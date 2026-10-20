@@ -23,7 +23,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
-PHIEN_BAN = "2.2.0"
+PHIEN_BAN = "2.2.1"
 MA_RE = re.compile(r"^([A-F])([1-6])$")
 DONG_INBOX_RE = re.compile(r"^- \[(\d{4}-\d{2}-\d{2})(?: (\d{2}:\d{2}))?\]")
 LINK_RE = re.compile(r"\[\[[^\]]+\]\]")

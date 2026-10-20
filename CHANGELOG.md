@@ -2,6 +2,19 @@
 
 Số phiên bản theo dạng x.y.z: x tăng khi dòng chảy chính đổi hình, y tăng khi thêm cơ chế mà không phá dòng chảy, z cho sửa số liệu, nhãn và câu chữ. Bản mới nhất ở trên cùng.
 
+## 2.2.1 · 20/10/2026
+
+Tài liệu. Luật và CLI không đổi cách chạy.
+
+### Thêm
+- README có mục "Bộ não dùng để làm gì": vấn đề giải quyết, hợp với ai, chưa hợp khi nào, nguyên tắc.
+- `docs/dung-voi-ai.md`: dùng bộ não với AI trên nhiều nền tảng, gồm ba mức kết nối, khối quy tắc chung, cách cài trên Claude, ChatGPT, Gemini, model local và các agent trong repo, quy trình mẫu kèm câu lệnh gợi ý.
+- `docs/huong-dan.md`: hướng dẫn từng bước cho người mới.
+
+### Đổi
+- `docs/quy-uoc-claude.md` → `docs/dung-voi-ai.md`, viết lại cho mọi nền tảng.
+- `vault/CLAUDE.md` → `vault/AGENTS.md`, viết lại cho mọi agent. Chép ra gốc repo với tên `AGENTS.md`, `CLAUDE.md` hoặc `GEMINI.md` tuỳ công cụ.
+
 ## 2.2.0 · 20/10/2026
 
 Tầng thực thi, bỏ giới hạn. Bộ não giữ vai điều phối, còn phần thực thi của project nhiều bước chuyển xuống board trong repo. Dòng chảy chính không đổi.

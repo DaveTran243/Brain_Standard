@@ -1,6 +1,6 @@
 # Hướng dẫn dùng Bộ não 2.2
 
-Hướng dẫn này dành cho người mới mở repo. Đọc xong và làm theo phần "Ngày đầu tiên", bạn sẽ có một bộ não chạy được trên máy mình trong khoảng 30 phút.
+Hướng dẫn này dành cho người mới mở repo. Đọc xong và làm theo phần "Ngày đầu tiên", bạn sẽ có một bộ não chạy được trên máy mình trong khoảng 30 phút. Phần dùng với AI nằm ở mục 8.
 
 ## 1. Bộ não này là gì
 
@@ -15,6 +15,8 @@ Một hệ thống ghi chép và làm việc dựng trên các file Markdown tro
 Thông tin do AI hay agent tìm về phải có **phiếu nguồn** và **mã độ tin** trước khi vào bộ não. Phần này gọi là cổng kiểm duyệt K1–K4.
 
 Một CLI nhỏ tên `brain` làm bốn việc: ghi nhanh vào Inbox, nộp mục từ agent qua cổng, rà lỗi trong vault, và đóng mỗi lượt làm việc.
+
+Bộ não giải quyết vấn đề gì, hợp với ai và chưa hợp khi nào: xem mục [Bộ não dùng để làm gì](../README.md#bộ-não-dùng-để-làm-gì) trong README.
 
 ## 2. Cần chuẩn bị
 
@@ -54,7 +56,7 @@ git push -u origin main
 Kiểm tra CLI chạy được. Lệnh `brain` chạy ở bất kỳ đâu trong repo; nó tự tìm file `brain.toml` ở thư mục gốc.
 
 ```sh
-bin/brain --version     # in ra: brain 2.2.0
+bin/brain --version     # in ra: brain 2.2.1
 bin/brain kiem          # in ra: Vault sạch.
 ```
 
@@ -201,19 +203,21 @@ Từ bản 2.2, project nhiều bước giữ phần thực thi trên một boar
 
 Chi tiết: [tang-thuc-thi.md](tang-thuc-thi.md).
 
-## 8. Dùng với Claude hoặc agent khác
+## 8. Dùng với AI
 
-**Trong chat với Claude:** chép khối quy tắc trong [quy-uoc-claude.md](quy-uoc-claude.md) vào phần tuỳ chọn cá nhân của Claude, hoặc vào hướng dẫn của một Project. Từ đó, mỗi câu trả lời của Claude kết thúc bằng một dòng "Bộ não:" cho biết mục đó đi vào làn nào. Bạn cũng dùng được các lệnh:
+Bộ não dùng được với mọi AI: Claude, ChatGPT, Gemini, model chạy local, và các agent viết code. Trang [Dùng bộ não với AI](dung-voi-ai.md) có cách cài trên từng nền tảng, quy trình mẫu và câu lệnh gợi ý. Bản ngắn:
 
-| Gõ | Claude làm |
+1. **Dán khối quy tắc chung** trong [dung-voi-ai.md](dung-voi-ai.md#khối-quy-tắc-chung) vào chỗ đặt hướng dẫn của AI bạn dùng: tuỳ chọn cá nhân, hướng dẫn của Project, Gem, hay ô system prompt.
+2. **Với agent làm việc trong repo**, chép `vault/AGENTS.md` ra thư mục gốc. Codex, Cursor, GitHub Copilot và Claude Code đọc được file này; Gemini CLI cần chỉnh một dòng cấu hình.
+3. Từ đó, mỗi câu trả lời của AI kết thúc bằng một dòng "Bộ não:" cho biết mục đó đi vào làn nào. Bạn dùng được các lệnh:
+
+| Gõ | AI làm |
 | --- | --- |
 | `ghi: …` | Chỉ ghi vào Inbox |
 | `hôm nay` | Chạy vòng ngày |
 | `weekly` | Weekly Review có số đo |
 
-**Trong Claude Code hoặc agent đọc được file:** file `vault/CLAUDE.md` chứa sẵn quy tắc. Nếu bạn mở Claude Code ở thư mục gốc của repo, hãy chép file này ra thư mục gốc.
-
-**Khi agent mang dữ kiện về:** agent viết một file có phiếu nguồn theo mẫu `vault/_mau/phieu-nguon.md`, rồi nộp qua cổng K1:
+**Khi AI mang dữ kiện về:** agent viết một file có phiếu nguồn theo mẫu `vault/_mau/phieu-nguon.md`, rồi nộp qua cổng K1:
 
 ```sh
 brain nop ket-qua-tra-cuu.md
@@ -270,4 +274,4 @@ git checkout chuan/main -- docs tools bin tests CHANGELOG.md
 - [ba-lan.md](ba-lan.md) · luật, số đo và dấu hiệu hỏng của từng làn
 - [kiem-duyet.md](kiem-duyet.md) · cổng K1–K4, bảng mã, 10 bước tra cứu
 - [tang-thuc-thi.md](tang-thuc-thi.md) · board, milestone, người phụ trách
-- [quy-uoc-claude.md](quy-uoc-claude.md) · làm việc với Claude
+- [dung-voi-ai.md](dung-voi-ai.md) · dùng với AI trên nhiều nền tảng

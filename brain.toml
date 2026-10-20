@@ -1,8 +1,8 @@
-# Brain_Standard · cấu hình chuẩn bộ não 2.2.0
+# Brain_Standard · cấu hình chuẩn bộ não 2.2.1
 # Từ 2.2.0 không còn mục [gioi_han]: không giới hạn số project hay next action.
 
 [bo_nao]
-phien_ban = "2.2.0"
+phien_ban = "2.2.1"
 vault = "vault"
 
 [duong_dan]

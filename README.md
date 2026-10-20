@@ -6,6 +6,8 @@ Bản 2.2 bỏ giới hạn số project và next action, và thêm **tầng th�
 
 **Phiên bản 2.2.0** · 20/10/2026 · [Change log](CHANGELOG.md)
 
+**Mới tới đây? Đọc [Hướng dẫn dùng bộ não](docs/huong-dan.md)**: cài đặt, ngày đầu tiên trong 30 phút, nhịp ngày và tuần, dùng với Claude.
+
 ## Dòng chảy
 
 ```mermaid
@@ -32,6 +34,7 @@ Ba làn trao đổi với nhau qua 7 đường I1–I7, mô tả ở [docs/dong-
 
 | Đường dẫn | Là gì |
 | --- | --- |
+| `docs/huong-dan.md` | Hướng dẫn từng bước cho người mới |
 | `docs/dong-chay.md` | Inbox, hai câu hỏi, ba làn, 7 đường nối, nhịp ngày, tuần, tháng |
 | `docs/ba-lan.md` | Luật, số đo và dấu hiệu hỏng của từng làn |
 | `docs/kiem-duyet.md` | Cổng K1–K4, hệ mã Admiralty, phiếu nguồn, 10 bước tra cứu |
@@ -42,16 +45,16 @@ Ba làn trao đổi với nhau qua 7 đường I1–I7, mô tả ở [docs/dong-
 | `tools/brain.py`, `bin/brain` | CLI: `ghi`, `nop`, `kiem`, `turn`, `weekly` |
 | `tests/` | Test cho CLI |
 
-## Bắt đầu
+## Bắt đầu nhanh
 
-1. Tạo một repo **private** cho bộ não của bạn. Chép vào đó `brain.toml`, `vault/`, `tools/` và `bin/`.
-2. Cần Python 3.11 trở lên, không cần cài thêm thư viện.
-3. Chạy thử:
+Cần Python 3.11 trở lên và git. Bộ não chứa ghi chú cá nhân, nên hãy tạo một repo **private** từ gói này. Các bước đầy đủ nằm trong [hướng dẫn](docs/huong-dan.md).
 
 ```sh
-bin/brain ghi "Đọc chương 5 sách DDIA"      # Windows: python tools\brain.py ghi "..."
-bin/brain kiem
-bin/brain turn y "đọc xong chương 5, ghi 1 literature note"
+git clone https://github.com/DaveTran243/Brain_Standard.git bo-nao-cua-toi
+cd bo-nao-cua-toi
+bin/brain kiem                                   # Windows: bin\brain.cmd kiem
+bin/brain ghi "Đọc chương 5 sách DDIA"
+bin/brain turn y "ghi ý đầu tiên vào Inbox"
 ```
 
 ## Lệnh

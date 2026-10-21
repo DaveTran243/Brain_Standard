@@ -7,8 +7,8 @@ Số phiên bản theo dạng x.y.z: x tăng khi dòng chảy chính đổi hìn
 Tài liệu. Luật và CLI không đổi cách chạy.
 
 ### Thêm
-- `docs/kien-truc-he-thong.md`: tài liệu kiến trúc hệ thống (DAB) chuẩn hoá theo arc42, gồm mục tiêu chất lượng, ràng buộc, bối cảnh, khối xây dựng, luồng chạy của từng lệnh, triển khai, mô hình dữ liệu, mã thoát, 8 quyết định kiến trúc, kịch bản chất lượng, rủi ro và nợ kỹ thuật.
-- Thiết kế đề xuất cho 2.3: tầng truy hồi với chỉ mục SQLite (FTS5 + sqlite-vec), embeddings local, lệnh `brain index`, `brain tim`, `brain mcp` và MCP server chỉ ghi qua cổng K1.
+- `docs/kien-truc-he-thong.md`: tài liệu kiến trúc hệ thống (DAB) chuẩn hoá theo arc42, gồm yêu cầu và ca sử dụng, mục tiêu chất lượng, ràng buộc, bối cảnh, khối xây dựng, đặc tả từng lệnh, triển khai, mô hình dữ liệu, ngữ pháp các dòng, danh mục luật kiểm có mã, tham chiếu cấu hình, mã thoát, mô hình mối đe doạ, ma trận truy vết test, 9 ADR, kịch bản chất lượng, 13 rủi ro và nợ kỹ thuật.
+- Thiết kế đề xuất cho 2.3: tầng truy hồi với chỉ mục SQLite (FTS5 + sqlite-vec), embeddings local, lệnh `brain index`, `brain tim`, `brain mcp` và MCP server chỉ ghi qua cổng K1; kèm lược đồ SQL, thuật toán index và xếp hạng theo độ tin, schema tool MCP, ngân sách hiệu năng, kế hoạch kiểm thử và tiêu chí nghiệm thu.
 
 ## 2.2.1 · 20/10/2026
 

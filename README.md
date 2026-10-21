@@ -2,7 +2,7 @@
 
 Một bộ não thứ hai bạn tự sở hữu: các file Markdown trong một repo git, một bộ luật để mọi thứ có chỗ của nó, và một bộ quy tắc để bất kỳ AI nào cũng làm việc được với nó.
 
-**Phiên bản 3.0.0** · 21/10/2026 · [Change log](CHANGELOG.md) · [DAB 3.0](docs/dab-3.0.md) · [bản 2.2.1](archive/2.2.1/README.md)
+**Phiên bản 3.0.0** · 21/10/2026 · [Change log](CHANGELOG.md) · [DAB 3.0](docs/kien-truc-he-thong.md) · [bản 2.2.1](archive/2.2.1/README.md)
 
 **Mới ở 3.0:** Javis giữ hai đầu dòng chảy. Javis **thu** thông tin vào Inbox, bạn **phân loại** bằng hai câu hỏi và ba làn, rồi giao cho Javis những việc nó được **làm tiếp** bằng nhãn `@javis:<mức>`. Kết quả quay về Inbox để bạn làm rõ lại.
 
@@ -88,11 +88,10 @@ Ba làn trao đổi với nhau qua 7 đường I1–I7, mô tả ở [docs/dong-
 | `docs/ba-lan.md` | Luật, số đo và dấu hiệu hỏng của từng làn |
 | `docs/kiem-duyet.md` | Cổng K1–K4, hệ mã Admiralty, phiếu nguồn, 10 bước tra cứu |
 | `docs/tang-thuc-thi.md` | Tầng thực thi 2.2: board, milestone, người phụ trách |
-| `docs/kien-truc-he-thong.md` | Kiến trúc hệ thống (DAB) theo arc42: thành phần, luồng chạy, quyết định, rủi ro, thiết kế tầng truy hồi 2.3 |
+| `docs/kien-truc-he-thong.md` | DAB 3.0, kiến trúc hệ thống theo arc42: thành phần, luồng chạy, vòng Javis, quyết định, rủi ro, việc cần chốt, thiết kế tầng truy hồi 3.1 |
 | `vault/` | Khung thư mục và mẫu file để bắt đầu một bộ não mới |
 | `vault/AGENTS.md` | Quy tắc cho agent làm việc trong repo |
 | `brain.toml` | Cấu hình chuẩn 3.0 |
-| `docs/dab-3.0.md` | DAB 3.0: tài liệu thiết kế để duyệt kiến trúc bộ não 3.0 |
 | `archive/` | Ảnh chụp các bản cũ, bắt đầu từ 2.2.1 |
 | `tools/brain.py`, `bin/brain` | CLI: `ghi`, `nop`, `kiem`, `turn`, `weekly`, `giao`, `javis`, `xong` |
 | `integrations/javis/` | Plugin Javis OS và hook Claude Code chặn AI ghi permanent note |

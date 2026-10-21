@@ -10,6 +10,7 @@ Repo này là một bộ não theo Brain_Standard 3.0. File này dành cho mọi
 - Kết thúc mọi câu trả lời bằng đúng một dòng: `Bộ não: <viec|y|file|xoa> · <lối ra> · <nội dung> · lệnh: brain …`.
 - Tin bắt đầu bằng `ghi:` chỉ ghi vào Inbox bằng `brain ghi`. `hôm nay` là vòng ngày: gợi ý tối đa 3 việc từ Next Actions. `weekly` là Weekly Review: chạy `brain weekly` rồi đi qua `weekly/_mau-weekly.md`.
 - Cổng K1: mọi dữ kiện bạn mang vào cần phiếu nguồn theo `_mau/phieu-nguon.md` và được nộp bằng `brain nop <file>`. Không bịa mã. Chưa kiểm được thì chấm thấp và nói rõ. Lời của chủ bộ não không qua K1.
+- Export chat vào Inbox bằng `brain ghi --kenh export`, không qua K1, nhưng chỉ đi tối đa tới Fleeting. Muốn đưa một dữ kiện trong export lên literature trở lên thì lập phiếu nguồn và nộp bằng `brain nop`.
 - Không giới hạn số project hay next action. Backlog, milestone và người phụ trách nằm trên board của project; project file giữ kết quả, tiêu chí, quyết định và bài học.
 - Vòng Javis (3.0): Javis thu ở đầu vào, chủ bộ não phân loại ở giữa, Javis làm tiếp ở đầu ra.
   - Thu: lời chủ bộ não vào bằng `brain ghi`, dữ kiện tự tra vào bằng `brain nop`. Không tự xếp mục vào làn; chỉ đề xuất lối ra.

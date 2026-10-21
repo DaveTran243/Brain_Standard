@@ -13,7 +13,8 @@ Bộ não có người vận hành. Dòng chảy đổi hình: Javis giữ hai �
 - `brain kiem`: lỗi khi nhãn `@javis` thiếu mức; cảnh báo khi việc giao quá `treo_toi_da_ngay` chưa xong.
 - `brain weekly`: việc giao Javis đang mở, xong trong 7 ngày, đang treo.
 - Mục `[javis]` trong `brain.toml`: `nhan`, `treo_toi_da_ngay`.
-- `docs/dab-3.0.md`: DAB 3.0, tài liệu thiết kế để duyệt kiến trúc.
+- `docs/kien-truc-he-thong.md` lên DAB 3.0, giữ khung arc42: yêu cầu, ca sử dụng, khối xây dựng, đặc tả lệnh, triển khai, ngữ pháp, luật kiểm, cấu hình, mã thoát, mối đe doạ, test và rủi ro có thêm phần Javis; ADR-10 đến ADR-12. Bản DAB 1.1 lưu ở `archive/2.2.1/docs/kien-truc-he-thong.md`.
+- `docs/kien-truc-he-thong.md` (DAB 1.1, trước 3.0): tài liệu kiến trúc chuẩn hoá theo arc42, 9 ADR, 13 rủi ro; thiết kế đề xuất tầng truy hồi (chỉ mục SQLite FTS5 + sqlite-vec, `brain index`, `brain tim`, `brain mcp`), nay dời sang 3.1.
 - `docs/dung-voi-javis.md`: dùng bộ não với Javis OS, gồm bản đồ khái niệm, các chỗ xung đột, cài đặt từng bước và quy trình mẫu, cả loop làm tiếp theo từng mức.
 - `integrations/javis/brain-standard/` (plugin 3.0.0): tool `brain_ghi`, `brain_nop`, `brain_kiem`, `brain_turn`, `brain_weekly`, `brain_viec_javis`, `brain_xong` cho mọi engine; hook chặn AI ghi vào permanent note, `00-Inbox/agent`, file mẫu, và chặn AI tự gắn hay nâng nhãn `@javis`. `brain_nop` nhận nội dung phiếu dạng chữ và chạy ở mức `suggest`, nên loop chỉ đọc vẫn nộp được dữ kiện tự tra qua K1.
 - `integrations/javis/chan_ghi_claude.py`: hook PreToolUse cho Claude Code, cùng luật chặn.
@@ -23,6 +24,7 @@ Bộ não có người vận hành. Dòng chảy đổi hình: Javis giữ hai �
 - `vault/AGENTS.md` và khối quy tắc chung: thêm luật vòng Javis (quy tắc 8).
 - Nguồn vào: lời bạn nhắn qua Javis vẫn không qua K1; dữ kiện Javis tự tra qua K1; kết quả `brain xong` vào Inbox.
 - Nhịp ngày và Weekly Review: thêm bước giao việc và rà việc đã giao.
+- Export chat: không qua K1 khi nhập, nhưng mang nhãn chưa kiểm và đi tối đa tới Fleeting, như mã F6; dữ kiện trong đó muốn đi xa hơn thì lập phiếu và qua K1. Trước đây `docs/dong-chay.md` ghi export phải qua K1, trái với cách lõi second-brain đang chạy.
 
 ### Giữ
 - Permanent note chỉ do bạn viết. Javis không xoá dữ liệu, không bỏ qua K1, không tự chốt hay dừng project, ở mọi mức.

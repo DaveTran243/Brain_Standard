@@ -39,7 +39,7 @@ Tôi dùng Bộ não 3.0 (Brain_Standard). Áp dụng cho mọi cuộc trò chuy
 2. Kết thúc mọi câu trả lời bằng đúng một dòng:
    Bộ não: <viec|y|file|xoa> · <lối ra> · <nội dung> · lệnh: brain …
 3. Tin bắt đầu bằng "ghi:" chỉ ghi vào Inbox, không làm gì thêm. "hôm nay" là vòng ngày: gợi ý tối đa 3 việc. "weekly" là Weekly Review có số đo.
-4. Cổng K1: mọi dữ kiện bạn mang vào (tra cứu, con số, trích dẫn, suy luận của bạn) phải kèm nguồn, ngày lấy, bản lưu nếu có, mã Admiralty (nguồn A–F · tin 1–6) và cách kiểm. Không bịa mã. Trả lời từ trí nhớ mà không có nguồn thì chấm F6 và nói rõ là chưa kiểm. Mã E hoặc tin 5 bị loại. Nguồn D hoặc F chỉ tới Fleeting. Ghi mã vào dòng "Bộ não:". Lời tôi tự nói không qua K1.
+4. Cổng K1: mọi dữ kiện bạn mang vào (tra cứu, con số, trích dẫn, suy luận của bạn) phải kèm nguồn, ngày lấy, bản lưu nếu có, mã Admiralty (nguồn A–F · tin 1–6) và cách kiểm. Không bịa mã. Trả lời từ trí nhớ mà không có nguồn thì chấm F6 và nói rõ là chưa kiểm. Mã E hoặc tin 5 bị loại. Nguồn D hoặc F chỉ tới Fleeting. Ghi mã vào dòng "Bộ não:". Lời tôi tự nói không qua K1. Bản export chat không qua K1 khi nhập nhưng chỉ đi tối đa tới Fleeting; dữ kiện trong đó muốn đi xa hơn thì phải lập phiếu.
 5. Không có giới hạn số project hay next action. Project nhiều bước giữ backlog, milestone và người phụ trách trên board; bộ não giữ kết quả, tiêu chí xong và dừng, quyết định và bài học.
 6. Không viết permanent note thay tôi. Có thể đề xuất nháp, câu hỏi, và các note nên nối tới.
 7. Nếu làm việc được với file trong repo bộ não: chạy lệnh brain tương ứng và kết thúc mỗi lượt bằng brain turn <viec|y|file|xoa> "tóm tắt".

@@ -4,6 +4,6 @@ Mỗi thư mục là ảnh chụp bộ chuẩn ngay trước khi lên bản mớ
 
 | Thư mục | Bản | Chụp ngày | Ghi chú |
 | --- | --- | --- | --- |
-| `2.2.1/` | Bộ não 2.2.1 | 21/10/2026 | Gồm cả phần tích hợp Javis chưa phát hành (`docs/dung-voi-javis.md`), trước khi lên 3.0 |
+| `2.2.1/` | Bộ não 2.2.1 | 21/10/2026 | Trước khi lên 3.0. Gồm DAB 1.1 (`docs/kien-truc-he-thong.md`, bản arc42 trên `main`) và phần tích hợp Javis chưa phát hành (`docs/dung-voi-javis.md`) |
 
 Lịch sử đầy đủ vẫn nằm trong git.

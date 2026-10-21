@@ -15,8 +15,10 @@ Javis THU ──► Inbox ──► bạn PHÂN LOẠI ──► lối ra ──
 | --- | --- |
 | Lời bạn: ghi tay, nói, gõ, lệnh `ghi:`, kể cả nhắn qua Javis | Không |
 | Agent tra cứu: web, paper, API, Claude hay Javis tự tra | Có, chặn cứng |
-| Kết quả việc Javis làm xong (`brain xong`) | Không, nhưng dữ kiện tự tra trong đó phải đã qua K1 |
-| Export chat mỗi tuần, chỉ khi có dữ liệu mới | Có |
+| Kết quả việc Javis làm xong (`brain xong`) | Không, nhưng đi tối đa tới Fleeting; dữ kiện tự tra trong đó phải đã nộp riêng qua K1 |
+| Export chat mỗi tuần, chỉ khi có dữ liệu mới | Không khi nhập, nhưng mang nhãn chưa kiểm và đi tối đa tới Fleeting |
+
+Export chat chứa cả lời bạn lẫn câu trả lời của AI, nên không lập phiếu cho cả bản export. Nó vào Inbox bằng `brain ghi --kenh export`, được coi như mã F6: chưa kiểm, đi tối đa tới Fleeting. Một dữ kiện trong đó muốn lên literature, permanent hay thẻ ôn thì phải lập phiếu nguồn riêng và nộp qua K1 bằng `brain nop`. Lời bạn chép lại từ export vẫn là lời bạn, không qua K1.
 
 Trạng thái của máy và các routine ghi vào `_log`, không ghi vào Inbox.
 

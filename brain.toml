@@ -1,8 +1,8 @@
-# Brain_Standard · cấu hình chuẩn bộ não 2.2.1
+# Brain_Standard · cấu hình chuẩn bộ não 3.0.0
 # Từ 2.2.0 không còn mục [gioi_han]: không giới hạn số project hay next action.
 
 [bo_nao]
-phien_ban = "2.2.1"
+phien_ban = "3.0.0"
 vault = "vault"
 
 [duong_dan]
@@ -43,3 +43,8 @@ canh_bao_project_khong_viec = true
 [johnny_decimal]
 khu = "50-59"
 toi_da_category = 10
+
+[javis]
+# 3.0: Javis thu ở đầu vào, làm tiếp ở đầu ra; bộ não phân loại ở giữa.
+nhan = "@javis"              # nhãn trên next action giao cho Javis, dạng @javis:<suggest|auto|full>
+treo_toi_da_ngay = 7         # việc giao quá số ngày này chưa xong thì brain kiem cảnh báo

@@ -1,4 +1,4 @@
-# Hướng dẫn dùng Bộ não 2.2
+# Hướng dẫn dùng Bộ não 3.0
 
 Hướng dẫn này dành cho người mới mở repo. Đọc xong và làm theo phần "Ngày đầu tiên", bạn sẽ có một bộ não chạy được trên máy mình trong khoảng 30 phút. Phần dùng với AI nằm ở mục 8.
 
@@ -34,7 +34,7 @@ macOS, Linux:
 git clone https://github.com/DaveTran243/Brain_Standard.git bo-nao-cua-toi
 cd bo-nao-cua-toi
 rm -rf .git && git init -b main  # bắt đầu lịch sử của riêng bạn
-git add -A && git commit -m "Khởi tạo bộ não từ Brain_Standard 2.2"
+git add -A && git commit -m "Khởi tạo bộ não từ Brain_Standard 3.0"
 ```
 
 Windows (PowerShell):
@@ -43,7 +43,7 @@ Windows (PowerShell):
 git clone https://github.com/DaveTran243/Brain_Standard.git bo-nao-cua-toi
 cd bo-nao-cua-toi
 Remove-Item -Recurse -Force .git; git init -b main
-git add -A; git commit -m "Khởi tạo bộ não từ Brain_Standard 2.2"
+git add -A; git commit -m "Khởi tạo bộ não từ Brain_Standard 3.0"
 ```
 
 Tạo một repo private trống trên GitHub, rồi nối và đẩy lên:
@@ -56,7 +56,7 @@ git push -u origin main
 Kiểm tra CLI chạy được. Lệnh `brain` chạy ở bất kỳ đâu trong repo; nó tự tìm file `brain.toml` ở thư mục gốc.
 
 ```sh
-bin/brain --version     # in ra: brain 2.2.1
+bin/brain --version     # in ra: brain 3.0.0
 bin/brain kiem          # in ra: Vault sạch.
 ```
 
@@ -233,6 +233,16 @@ Mã gồm một chữ cho độ tin của nguồn (A tốt nhất, F chưa đán
 
 Lời bạn tự nói hay tự gõ không cần qua cổng này.
 
+**Giao việc cho Javis (3.0).** Sau khi phân loại, gắn nhãn cho next action mà Javis hay một agent được làm thay bạn:
+
+```sh
+brain giao "kế toán" auto      # tìm đúng 1 việc đang mở có chữ "kế toán", gắn @javis:auto · giao <hôm nay>
+brain javis                    # xem việc đang giao
+brain xong 1 "đã soạn nháp ở nhap/email.md"   # agent báo xong; kết quả vào Inbox
+```
+
+Mức `suggest` chỉ cho đọc và đề xuất, `auto` cho viết nháp và code trong repo, `full` cho làm hành động thật bên ngoài. Agent không tự gắn nhãn. Chi tiết: [dong-chay.md](dong-chay.md#vòng-javis), cài với Javis OS: [dung-voi-javis.md](dung-voi-javis.md).
+
 ## 9. Tuỳ chỉnh trong `brain.toml`
 
 | Khoá | Mặc định | Dùng khi |
@@ -242,6 +252,7 @@ Lời bạn tự nói hay tự gõ không cần qua cổng này.
 | `kiem_duyet.truong_bat_buoc` | 5 trường | Đổi các trường bắt buộc của phiếu nguồn |
 | `duong_dan.*` | theo khung mẫu | Bạn đổi tên hoặc chỗ các thư mục |
 | `bo_nao.vault` | `vault` | Vault nằm ở thư mục khác |
+| `javis.treo_toi_da_ngay` | 7 | Việc giao Javis quá số ngày này chưa xong thì `brain kiem` cảnh báo |
 
 Các ngưỡng như 7 ngày, 90 phút, 7 note cho một MOC chỉ là điểm bắt đầu. Hãy chỉnh lại sau khoảng 4 tuần dùng thật.
 
@@ -254,6 +265,7 @@ Các ngưỡng như 7 ngày, 90 phút, 7 note cho một MOC chỉ là điểm b�
 | `Lượt chưa đóng được` | Chạy `brain kiem`, sửa từng lỗi được liệt kê, rồi chạy lại `brain turn`. |
 | `permanent note chưa nối tới note nào` | Thêm ít nhất một `[[link]]` vào note. |
 | `thiếu tieu_chi_xong` | Project active phải có `ket_qua`, `tieu_chi_xong`, `tieu_chi_dung`. |
+| `@javis cần mức suggest, auto, full` | Nhãn thiếu mức. Sửa thành `@javis:<mức>`, hoặc bỏ nhãn rồi chạy `brain giao`. |
 | Chữ tiếng Việt hiện sai trên Windows | Dùng Windows Terminal, hoặc chạy `chcp 65001` trước. |
 
 ## 11. Cập nhật khi có bản mới
@@ -267,6 +279,8 @@ git checkout chuan/main -- docs tools bin tests CHANGELOG.md
 ```
 
 Đừng lấy thư mục `vault/` hay file `brain.toml` theo cách này, vì chúng sẽ đè lên dữ liệu và cấu hình của bạn. Nếu bản mới đổi `brain.toml`, hãy so sánh rồi sửa tay.
+
+**Lên 3.0 từ 2.2:** thêm mục `[javis]` vào `brain.toml` (chép từ bản chuẩn; không thêm thì CLI dùng giá trị mặc định), và chép lại `vault/AGENTS.md` ra gốc repo. Ghi chú của bạn không phải đổi gì.
 
 ## Đọc thêm
 

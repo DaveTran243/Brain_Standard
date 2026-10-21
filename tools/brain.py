@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""brain · CLI cho Brain_Standard 2.2.
+"""brain · CLI cho Brain_Standard 3.0.
 
 Lệnh:
   ghi "…"                       ghi lời bạn vào Inbox (không qua K1)
   nop <file.md>                 nộp mục do agent mang về qua cổng K1
-  kiem                          rà vault theo luật 2.2 và cổng K2–K3
+  kiem                          rà vault theo luật 3.0 và cổng K2–K3
   turn <viec|y|file|xoa> "…"    đóng một lượt làm việc
   weekly [--ghi]                số đo cho Weekly Review
+  giao "…" <suggest|auto|full>  giao một next action cho Javis (chỉ chủ bộ não)
+  javis [--muc …]               liệt kê việc đang giao cho Javis
+  xong <số> "kết quả"           Javis báo xong một việc; kết quả về Inbox
 
 Chỉ dùng thư viện chuẩn, cần Python 3.11 trở lên. Thời điểm hiện tại có thể đặt
 bằng biến môi trường BRAIN_NOW (ISO 8601), dùng cho test.
@@ -23,12 +26,16 @@ import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
-PHIEN_BAN = "2.2.1"
+PHIEN_BAN = "3.0.0"
 MA_RE = re.compile(r"^([A-F])([1-6])$")
 DONG_INBOX_RE = re.compile(r"^- \[(\d{4}-\d{2}-\d{2})(?: (\d{2}:\d{2}))?\]")
 LINK_RE = re.compile(r"\[\[[^\]]+\]\]")
 LOAI_TURN = ("viec", "y", "file", "xoa")
 TRANG_THAI = ("someday", "active", "done", "stopped")
+MUC_JAVIS = ("suggest", "auto", "full")
+VIEC_RE = re.compile(r"^(\s*)- \[([ xX])\] (.*)$")
+GIAO_RE = re.compile(r"· giao (\d{4}-\d{2}-\d{2})")
+XONG_RE = re.compile(r"· xong (\d{4}-\d{2}-\d{2})")
 NHAN_K1 = {"the": "thẻ ôn", "literature": "literature", "fleeting": "fleeting (chưa kiểm)"}
 
 MAC_DINH = {
@@ -60,6 +67,7 @@ MAC_DINH = {
         "the_tin": [1, 2],
     },
     "thuc_thi": {"canh_bao_milestone_khong_board": True, "canh_bao_project_khong_viec": True},
+    "javis": {"nhan": "@javis", "treo_toi_da_ngay": 7},
 }
 
 
@@ -223,6 +231,45 @@ class BoNao:
         return f"{self.now:%Y-%m-%d %H:%M}"
 
 
+@dataclass
+class ViecJavis:
+    """Một next action mang nhãn @javis."""
+
+    dong: int          # chỉ số dòng trong file Next Actions
+    xong: bool
+    muc: str           # "" nếu thiếu hoặc sai mức
+    noi_dung: str
+    giao: dt.date | None
+    ngay_xong: dt.date | None
+
+
+def _nhan_re(bn: "BoNao") -> re.Pattern:
+    return re.compile(re.escape(bn.cfg["javis"]["nhan"]) + r"(?::([\w-]+))?(?![\w:-])")
+
+
+def viec_javis(bn: "BoNao") -> list[ViecJavis]:
+    p = bn.p("next_actions")
+    if not p.is_file():
+        return []
+    nhan = _nhan_re(bn)
+    kq = []
+    for i, d in enumerate(doc(p).splitlines()):
+        m = VIEC_RE.match(d)
+        if not m:
+            continue
+        n = nhan.search(m.group(3))
+        if not n:
+            continue
+        muc = n.group(1) or ""
+        g, x = GIAO_RE.search(d), XONG_RE.search(d)
+        kq.append(ViecJavis(
+            dong=i, xong=m.group(2) != " ", muc=muc if muc in MUC_JAVIS else "",
+            noi_dung=m.group(3), giao=dt.date.fromisoformat(g.group(1)) if g else None,
+            ngay_xong=dt.date.fromisoformat(x.group(1)) if x else None,
+        ))
+    return kq
+
+
 def tim_goc(tu: Path) -> Path | None:
     for p in [tu, *tu.parents]:
         if (p / "brain.toml").is_file():
@@ -290,6 +337,62 @@ def lenh_nop(bn: BoNao, file: str) -> int:
     td = tieu_de(body, nguon_file.stem)
     ghi_them(bn.p("inbox"), f"- [{bn.gio}] (agent) {td} · {ma} · tối đa {NHAN_K1[kq]} → agent/{ten}\n", "# Inbox\n\n## Mục\n")
     print(f"K1 đạt: {td} · mã {ma} · đi tối đa tới {NHAN_K1[kq]}.")
+    return 0
+
+
+def lenh_giao(bn: BoNao, khop: str, muc: str) -> int:
+    p = bn.p("next_actions")
+    khop = " ".join(khop.split())
+    dong = doc(p).splitlines() if p.is_file() else []
+    nhan = _nhan_re(bn)
+    trung = [i for i, d in enumerate(dong)
+             if (m := VIEC_RE.match(d)) and m.group(2) == " " and khop.lower() in m.group(3).lower()]
+    if len(trung) != 1:
+        print(f"Cần đúng 1 next action đang mở chứa '{khop}', đang thấy {len(trung)}.", file=sys.stderr)
+        return 2
+    i = trung[0]
+    if nhan.search(dong[i]):
+        print("Việc này đã giao cho Javis. Sửa mức bằng tay trong Next Actions nếu cần.", file=sys.stderr)
+        return 2
+    dong[i] = f"{dong[i].rstrip()} · {bn.cfg['javis']['nhan']}:{muc} · giao {bn.now:%Y-%m-%d}"
+    p.write_text("\n".join(dong) + "\n", encoding="utf-8", newline="\n")
+    print(f"Đã giao cho Javis ({muc}): {VIEC_RE.match(dong[i]).group(3)}")
+    return 0
+
+
+def _mo_theo_muc(bn: BoNao, muc_toi_da: str | None) -> list[ViecJavis]:
+    tran = MUC_JAVIS.index(muc_toi_da) if muc_toi_da else len(MUC_JAVIS) - 1
+    return [v for v in viec_javis(bn) if not v.xong and v.muc and MUC_JAVIS.index(v.muc) <= tran]
+
+
+def lenh_javis(bn: BoNao, muc_toi_da: str | None) -> int:
+    ds = _mo_theo_muc(bn, muc_toi_da)
+    if not ds:
+        print("Không có việc nào đang giao cho Javis" + (f" ở mức {muc_toi_da} trở xuống." if muc_toi_da else "."))
+        return 0
+    for so, v in enumerate(ds, 1):
+        print(f"{so} · {v.muc} · {v.noi_dung}")
+    return 0
+
+
+def lenh_xong(bn: BoNao, so: int, ket_qua: str, muc_toi_da: str | None) -> int:
+    ket_qua = " ".join(ket_qua.split())
+    if not ket_qua:
+        print("Cần một câu kết quả.", file=sys.stderr)
+        return 2
+    ds = _mo_theo_muc(bn, muc_toi_da)
+    if not 1 <= so <= len(ds):
+        print(f"Không có việc số {so}. Chạy brain javis để xem danh sách.", file=sys.stderr)
+        return 2
+    v = ds[so - 1]
+    p = bn.p("next_actions")
+    dong = doc(p).splitlines()
+    dong[v.dong] = dong[v.dong].replace("- [ ]", "- [x]", 1).rstrip() + f" · xong {bn.now:%Y-%m-%d}"
+    p.write_text("\n".join(dong) + "\n", encoding="utf-8", newline="\n")
+    viec = _nhan_re(bn).sub("", GIAO_RE.sub("", v.noi_dung))
+    viec = " ".join(viec.replace("· ·", "·").split()).strip(" ·")
+    ghi_them(bn.p("inbox"), f"- [{bn.gio}] (javis) Kết quả \"{viec}\": {ket_qua}\n", "# Inbox\n\n## Mục\n")
+    print(f"Đã xong: {viec}. Kết quả đã vào Inbox để làm rõ.")
     return 0
 
 
@@ -385,6 +488,16 @@ def kiem(bn: BoNao) -> tuple[list[str], list[str]]:
                 canh_bao.append(f"Thực thi · {ten(p)}: đã qua hạn {fm.get('han')}")
         if trang_thai == "stopped" and not fm.get("ly_do_dung"):
             canh_bao.append(f"Hành động · {ten(p)}: project dừng nên ghi ly_do_dung")
+
+    # Javis · 3.0: việc giao phải có mức; việc treo quá lâu thì cảnh báo
+    treo = int(bn.cfg["javis"]["treo_toi_da_ngay"])
+    for v in viec_javis(bn):
+        if v.xong:
+            continue
+        if not v.muc:
+            loi.append(f"Javis · next action dòng {v.dong + 1}: {bn.cfg['javis']['nhan']} cần mức {', '.join(MUC_JAVIS)}")
+        elif v.giao and (hom_nay - v.giao).days > treo:
+            canh_bao.append(f"Javis · next action dòng {v.dong + 1}: giao Javis đã {(hom_nay - v.giao).days} ngày chưa xong")
     return loi, canh_bao
 
 
@@ -460,6 +573,8 @@ def so_do(bn: BoNao) -> dict:
         for p in cac_note(bn.p(khoa)):
             het = han_het(frontmatter(doc(p))[0].get("han_dung", ""))
             qua_han_dung += bool(het and hom_nay >= het)
+    javis = viec_javis(bn)
+    treo = int(bn.cfg["javis"]["treo_toi_da_ngay"])
     qua_han_project = sum(
         1
         for fm in projects
@@ -482,6 +597,9 @@ def so_do(bn: BoNao) -> dict:
         "k1_bi_loai": bi_loai,
         "phan_tram_thieu_phieu": round(100 * agent_thieu / len(agent)) if agent else 0,
         "qua_han_dung": qua_han_dung,
+        "javis_mo": sum(1 for v in javis if not v.xong),
+        "javis_xong": sum(1 for v in javis if v.xong and v.ngay_xong and v.ngay_xong > tuan_truoc),
+        "javis_treo": sum(1 for v in javis if not v.xong and v.giao and (hom_nay - v.giao).days > treo),
     }
 
 
@@ -505,6 +623,7 @@ def lenh_weekly(bn: BoNao, luu: bool) -> int:
             f"| K1 bị loại trong 7 ngày | {s['k1_bi_loai']} |",
             f"| % mục agent thiếu phiếu | {s['phan_tram_thieu_phieu']}% |",
             f"| Mục quá hạn dùng | {s['qua_han_dung']} |",
+            f"| Việc giao Javis đang mở · xong trong 7 ngày · treo | {s['javis_mo']} · {s['javis_xong']} · {s['javis_treo']} |",
             "",
             "Chỉ đo, không chặn. Không có giới hạn số project hay next action từ 2.2.0.",
             "",
@@ -541,12 +660,21 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--kenh", default="tay", help="kênh: tay, noi, telegram… (mặc định: tay)")
     n = sub.add_parser("nop", help="nộp mục do agent mang về qua K1")
     n.add_argument("file")
-    sub.add_parser("kiem", help="rà vault theo luật 2.2")
+    sub.add_parser("kiem", help="rà vault theo luật 3.0")
     t = sub.add_parser("turn", help="đóng một lượt làm việc")
     t.add_argument("loai", choices=LOAI_TURN)
     t.add_argument("tom_tat", nargs="+")
     w = sub.add_parser("weekly", help="số đo cho Weekly Review")
     w.add_argument("--ghi", action="store_true", help="lưu vào thư mục weekly/")
+    gi = sub.add_parser("giao", help="giao một next action cho Javis (chỉ chủ bộ não)")
+    gi.add_argument("khop", help="một đoạn chữ có trong đúng một next action đang mở")
+    gi.add_argument("muc", choices=MUC_JAVIS)
+    j = sub.add_parser("javis", help="liệt kê việc đang giao cho Javis")
+    j.add_argument("--muc", choices=MUC_JAVIS, help="chỉ việc ở mức này trở xuống")
+    x = sub.add_parser("xong", help="báo xong một việc của Javis; kết quả về Inbox")
+    x.add_argument("so", type=int, help="số thứ tự trong brain javis")
+    x.add_argument("ket_qua", nargs="+")
+    x.add_argument("--muc", choices=MUC_JAVIS, help="cùng --muc đã dùng với brain javis")
     a = ap.parse_args(argv)
     bn = mo_bo_nao(a.root)
     if a.lenh == "ghi":
@@ -559,6 +687,12 @@ def main(argv: list[str] | None = None) -> int:
         return lenh_turn(bn, a.loai, " ".join(a.tom_tat))
     if a.lenh == "weekly":
         return lenh_weekly(bn, a.ghi)
+    if a.lenh == "giao":
+        return lenh_giao(bn, a.khop, a.muc)
+    if a.lenh == "javis":
+        return lenh_javis(bn, a.muc)
+    if a.lenh == "xong":
+        return lenh_xong(bn, a.so, " ".join(a.ket_qua), a.muc)
     return 2
 
 

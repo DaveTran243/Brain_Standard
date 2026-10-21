@@ -1,4 +1,4 @@
-# Kiến trúc hệ thống · Bộ não 2.2
+# Kiến trúc hệ thống · Bộ não 3.0
 
 Tài liệu thiết kế kiến trúc (DAB) của Brain_Standard. Bố cục theo khung [arc42](https://arc42.org) và các góc nhìn của ISO/IEC/IEEE 42010; sơ đồ theo mô hình C4; quyết định ghi theo dạng ADR của Michael Nygard. Luật nghiệp vụ được giải thích ở các trang `docs/` khác; trang này mô tả hệ thống được dựng thế nào, chạy ra sao, và vì sao được dựng như vậy, đủ chi tiết để viết lại CLI từ đầu mà không cần đọc code.
 
@@ -16,7 +16,7 @@ Tài liệu thiết kế kiến trúc (DAB) của Brain_Standard. Bố cục the
 9. [Quyết định kiến trúc](#9-quyết-định-kiến-trúc)
 10. [Yêu cầu chất lượng](#10-yêu-cầu-chất-lượng)
 11. [Rủi ro và nợ kỹ thuật](#11-rủi-ro-và-nợ-kỹ-thuật)
-12. [Hướng phát triển · tầng truy hồi (đề xuất 2.3)](#12-hướng-phát-triển--tầng-truy-hồi-đề-xuất-23)
+12. [Hướng phát triển · tầng truy hồi (đề xuất 3.1)](#12-hướng-phát-triển--tầng-truy-hồi-đề-xuất-31)
 13. [Thuật ngữ](#13-thuật-ngữ)
 14. [Tài liệu tham khảo](#14-tài-liệu-tham-khảo)
 15. [Bảo trì tài liệu này](#15-bảo-trì-tài-liệu-này)
@@ -26,16 +26,17 @@ Tài liệu thiết kế kiến trúc (DAB) của Brain_Standard. Bố cục the
 | Mục | Nội dung |
 | --- | --- |
 | Hệ thống | Brain_Standard · bộ não thứ hai dạng Markdown + git + CLI `brain` |
-| Phiên bản hệ thống mô tả | 2.2.1 (đang chạy) và 2.3 (đề xuất, mục 12) |
-| Bản tài liệu | 1.1 |
-| Trạng thái | Bản nháp đã chuẩn hoá, chờ chủ bộ não duyệt |
+| Phiên bản hệ thống mô tả | 3.0.0 (đang chạy, có vòng Javis) và 3.1 (đề xuất, mục 12) |
+| Bản tài liệu | 3.0 (DAB 3.0). Bản 1.1 lưu ở [`archive/2.2.1/docs/kien-truc-he-thong.md`](../archive/2.2.1/docs/kien-truc-he-thong.md) |
+| Trạng thái | Chờ Design Authority Board duyệt; mã, test và plugin đã xong, Javis OS chưa chạy thật trên một bộ não |
 | Chủ sở hữu | Chủ repo Brain_Standard |
 | Cập nhật lần cuối | 21/10/2026 |
-| Nguồn sự thật đối chiếu | `tools/brain.py`, `brain.toml`, `tests/test_brain.py`, `vault/`, các trang `docs/` |
+| Nguồn sự thật đối chiếu | `tools/brain.py`, `brain.toml`, `tests/test_brain.py`, `tests/test_javis_plugin.py`, `integrations/javis/`, `vault/`, các trang `docs/` |
+| Hệ thống liên quan | [Javis OS](https://github.com/blogminhquy/javis-os) 0.270.0, Claude Code |
 
 ### 0.1 Phạm vi tài liệu
 
-Tài liệu bao gồm: chuẩn dữ liệu của vault, CLI `brain`, luật kiểm tra, cách AI và agent tương tác, cách triển khai, và thiết kế tầng truy hồi đề xuất. Tài liệu không thay cho hướng dẫn người dùng ([huong-dan.md](huong-dan.md)) và không giải thích lại phương pháp GTD, Zettelkasten… ngoài mức cần cho kiến trúc.
+Tài liệu bao gồm: chuẩn dữ liệu của vault, CLI `brain`, luật kiểm tra, cách AI và agent tương tác, vòng Javis của 3.0 (Javis thu, chủ bộ não phân loại, Javis làm tiếp), plugin Javis OS và hook, cách triển khai, và thiết kế tầng truy hồi đề xuất. Tài liệu không thay cho hướng dẫn người dùng ([huong-dan.md](huong-dan.md)) và không giải thích lại phương pháp GTD, Zettelkasten… ngoài mức cần cho kiến trúc.
 
 ### 0.2 Đọc theo vai
 
@@ -45,6 +46,7 @@ Tài liệu bao gồm: chuẩn dữ liệu của vault, CLI `brain`, luật ki�
 | Người sửa CLI | 5, 6, 8, 10, 11 |
 | Agent làm việc trong repo | 6.7, 8.1–8.4, 8.10 |
 | Người làm tầng truy hồi | 8, 12 |
+| Người vận hành Javis | 1.7, 5.4, 6.9–6.12, 7.4, 8.4 (JV), 9 (ADR-10–12), 11 |
 
 ### 0.3 Quy ước
 
@@ -60,12 +62,15 @@ Tài liệu bao gồm: chuẩn dữ liệu của vault, CLI `brain`, luật ki�
 | --- | --- | --- |
 | 1.0 | 21/10/2026 | Bản đầu, chuẩn hoá theo arc42: gom mô tả rải rác trong `docs/` và `tools/brain.py`, thêm ADR, rủi ro, thiết kế tầng truy hồi 2.3 |
 | 1.1 | 21/10/2026 | Viết chi tiết: ca sử dụng, đặc tả từng lệnh, danh mục luật kiểm, tham chiếu cấu hình, ngữ pháp các dòng, mô hình mối đe doạ, ma trận truy vết test, ADR đầy đủ, DDL và thuật toán của tầng truy hồi, schema tool MCP, tiêu chí nghiệm thu |
+| 3.0 | 21/10/2026 | DAB 3.0: thêm vòng Javis vào mọi góc nhìn (yêu cầu F13–F18, ca UC10–UC12, chỉ số thành công, container và thành phần mới, đặc tả `giao`, `javis`, `xong`, triển khai Javis OS, ngữ pháp nhãn, luật JV-01, JV-02, khoá `[javis]`, mối đe doạ, test, ADR-10–12, rủi ro R14–R17, việc cần chốt). Tầng truy hồi dời từ 2.3 sang 3.1 |
 
 ## 1. Giới thiệu và mục tiêu
 
 ### 1.1 Bài toán
 
 Một người làm nhiều việc, đọc nhiều, viết code và dùng nhiều AI gặp năm vấn đề: việc và ý rơi rớt ở nhiều nơi; đọc nhiều mà không nhớ; project dở dang không rõ bước tiếp; file nằm lung tung; AI quên giữa các phiên, đôi khi bịa, và mỗi nền tảng một kiểu. Bộ não giải bằng một dòng chảy duy nhất: mọi thứ vào **một Inbox**, được làm rõ bằng **hai câu hỏi**, rồi đi vào đúng **một trong ba làn**. Các làn trao đổi qua **7 đường nối I1–I7**. Dữ kiện do AI mang về phải qua **cổng K1–K4**. Xem [dong-chay.md](dong-chay.md).
+
+Bản 3.0 thêm **Javis**, một trợ lý vận hành, ở hai đầu dòng chảy: Javis **thu** từ Telegram, giọng nói, web vào Inbox, và **làm tiếp** những next action chủ bộ não đã phân loại rồi giao bằng nhãn `@javis:<mức>`. Phần giữa, tức hai câu hỏi và chọn làn, vẫn do chủ bộ não quyết. Kết quả Javis làm xong quay về Inbox. Xem [dong-chay.md](dong-chay.md#vòng-javis) và [dung-voi-javis.md](dung-voi-javis.md).
 
 ### 1.2 Yêu cầu chức năng
 
@@ -83,6 +88,12 @@ Một người làm nhiều việc, đọc nhiều, viết code và dùng nhiề
 | F10 | Kiểm Index Johnny Decimal khớp thư mục | Nên | Chưa | | |
 | F11 | Tìm note theo từ khoá và theo nghĩa | Nên | Đề xuất | `brain index`, `brain tim` | Mục 12.13 |
 | F12 | Cho client MCP đọc bộ não và ghi qua cổng | Nên | Đề xuất | `brain mcp` | Mục 12.13 |
+| F13 | Chủ bộ não giao một next action cho Javis kèm mức quyền và ngày giao | Phải | Có | `brain giao` | `test_giao_gan_nhan_va_ngay`, `test_giao_can_dung_mot_viec` |
+| F14 | Liệt kê việc đang giao, lọc theo mức của lượt | Phải | Có | `brain javis --muc` | `test_javis_loc_theo_muc` |
+| F15 | Báo xong việc được giao, kết quả quay về Inbox | Phải | Có | `brain xong` | `test_xong_danh_dau_va_ve_inbox` |
+| F16 | Bắt nhãn thiếu mức và việc giao treo | Phải | Có | `brain kiem` (JV-01, JV-02) | `test_kiem_javis_thieu_muc_va_treo` |
+| F17 | Đo việc giao trong Weekly Review | Nên | Có | `brain weekly` | `test_weekly_dem_viec_javis` |
+| F18 | Mọi engine của Javis OS dùng được lệnh `brain`, và AI không tự giao việc hay ghi đường tắt | Phải | Có | `integrations/javis/` | `tests/test_javis_plugin.py` |
 
 ### 1.3 Yêu cầu phi chức năng
 
@@ -95,6 +106,7 @@ Một người làm nhiều việc, đọc nhiều, viết code và dùng nhiề
 | N5 | Kết quả xác định khi cố định giờ | `BRAIN_NOW` |
 | N6 | Thông báo bằng tiếng Việt, chỉ rõ file và luật bị vi phạm | Mẫu thông báo mục 8.4 |
 | N7 | `brain kiem` chạy dưới 2 giây với vault 5.000 note trên máy cá nhân | Chưa đo, rủi ro R2 |
+| N8 | Plugin Javis chỉ dùng thư viện chuẩn và gọi lại `tools/brain.py`, không chép luật | Plugin không `import` ngoài thư viện chuẩn; mọi tool chạy CLI |
 
 ### 1.4 Mục tiêu chất lượng
 
@@ -117,6 +129,7 @@ Xếp theo ưu tiên. Khi hai mục xung đột, mục trên thắng.
 | AI dạng chat (mức 1–2) | Khối quy tắc ngắn, dòng `Bộ não:` | Q4 |
 | Người đóng góp chuẩn | Code nhỏ, có test, change log rõ | Q3, Q5 |
 | Cộng tác viên trên board | Backlog, người, hạn ở board | Ranh giới bộ não – board (ADR-07) |
+| Javis (Javis OS hay agent tương tự) | Biết việc nào được làm, tới mức nào, trả kết quả về đâu | Nhãn `@javis`, mức quyền, tool không ghi đường tắt (ADR-10–12) |
 
 ### 1.6 Ca sử dụng chính
 
@@ -131,6 +144,20 @@ Xếp theo ưu tiên. Khi hai mục xung đột, mục trên thắng.
 | UC7 | Weekly Review | Chủ bộ não | Lấy số đo → đi qua mẫu weekly → quyết định | `brain weekly --ghi` |
 | UC8 | Đổi AI | Chủ bộ não | Chép `AGENTS.md` theo tên công cụ mới hoặc dán khối quy tắc | Không |
 | UC9 | Hỏi AI về note cũ | Chủ bộ não qua client MCP | AI gọi `tim` → đọc note → trả lời kèm đường dẫn và mã | **(đề xuất)** `brain mcp` |
+| UC10 | Thu qua Javis | Chủ bộ não nhắn Telegram, Javis | Lời chủ bộ não → `brain ghi --kenh telegram`; dữ kiện Javis tự tra → `brain nop` | `brain ghi`, `brain nop` |
+| UC11 | Giao việc cho Javis | Chủ bộ não | Phân loại xong → chọn next action → gắn nhãn và mức | `brain giao` |
+| UC12 | Javis làm tiếp | Javis (loop theo mức) | Nhận việc ở mức không quá mức của lượt → làm → báo xong → kết quả vào Inbox → chủ bộ não làm rõ lại | `brain javis`, `brain xong` |
+
+### 1.7 Chỉ số thành công của 3.0 (đề xuất)
+
+Đo sau 4 tuần dùng thật, bằng `brain weekly`.
+
+| Chỉ số | Mục tiêu |
+| --- | --- |
+| Mục Inbox đến qua Javis (Telegram, giọng nói…) | ≥ 30% tổng mục mới |
+| Việc giao xong trong tuần / việc giao trong tuần | ≥ 70% |
+| Việc giao treo quá 7 ngày | ≤ 2 |
+| Mục Inbox cũ nhất | ≤ 7 ngày, như 2.2 |
 
 ## 2. Ràng buộc
 
@@ -153,6 +180,8 @@ Xếp theo ưu tiên. Khi hai mục xung đột, mục trên thắng.
 | Thiết kế cho một người; làm nhóm chỉ ở board của từng project | Giữ dòng chảy đơn giản |
 | AI không viết permanent note, không xoá dữ liệu, không nâng mã | Nguyên tắc 2 và 3 trong README |
 | Không giới hạn số project hay next action từ 2.2.0 | Đo thay vì cấm (ADR-06) |
+| Chỉ chủ bộ não giao việc cho Javis; Javis chỉ làm việc có nhãn và không vượt mức trên nhãn | ADR-10, ADR-11 |
+| Việc nền của Javis không chạy bằng gói thuê bao Claude Pro/Max | Gói đó chỉ cho dùng cá nhân; việc 24/7 chạy bằng API key hay model khác |
 
 ### 2.3 Quy ước
 
@@ -175,6 +204,9 @@ flowchart LR
   U["Chủ bộ não"] -- "lời mình: ghi, làm rõ, viết note" --> B["Bộ não<br/>vault + brain CLI"]
   AI["AI dạng chat<br/>Claude, ChatGPT, Gemini, local"] -- "dòng Bộ não: …<br/>chủ bộ não chép vào" --> U
   AG["Agent trong repo<br/>Claude Code, Codex, Cursor…"] -- "brain ghi / nop / kiem / turn" --> B
+  JV["Javis OS<br/>trợ lý vận hành, 3.0"] -- "thu: brain_ghi, brain_nop<br/>làm tiếp: brain_viec_javis, brain_xong" --> B
+  U -- "brain giao" --> B
+  TG["Telegram, giọng nói, web"] --> JV
   WEB["Nguồn ngoài<br/>web, paper, API"] -- "dữ kiện + phiếu nguồn" --> AG
   B -- "project nhiều bước" --> BD["Board của project<br/>GitHub Projects…"]
   B -- "git push" --> R["Remote git private"]
@@ -186,6 +218,7 @@ flowchart LR
 | Chủ bộ não | Ghi chú, quyết định, permanent note | Next Actions, số đo, note để đọc lại | Không |
 | AI dạng chat | Không ghi trực tiếp; chủ bộ não chép dòng `Bộ não:` | Note được dán vào chat | K1 nếu là dữ kiện AI tự tra |
 | Agent trong repo | Mục Inbox, mục qua K1, sửa file theo `AGENTS.md` | Toàn bộ vault | K1 cho dữ kiện ngoài |
+| Javis (3.0) | Lời chủ bộ não qua kênh; mục qua K1; dấu xong và dòng kết quả cho việc được giao | Việc đang giao, số đo, note để đọc | K1 cho dữ kiện tự tra; không ghi permanent, không tự giao việc |
 | Nguồn ngoài | Chỉ qua agent | Không | K1 bắt buộc |
 | Board | Không, bộ não chỉ giữ link | Link board, milestone, số issue | Không |
 | Công cụ FSRS | Không | Nội dung thẻ | K4 |
@@ -200,6 +233,8 @@ flowchart LR
 | File dữ liệu | Markdown + frontmatter | Mục 8.1–8.2 |
 | Cấu hình | TOML | Mục 8.5 |
 | Biến môi trường | `BRAIN_ROOT`, `BRAIN_NOW` | Mục 8.6–8.7 |
+| Plugin Javis OS | `register_tool`, `register_hook("pre_tool_call")`, gọi CLI bằng subprocess | Mục 5.4 |
+| Hook Claude Code | PreToolUse, JSON qua stdin, mã thoát 2 để chặn | Mục 5.4 |
 | Git | Lệnh git thường | Ngoài CLI; người hoặc agent tự commit và push |
 | MCP | JSON-RPC qua stdio | **(đề xuất)** mục 12.9 |
 
@@ -209,7 +244,8 @@ flowchart LR
 - Lịch nhắc, thông báo đẩy, ứng dụng di động riêng.
 - Thay thế board quản lý project.
 - Bộ lập lịch ôn thẻ FSRS.
-- Tự động phân loại Inbox: AI chỉ đề xuất, người quyết định.
+- Tự động phân loại Inbox: AI và Javis chỉ đề xuất, người quyết định (xem việc cần chốt ở mục 11.1).
+- Đồng bộ trạng thái issue trên board về Next Actions.
 - Mã hoá vault khi lưu: dựa vào mã hoá ổ đĩa và quyền repo private.
 
 ## 4. Chiến lược giải pháp
@@ -221,6 +257,7 @@ flowchart LR
 | Q3 Đơn giản | Một file, thư viện chuẩn, lệnh ngắn, không daemon | 02 |
 | Q4 Trung lập AI | Luật viết bằng văn bản chung; lệnh CLI là API chung cho mọi agent | 05 |
 | Q5 Kiểm chứng | Luật trong hàm thuần (`phan_loai`, `kiem`, `so_do`); giờ qua `bay_gio()`; test trên vault tạm | 02 |
+| Q2 với Javis | AI ở hai đầu, người ở giữa; nhãn và mức trên dòng việc; plugin không có tool giao việc; hook chặn đường ghi tắt | 10, 11, 12 |
 
 Mô hình nghiệp vụ ghép bốn phương pháp: GTD + PARA cho làn hành động, Zettelkasten + LYT + FSRS cho làn tri thức, Johnny Decimal cho làn file và code, hệ Admiralty cho độ tin. Chi tiết luật: [ba-lan.md](ba-lan.md), [kiem-duyet.md](kiem-duyet.md), [tang-thuc-thi.md](tang-thuc-thi.md).
 
@@ -228,7 +265,9 @@ Cách phân chia trách nhiệm cơ bản:
 
 | Việc | Ai làm |
 | --- | --- |
-| Quyết định mục đi làn nào | Chủ bộ não (AI đề xuất) |
+| Quyết định mục đi làn nào | Chủ bộ não (AI và Javis đề xuất) |
+| Giao việc cho Javis, chọn mức | Chủ bộ não, bằng `brain giao` |
+| Làm tiếp việc được giao, trả kết quả | Javis, qua tool của plugin |
 | Di chuyển file giữa các làn | Chủ bộ não hoặc agent, sửa file trực tiếp |
 | Ghi Inbox, nhận mục agent, ghi log | CLI |
 | Kiểm luật | CLI |
@@ -248,7 +287,10 @@ flowchart TB
     AGM["vault/AGENTS.md<br/>luật cho agent"]
     T["tests/<br/>unittest"]
     D["docs/<br/>chuẩn"]
+    PL["integrations/javis/<br/>plugin + hook"]
   end
+  JOS["Javis OS"] -- "nạp plugin" --> PL
+  PL -- "subprocess" --> CLI
   W --> CLI
   CLI -- "đọc" --> CFG
   CLI -- "đọc, ghi nối, tạo mới" --> V
@@ -264,7 +306,10 @@ flowchart TB
 | `bin/brain` | Vỏ POSIX: tìm thư mục repo, gọi `python3 tools/brain.py` | |
 | `bin/brain.cmd` | Vỏ Windows: gọi `python tools\brain.py` | |
 | `vault/AGENTS.md` | Luật cho agent; chép ra gốc repo thành `AGENTS.md`, `CLAUDE.md` hoặc `GEMINI.md` | |
-| `tests/test_brain.py` | 17 test hành vi trên vault tạm | |
+| `tests/test_brain.py` | 23 test hành vi trên vault tạm | |
+| `tests/test_javis_plugin.py` | 15 test cho plugin và hook | |
+| `integrations/javis/brain-standard/` | Plugin Javis OS: 7 tool gọi CLI, hook `pre_tool_call` | Không chép luật; không có tool `giao` |
+| `integrations/javis/chan_ghi_claude.py` | Hook PreToolUse cho Claude Code, dùng chung luật chặn của plugin | |
 | `docs/` | Chuẩn và hướng dẫn | |
 
 ### 5.2 Mức 2 · Cấu trúc vault
@@ -273,7 +318,7 @@ flowchart TB
 | --- | --- | --- | --- | --- | --- |
 | `00-Inbox/Inbox.md` | Cửa vào | `inbox` | Một file, mỗi mục một dòng | Ghi nối (`ghi`, `nop`) | `weekly` |
 | `00-Inbox/agent/` | Cửa vào | `inbox_agent` | Mỗi mục một file | Tạo mới (`nop`) | K1-01…03, KD-01 |
-| `10-Action/11-next-actions.md` | Hành động | `next_actions` | Một file, checklist | Không | TH-02, `weekly` |
+| `10-Action/11-next-actions.md` | Hành động | `next_actions` | Một file, checklist | Sửa dòng (`giao`, `xong`) | TH-02, JV-01, JV-02, `weekly` |
 | `10-Action/12-waiting-for.md` | Hành động | `waiting_for` | Một file | Không | Chưa kiểm |
 | `10-Action/13-Projects/` | Hành động | `projects` | Mỗi project một file | Không | HD-01…03, TH-01…03 |
 | `10-Action/14-someday.md` | Hành động | `someday` | Một file | Không | Chưa kiểm |
@@ -307,6 +352,12 @@ flowchart LR
   main --> lenh_turn --> kiem
   lenh_turn --> ghi_them
   main --> lenh_weekly --> so_do
+  main --> lenh_giao
+  main --> lenh_javis --> _mo_theo_muc --> viec_javis
+  main --> lenh_xong --> _mo_theo_muc
+  lenh_xong --> ghi_them
+  kiem --> viec_javis
+  so_do --> viec_javis
   kiem --> frontmatter
   kiem --> phan_loai
   kiem --> han_het
@@ -318,7 +369,7 @@ flowchart LR
 
 | Nhóm | Hàm · hằng | Vai trò | Thuần? |
 | --- | --- | --- | --- |
-| Hằng | `PHIEN_BAN`, `MA_RE`, `DONG_INBOX_RE`, `LINK_RE`, `LOAI_TURN`, `TRANG_THAI`, `NHAN_K1`, `MAC_DINH` | Phiên bản, biểu thức, giá trị hợp lệ, cấu hình mặc định | |
+| Hằng | `PHIEN_BAN`, `MA_RE`, `DONG_INBOX_RE`, `LINK_RE`, `LOAI_TURN`, `TRANG_THAI`, `NHAN_K1`, `MAC_DINH`, `MUC_JAVIS`, `VIEC_RE`, `GIAO_RE`, `XONG_RE` | Phiên bản, biểu thức, giá trị hợp lệ, cấu hình mặc định | |
 | Giờ | `bay_gio()` | Giờ hiện tại, hoặc `BRAIN_NOW` | Đọc môi trường |
 | Cấu hình | `gop(mac_dinh, rieng)` | Gộp cấu hình hai mức | Có |
 | File | `doc(p)`, `ghi_them(p, dong, dau_file)` | Đọc UTF-8; ghi nối, tạo thư mục và đầu file nếu chưa có | Không |
@@ -330,10 +381,31 @@ flowchart LR
 | Luật | `kiem(bn)` | Trả `(lỗi, cảnh báo)` | Đọc đĩa |
 | Luật | `so_do(bn)` | Từ điển số đo tuần | Đọc đĩa |
 | Ngữ cảnh | `BoNao`, `tim_goc`, `mo_bo_nao` | Gốc, cấu hình, giờ; phân giải đường dẫn qua `bn.p(khoa)` | |
-| Lệnh | `lenh_ghi`, `lenh_nop`, `lenh_kiem`, `lenh_turn`, `lenh_weekly` | Trả mã thoát | |
+| Javis | `ViecJavis`, `_nhan_re(bn)`, `viec_javis(bn)`, `_mo_theo_muc(bn, muc)` | Đọc các dòng có nhãn: chỉ số dòng, xong chưa, mức, ngày giao, ngày xong; lọc việc mở theo mức | Đọc đĩa |
+| Lệnh | `lenh_ghi`, `lenh_nop`, `lenh_kiem`, `lenh_turn`, `lenh_weekly`, `lenh_giao`, `lenh_javis`, `lenh_xong` | Trả mã thoát | |
 | Vào | `main(argv)` | Đặt UTF-8 cho console, phân tích tham số, gọi lệnh | |
 
 `BoNao` là dataclass giữ `goc`, `cfg`, `now`, với các thuộc tính `vault`, `kd` (mục `kiem_duyet`), `gio` (`YYYY-MM-DD HH:MM`) và hàm `p(khoa)` trả về `vault / duong_dan[khoa]`.
+
+### 5.4 Mức 3 · Plugin Javis và hook
+
+| Thành phần | Vai trò | Ghi chú |
+| --- | --- | --- |
+| `plugin.yaml` | Khai báo slug `brain-standard`, 7 tool, hook `pre_tool_call`, `enabled: false` | Chủ bộ não đọc rồi bật trên trang Plugins |
+| `_goc(vault_root)` | Tìm gốc có `brain.toml`, từ `BRAIN_ROOT` hoặc đi ngược từ vault của Javis | Không thấy thì tool báo lỗi, hook không chặn gì |
+| `_chay(ctx, …)` | Chạy `python tools/brain.py --root <gốc> …`, chặn sau 60 giây | Mã thoát khác 0 được ghi đầu kết quả |
+| Tool | `brain_ghi`, `brain_nop`, `brain_kiem`, `brain_turn`, `brain_weekly`, `brain_viec_javis`, `brain_xong` | `min_mode` ở mục 6.12 |
+| `ly_do_chan(tool, args, vault_root)` | Luật chặn dùng chung | Dùng cho cả hook Javis và hook Claude Code |
+| `chan_ghi_claude.py` | Đọc JSON PreToolUse, gọi `ly_do_chan`, thoát mã 2 kèm lý do | Khai trong `.claude/settings.json` |
+
+`ly_do_chan` từ chối một lần ghi file (`javis_write_file`, `javis_edit_file`; với Claude Code: `Write`, `Edit`, `MultiEdit`, `NotebookEdit`) khi đích nằm trong vault và:
+
+| Đích | Điều kiện |
+| --- | --- |
+| `30-Knowledge/permanent/` | Luôn |
+| `00-Inbox/agent/` | Luôn (phải qua `brain nop`) |
+| File hay thư mục bắt đầu bằng `_` | Luôn (mẫu và `_log`) |
+| Next Actions | Nội dung mới có thêm nhãn ở một mức nào đó so với nội dung cũ, tức gắn mới hay nâng mức |
 
 ## 6. Góc nhìn vận hành
 
@@ -411,12 +483,12 @@ File nộp gốc không bị xoá hay sửa. Tiêu đề trong dòng Inbox là h
 | Mục | Đặc tả |
 | --- | --- |
 | Cú pháp | `brain kiem` |
-| Đọc | `inbox_agent`, `literature`, `permanent`, `fleeting`, `projects`, `next_actions` |
+| Đọc | `inbox_agent`, `literature`, `permanent`, `fleeting`, `projects`, `next_actions` (cả nhãn `@javis`) |
 | Ghi | Không |
 | Đầu ra | `Lỗi (n):` và `Cảnh báo (m):`, mỗi mục một dòng `  - …`; không có gì thì `Vault sạch.` |
 | Mã thoát | 0 không có lỗi (có thể có cảnh báo); 1 có ít nhất một lỗi |
 
-Thứ tự duyệt trong `kiem`: K1 trong `inbox_agent` → K2 trong literature → luật permanent và K3 → tuổi fleeting → hạn dùng của literature, permanent, inbox_agent → luật project. Danh mục đầy đủ: mục 8.4.
+Thứ tự duyệt trong `kiem`: K1 trong `inbox_agent` → K2 trong literature → luật permanent và K3 → tuổi fleeting → hạn dùng của literature, permanent, inbox_agent → luật project → luật Javis (JV-01, JV-02). Danh mục đầy đủ: mục 8.4.
 
 Ví dụ:
 
@@ -465,6 +537,9 @@ Bốn loại lượt: `viec` tạo ra việc, `y` tạo ra ý, `file` tạo ra f
 | `k1_bi_loai` | Dòng trong `_log/k1.md` trong cửa sổ 7 ngày |
 | `phan_tram_thieu_phieu` | % file trong `inbox_agent` thiếu ít nhất một trường bắt buộc, làm tròn |
 | `qua_han_dung` | Số note literature, permanent, inbox_agent có `han_dung` đã qua |
+| `javis_mo` | Việc có nhãn `@javis` chưa xong |
+| `javis_xong` | Việc có nhãn đã xong, `xong` trong cửa sổ 7 ngày |
+| `javis_treo` | Việc mở có `giao` cũ hơn `treo_toi_da_ngay` |
 
 ### 6.6 Nhịp làm việc như các kịch bản vận hành
 
@@ -472,6 +547,8 @@ Bốn loại lượt: `viec` tạo ra việc, `y` tạo ra ý, `file` tạo ra f
 | --- | --- | --- |
 | Mỗi lần nghĩ ra | Ghi ngay | `brain ghi` |
 | Mỗi lần agent tra cứu | Lập phiếu, nộp | `brain nop` |
+| Sau khi phân loại | Giao việc Javis làm được | `brain giao` |
+| Mỗi 30 phút, theo loop của Javis | Nhận việc được giao, làm, trả kết quả | `brain javis`, `brain xong` |
 | Mỗi lượt làm việc | Kiểm, đóng lượt, commit | `brain kiem`, `brain turn` |
 | Mỗi sáng, 30–45 phút | Chọn tối đa 3 việc (`nhip.vong_ngay_chon_toi_da`), làm ít nhất 1, ôn 15–20 thẻ | Không |
 | Chủ nhật, 30 phút | Weekly Review theo `weekly/_mau-weekly.md` | `brain weekly --ghi` |
@@ -519,6 +596,90 @@ Các đường I1–I7 hiện do người hoặc agent làm bằng tay; CLI chư
 | I6 | file → hành động | Issue giao cho bạn hoặc lỗi chặn project | Next action trỏ số issue | Không |
 | I7 | tri thức → hành động | Kiểm lại thấy khẳng định sai | Việc sửa note, thẻ, node bản đồ | Không |
 
+### 6.9 `brain giao`
+
+| Mục | Đặc tả |
+| --- | --- |
+| Cú pháp | <code>brain giao &lt;khớp&gt; &lt;suggest&#124;auto&#124;full&gt;</code> |
+| Ai chạy | Chỉ chủ bộ não. Plugin không có tool cho lệnh này; hook chặn AI tự gắn nhãn (mục 5.4) |
+| Bước | 1. Gộp khoảng trắng của `khớp`. 2. Tìm các dòng `- [ ]` trong Next Actions có chứa `khớp` (không phân biệt hoa thường). 3. Khác đúng 1 dòng → stderr `Cần đúng 1 next action đang mở chứa '…', đang thấy n.`, mã 2. 4. Dòng đã có nhãn → stderr, mã 2. 5. Nối ` · @javis:<mức> · giao <hôm nay>` vào cuối dòng, ghi lại file |
+| Ghi | `10-Action/11-next-actions.md` |
+| Đầu ra | `Đã giao cho Javis (<mức>): <dòng>` |
+| Mã thoát | 0; 2 không khớp đúng 1 việc, hoặc việc đã giao |
+
+### 6.10 `brain javis`
+
+| Mục | Đặc tả |
+| --- | --- |
+| Cú pháp | <code>brain javis [--muc suggest&#124;auto&#124;full]</code> |
+| Đọc | Next Actions |
+| Đầu ra | Mỗi việc mở có nhãn hợp lệ, mức không quá `--muc`: `<số> · <mức> · <dòng>`. Không có thì `Không có việc nào đang giao cho Javis…` |
+| Mã thoát | Luôn 0 |
+
+`<số>` là thứ tự trong danh sách đã lọc, đếm từ 1. Việc có nhãn thiếu mức không hiện; `brain kiem` báo nó là lỗi JV-01.
+
+### 6.11 `brain xong`
+
+| Mục | Đặc tả |
+| --- | --- |
+| Cú pháp | <code>brain xong &lt;số&gt; &lt;kết quả…&gt; [--muc …]</code> |
+| Bước | 1. Kết quả rỗng → mã 2. 2. Lấy danh sách như `brain javis --muc`; số ngoài danh sách → mã 2. 3. Đổi `- [ ]` thành `- [x]`, nối ` · xong <hôm nay>`. 4. Ghi nối Inbox dòng `(javis) Kết quả "<việc>": <kết quả>`, với `<việc>` là dòng đã bỏ nhãn và ngày giao |
+| Ghi | Next Actions, Inbox |
+| Mã thoát | 0; 2 số sai hoặc thiếu kết quả |
+
+Kết quả Javis vào Inbox không qua K1, nhưng đi tối đa tới Fleeting khi làm rõ, như export chat. Dữ kiện Javis tự tra phải đã nộp riêng qua `brain nop`.
+
+### 6.12 Vòng Javis
+
+```mermaid
+sequenceDiagram
+  actor U as Chủ bộ não
+  participant J as Javis (loop mức auto)
+  participant P as Plugin + hook
+  participant C as brain CLI
+  participant N as Next Actions
+  participant I as Inbox
+  U->>J: "ghi: hỏi kế toán…" (Telegram)
+  J->>P: brain_ghi(kenh=telegram)
+  P->>C: brain ghi … --kenh telegram
+  C->>I: dòng (telegram)
+  U->>N: phân loại thành next action
+  U->>C: brain giao "kế toán" auto
+  C->>N: … · @javis:auto · giao <ngày>
+  J->>P: brain_viec_javis(muc_toi_da=auto)
+  P->>C: brain javis --muc auto
+  C-->>J: 1 · auto · …
+  J->>J: làm việc: nháp, tra cứu
+  opt dữ kiện tự tra
+    J->>P: brain_nop(phieu=…)
+    P->>C: brain nop <tạm>
+  end
+  J->>P: javis_edit_file(Next Actions, thêm @javis:full)
+  P-->>J: chặn: chỉ chủ bộ não giao việc
+  J->>P: brain_xong(so=1, ket_qua, muc_toi_da=auto)
+  P->>C: brain xong 1 "…" --muc auto
+  C->>N: - [x] … · xong <ngày>
+  C->>I: (javis) Kết quả "…": …
+  U->>I: làm rõ kết quả như mọi mục khác
+```
+
+Mức trên nhãn là trần của việc, và trùng tên với ba mức quyền của Javis OS, nên mỗi loop chạy ở một mức và gọi `brain_viec_javis` với `muc_toi_da` bằng mức đó.
+
+| Mức | Javis được | Không được, ở mọi mức |
+| --- | --- | --- |
+| `suggest` | Đọc vault, tra cứu, nộp qua K1, đề xuất, báo xong | Tự giao hay nâng mức việc, viết permanent note, xoá dữ liệu, bỏ qua K1, chốt hoặc dừng project |
+| `auto` | Thêm: viết nháp, code trong khu 50–59, issue trên board | |
+| `full` | Thêm: gửi tin, đăng bài, đặt hàng đúng việc được giao | |
+
+| Tool | Gọi | `min_mode` |
+| --- | --- | --- |
+| `brain_ghi` | `brain ghi --kenh` | `safe` |
+| `brain_turn` | `brain turn` | `safe` |
+| `brain_nop(phieu, ten)` hoặc `brain_nop(file)` | `brain nop` | `readonly`: phiếu ghi ra thư mục tạm ngoài vault; chỗ ghi duy nhất vào bộ não là của CLI sau khi K1 duyệt |
+| `brain_kiem`, `brain_weekly` | `brain kiem`, `brain weekly` | `readonly` |
+| `brain_viec_javis(muc_toi_da)` | `brain javis --muc` | `readonly` |
+| `brain_xong(so, ket_qua, muc_toi_da)` | `brain xong --muc` | `readonly`: chỗ ghi duy nhất là sổ sách của CLI |
+
 ## 7. Góc nhìn triển khai
 
 ```mermaid
@@ -528,7 +689,9 @@ flowchart LR
     CLI2 --- VA["vault/ (clone git)"]
     ED["Trình soạn: Obsidian, VS Code…"] --- VA
     AGT["Agent: Claude Code, Codex…"] --- CLI2
+    JOS2["Javis OS (3.0)<br/>plugin brain-standard"] --- CLI2
   end
+  TG2["Telegram, giọng nói"] --> JOS2
   VA -- "push / pull" --> GH["Remote git private"]
   GH --> CL["Agent chạy trên cloud<br/>clone tạm"]
   GH --> M2["Máy thứ hai"]
@@ -542,13 +705,15 @@ flowchart LR
 | Remote git private | Sao lưu, đồng bộ, lịch sử | Một repo private |
 | Máy thứ hai | Làm việc ở nơi khác | Pull trước khi làm, push sau khi xong |
 | Agent cloud | Làm việc trên clone tạm | Phải commit và push trước khi phiên kết thúc |
+| Javis OS (3.0) | Thu từ kênh, chạy loop làm tiếp | Laptop, mini PC hay VPS có bản checkout của repo; Python 3.12 cho Javis; việc nền chạy bằng API key |
 
 ### 7.2 Cài đặt và nâng cấp
 
 1. Tạo repo private từ gói Brain_Standard, clone về máy.
-2. Chạy `bin/brain --version`, phải in `brain 2.2.1`. Không có bước build hay cài thư viện.
+2. Chạy `bin/brain --version`, phải in `brain 3.0.0`. Không có bước build hay cài thư viện.
 3. Chép `vault/AGENTS.md` ra gốc repo theo tên mà công cụ của bạn đọc.
-4. Nâng cấp: kéo bản mới của `tools/`, `bin/`, `docs/`, đọc CHANGELOG, gộp tay các khoá mới vào `brain.toml`. Vault không cần chuyển đổi trừ khi CHANGELOG ghi rõ. Chi tiết: [huong-dan.md](huong-dan.md) mục 11.
+4. Nâng cấp: kéo bản mới của `tools/`, `bin/`, `docs/`, `integrations/`, đọc CHANGELOG, gộp tay các khoá mới vào `brain.toml`. Vault không cần chuyển đổi trừ khi CHANGELOG ghi rõ. Chi tiết: [huong-dan.md](huong-dan.md) mục 11.
+5. Lên 3.0 từ 2.2: thêm mục `[javis]` vào `brain.toml` (không thêm thì dùng mặc định), chép lại `vault/AGENTS.md`. Dòng không có nhãn đọc và ghi như cũ; nhãn `@javis` còn lại khi về 2.2 chỉ là chữ thường.
 
 ### 7.3 Sao lưu và khôi phục
 
@@ -558,6 +723,20 @@ flowchart LR
 | Sửa nhầm hoặc agent làm hỏng | `git log`, `git restore` hoặc `git revert` |
 | Hỏng remote | Mọi clone đều là bản sao đầy đủ |
 | Chỉ mục truy hồi hỏng **(đề xuất)** | Xoá `.brain/`, chạy `brain index --lai` |
+| Javis làm sai | Tắt plugin trên trang Plugins của Javis; `git revert` các commit của Javis |
+
+### 7.4 Triển khai Javis OS
+
+Tóm tắt từ [dung-voi-javis.md](dung-voi-javis.md), trang đó có từng bước:
+
+1. Cài Javis OS; việc nền dùng API key.
+2. Trỏ brain vào gốc repo (thư mục có `brain.toml`), không vào `vault/`; không bấm "chuẩn hoá cấu trúc".
+3. Thêm log, cache của Javis và `nhap/` vào `.gitignore`.
+4. Tự học: chạy thử hoặc gợi ý; tắt Wiki, Skill, Curator; không dùng INGEST.
+5. Dán khối quy tắc chung vào hướng dẫn của một project trong Javis; chép `AGENTS.md`, `CLAUDE.md` ra gốc repo.
+6. Chép `integrations/javis/brain-standard/` vào `plugins/`, đọc rồi bật.
+7. Khai hook `chan_ghi_claude.py` trong `.claude/settings.json`.
+8. Tạo loop "Javis · suggest"; sau 2 tuần ổn thêm "Javis · auto"; "Javis · full" chỉ bật khi có việc.
 
 ## 8. Khái niệm xuyên suốt
 
@@ -610,6 +789,8 @@ Mỗi note là một file Markdown. Frontmatter tuỳ chọn, nằm ở đầu f
 | `nguoi` | Không | Người tham gia (đọc thành chuỗi, R1) | |
 | `ly_do_dung` | Nên khi `stopped` | | HD-03 |
 
+**Next action giao cho Javis** (3.0): không có frontmatter; nhãn nằm trên dòng, ngữ pháp ở mục 8.2. `@javis` không kèm mức hợp lệ là lỗi JV-01.
+
 **Fleeting**: không bắt buộc frontmatter; nên có `ngay`. **Area**: `loai: area`, `tieu_chuan`, `project_quy_nay`. **MOC**: `loai: moc`, thân là danh sách link.
 
 ### 8.2 Ngữ pháp các dòng
@@ -625,10 +806,14 @@ dong_inbox  = moc " (" kenh ") " noi_dung
 dong_agent  = moc " (agent) " tieu_de " · " ma " · tối đa " dich " → agent/" ten_file
 dong_k1     = moc " loại · " ma " · " ten_file " · " nguon
 dong_turn   = moc " " loai_turn " · " tom_tat
-dong_viec   = "- [ ] " dong_tu " …" [" · @" ngu_canh] [" · ~" phut "'"] [" · [[" project "]]"] [" · #" so_issue]
+dong_viec   = "- [" (" " | "x") "] " dong_tu " …" [" · @" ngu_canh] [" · ~" phut "'"] [" · [[" project "]]"] [" · #" so_issue] [giao_javis]
+giao_javis  = " · " nhan ":" muc " · giao " ngay [" · xong " ngay]
+dong_ket_qua = moc " (javis) Kết quả \"" viec "\": " ket_qua
 dong_jdex   = "- " AC.ID " " ten " · nơi: " duong_dan [" · project: [[…]]"] [" · repo: …"] [" · board: …"] " · trạng thái: " trang_thai
 
-kenh        = "tay" | "noi" | "telegram" | "mcp" | …
+kenh        = "tay" | "noi" | "telegram" | "mcp" | "export" | "javis" | …
+nhan        = "@javis"            (đổi được bằng javis.nhan)
+muc         = "suggest" | "auto" | "full"
 loai_turn   = "viec" | "y" | "file" | "xoa"
 dich        = "thẻ ôn" | "literature" | "fleeting (chưa kiểm)"
 ```
@@ -691,6 +876,8 @@ Mỗi luật có mã để tài liệu, test và (sau này) chỉ mục truy h�
 | TH-02 | Cảnh báo | project `active` | Không có `board` và Next Actions không chứa `[[<tên file>]]` | `Thực thi · <f>: project active chưa có việc nào …` | `canh_bao_project_khong_viec` |
 | TH-03 | Cảnh báo | project `active` | `han` đã qua | `Thực thi · <f>: đã qua hạn …` | |
 | HD-03 | Cảnh báo | project `stopped` | Thiếu `ly_do_dung` | `Hành động · <f>: project dừng nên ghi ly_do_dung` | |
+| JV-01 | Lỗi | next action mở có nhãn | Thiếu mức hoặc mức ngoài `suggest`, `auto`, `full` | `Javis · next action dòng n: @javis cần mức …` | `javis.nhan` |
+| JV-02 | Cảnh báo | next action mở có nhãn | `giao` cũ hơn `treo_toi_da_ngay` | `Javis · next action dòng n: giao Javis đã n ngày chưa xong` | `javis.treo_toi_da_ngay` |
 
 Ghi chú: K2 và K3 chỉ áp khi note có `ma`, vì literature và permanent do chủ bộ não tự viết từ nguồn tự đọc không qua cổng. Luật về giới hạn số project và next action đã bỏ từ 2.2.0.
 
@@ -700,7 +887,7 @@ Ghi chú: K2 và K3 chỉ áp khi note có `ma`, vì literature và permanent do
 
 | Khoá | Kiểu | Mặc định | Dùng bởi |
 | --- | --- | --- | --- |
-| `bo_nao.phien_ban` | Chuỗi | `"2.2.1"` | Chỉ để đọc; CLI chưa so với `PHIEN_BAN` |
+| `bo_nao.phien_ban` | Chuỗi | `"3.0.0"` | Chỉ để đọc; CLI chưa so với `PHIEN_BAN` |
 | `bo_nao.vault` | Đường dẫn | `"vault"` | Mọi lệnh |
 | `duong_dan.inbox` | Đường dẫn | `00-Inbox/Inbox.md` | `ghi`, `nop`, `weekly` |
 | `duong_dan.inbox_agent` | Thư mục | `00-Inbox/agent` | `nop`, `kiem`, `weekly` |
@@ -729,6 +916,8 @@ Ghi chú: K2 và K3 chỉ áp khi note có `ma`, vì literature và permanent do
 | `thuc_thi.canh_bao_project_khong_viec` | Logic | `true` | TH-02 |
 | `johnny_decimal.khu` | Chuỗi | `"50-59"` | Chưa dùng (F10) |
 | `johnny_decimal.toi_da_category` | Số nguyên | 10 | Chưa dùng (F10) |
+| `javis.nhan` | Chuỗi | `"@javis"` | `giao`, `javis`, `xong`, JV-01, plugin |
+| `javis.treo_toi_da_ngay` | Số nguyên | 7 | JV-02, `weekly` |
 
 ### 8.6 Tìm gốc bộ não
 
@@ -760,9 +949,9 @@ Thứ tự ưu tiên: tham số `--root`, rồi biến `BRAIN_ROOT`, rồi đi t
 
 | Mã | Ý nghĩa | Ví dụ |
 | --- | --- | --- |
-| 0 | Thành công | `ghi` xong; `nop` đạt; `kiem` không có lỗi; `turn` đóng được; `weekly` |
+| 0 | Thành công | `ghi` xong; `nop` đạt; `kiem` không có lỗi; `turn` đóng được; `weekly`; `giao`, `javis`, `xong` thành công |
 | 1 | Vault có lỗi, hoặc không tìm thấy bộ não | `kiem` có lỗi; `turn` bị chặn; thiếu `brain.toml` |
-| 2 | Đầu vào sai | Nội dung hoặc tóm tắt rỗng; không thấy file; thiếu phiếu nguồn; mã sai dạng; tham số sai (`argparse`) |
+| 2 | Đầu vào sai | Nội dung hoặc tóm tắt rỗng; không thấy file; thiếu phiếu nguồn; mã sai dạng; tham số sai (`argparse`); `giao` không khớp đúng 1 việc hoặc việc đã giao; `xong` số sai hoặc thiếu kết quả |
 | 3 | K1 loại mục | Nguồn E hoặc tin 5 |
 
 Agent nên dựa vào mã thoát chứ không dò chữ trong thông báo.
@@ -778,6 +967,11 @@ Agent nên dựa vào mã thoát chứ không dò chữ trong thông báo.
 | Lộ dữ liệu cá nhân | Repo public, dán note vào AI bên ngoài | Khuyến nghị repo private, chỉ đưa note cần thiết | Không kiểm tự động |
 | Mất dữ liệu | Agent xoá file | Luật "không xoá", git | Phụ thuộc agent tuân thủ |
 | Đường dẫn ra ngoài vault **(đề xuất)** | Tool MCP đọc `../../.ssh` | Kiểm đường dẫn trong `doc_note` (mục 12.10) | |
+| Javis tự giao hay nâng mức việc | Sửa `@javis:suggest` thành `@javis:full` | Không có tool `giao`; hook chặn thêm hay nâng nhãn; JV-01 | Ghi bằng shell vòng qua hook (R15) |
+| Javis viết permanent hay ghi thẳng vào Inbox agent | Ghi file vào `30-Knowledge/permanent/` | Hook chặn; TT-01, K3 | Như trên |
+| Javis làm hành động thật sai | Gửi email nhầm ở mức `full` | Chỉ việc có nhãn `full`; loop `full` chỉ bật khi cần | Hook và CLI không thấy hành động ngoài (R17) |
+| Kết quả Javis mang dữ kiện chưa kiểm | Con số trong câu kết quả | Kết quả đi tối đa tới Fleeting; dữ kiện phải qua `brain nop` | Luật cho người làm rõ, CLI chưa kiểm (R3) |
+| Tự học của Javis OS viết wiki | Javis chưng cất hội thoại thành tri thức | Cấu hình tự học ở chế độ không ghi (mục 7.4) | Bộ ghi của tự học không đi qua hook |
 
 ### 8.12 Chiến lược kiểm thử và ma trận truy vết
 
@@ -802,6 +996,12 @@ Chạy: `python3 -m unittest discover -s tests`. Mỗi test chép `brain.toml` v
 | `test_turn_chan_khi_co_loi` | F6, chặn khi có lỗi |
 | `test_turn_ghi_log` | F6, `dong_turn` |
 | `test_weekly` | F7, `weekly --ghi` |
+| `test_giao_gan_nhan_va_ngay`, `test_giao_can_dung_mot_viec` | F13, `giao_javis` |
+| `test_javis_loc_theo_muc` | F14 |
+| `test_xong_danh_dau_va_ve_inbox` | F15, `dong_ket_qua` |
+| `test_kiem_javis_thieu_muc_va_treo` | F16, JV-01, JV-02 |
+| `test_weekly_dem_viec_javis` | F17 |
+| `tests/test_javis_plugin.py` (15 test) | F18: tool gọi đúng CLI, `min_mode`, `brain_nop` từ phiếu dạng chữ, hook chặn permanent, Inbox agent, mẫu, nhãn; hook Claude Code |
 
 Chưa có test cho: K1-02, K1-03 trong `kiem`; K2-01; K3-01; TT-02; HD-01; HD-03; TH-03; `chan_cung = false`; tìm gốc qua `BRAIN_ROOT`; R9.
 
@@ -810,6 +1010,7 @@ Chưa có test cho: K1-02, K1-03 trong `kiem`; K2-01; K3-01; TT-02; HD-01; HD-03
 - Phiên bản nằm ở ba nơi phải khớp nhau: `PHIEN_BAN` trong `tools/brain.py`, `bo_nao.phien_ban` trong `brain.toml`, và CHANGELOG.
 - Bản z không đổi định dạng dữ liệu. Bản y có thể thêm khoá frontmatter hoặc cấu hình nhưng giữ khoá cũ chạy được. Bản x có thể đổi hình dòng chảy và kèm hướng dẫn chuyển đổi.
 - Khoá cấu hình mới luôn có mặc định trong `MAC_DINH`, nên `brain.toml` cũ vẫn chạy.
+- 3.0 tăng x vì dòng chảy đổi hình: Javis giữ hai đầu. Dữ liệu 2.2 không phải chuyển đổi.
 
 ## 9. Quyết định kiến trúc
 
@@ -869,7 +1070,7 @@ Mỗi ADR ghi bối cảnh, quyết định, phương án đã cân nhắc và h
 
 ### ADR-08 · Chỉ mục truy hồi là dữ liệu phái sinh trong SQLite
 
-- **Trạng thái:** Đề xuất (2.3).
+- **Trạng thái:** Đề xuất (3.1).
 - **Bối cảnh:** Vault lớn lên thì không tìm lại được note theo nghĩa; AI chỉ nhớ những gì được dán vào.
 - **Quyết định:** Chỉ mục ở `.brain/index.db` (SQLite, FTS5, sqlite-vec), không commit, dựng lại được; truy cập qua `brain tim` và `brain mcp`.
 - **Phương án khác:** Vector DB riêng như Chroma, Qdrant (thêm server); dịch vụ đám mây như Pinecone (dữ liệu rời máy); chỉ dùng grep (không tìm theo nghĩa).
@@ -881,6 +1082,30 @@ Mỗi ADR ghi bối cảnh, quyết định, phương án đã cân nhắc và h
 - **Bối cảnh:** Người dùng chính là người Việt; tên có dấu dễ lỗi trên terminal và hệ thống file.
 - **Quyết định:** Lệnh, hàm, khoá cấu hình và frontmatter dùng tiếng Việt không dấu; nội dung và thông báo có dấu.
 - **Hệ quả:** Dễ hiểu với người dùng Việt; người không biết tiếng Việt cần thuật ngữ ở mục 13.
+
+### ADR-10 · Javis ở hai đầu, chủ bộ não ở giữa
+
+- **Trạng thái:** Chấp nhận (3.0.0).
+- **Bối cảnh:** Thu và làm tiếp là phần tốn công nhất mà AI làm tốt; phân loại là chỗ quyết định tri thức nào thành của mình. Agent như Javis OS mặc định tự chưng cất wiki và tự tạo việc.
+- **Quyết định:** Javis thu vào Inbox và làm tiếp việc được giao; chủ bộ não phân loại. Kết quả Javis quay về Inbox.
+- **Phương án khác:** Javis tự phân loại (nhanh, nhưng đi vòng qua quyết định của chủ bộ não và qua K1); không cho AI làm thay (giữ nguyên làm tay).
+- **Hệ quả:** Không có gì vào làn mà chưa qua tay người. Inbox nhận thêm dòng kết quả; Weekly Review đo việc giao.
+
+### ADR-11 · Giao việc bằng nhãn trên dòng, chỉ chủ bộ não gắn
+
+- **Trạng thái:** Chấp nhận (3.0.0).
+- **Bối cảnh:** Cần một chỗ ghi việc nào AI được làm và tới đâu, đọc được bằng mắt và bằng máy.
+- **Quyết định:** Nhãn `@javis:<suggest|auto|full>` kèm ngày giao trên chính dòng next action; chỉ lệnh `brain giao` gắn; plugin không có tool giao; hook chặn AI thêm hay nâng nhãn.
+- **Phương án khác:** Mục "Giao Javis" riêng (phải chuyển dòng qua lại, mất liên kết với project); hai mức có/không (không tách được nháp với gửi thật); tin vào prompt (không phải chốt chặn).
+- **Hệ quả:** Ba mức trùng tên với mức quyền của Javis OS, nên mức của loop là trần tự nhiên. `brain xong` dùng số thứ tự trong danh sách lọc (R14).
+
+### ADR-12 · Tool ghi sổ sách của CLI chạy ở mức chỉ đọc
+
+- **Trạng thái:** Chấp nhận (3.0.0).
+- **Bối cảnh:** Loop mức `suggest` của Javis không được ghi file, nên không lập được phiếu nguồn hay báo xong; dữ kiện tự tra khi đó dễ bị nhét vào câu kết quả, đi vòng qua K1.
+- **Quyết định:** `brain_nop` nhận phiếu dạng chữ, tự ghi ra thư mục tạm ngoài vault rồi chạy CLI; `brain_nop` và `brain_xong` khai `min_mode: readonly`. Chỗ ghi duy nhất vào bộ não là của CLI, sau K1 hay sau khi đánh dấu xong.
+- **Phương án khác:** Để `safe` và sửa tài liệu cho `suggest` chỉ đọc (việc tra cứu phải giao `auto`); cho `suggest` ghi file trong `nhap/` (mở rộng quyền ghi của mức thấp nhất).
+- **Hệ quả:** Mức `suggest` giữ đúng nghĩa: đọc, tra cứu, nộp qua K1, đề xuất, báo xong. Plugin phải giữ cam kết là không ghi gì khác ở mức đó.
 
 ## 10. Yêu cầu chất lượng
 
@@ -914,6 +1139,9 @@ flowchart LR
 | S8 | Q5 | Chạy test hai lần ở hai ngày khác nhau | Kết quả giống nhau | `BRAIN_NOW` | Đạt |
 | S9 | Hiệu năng | Vault 5.000 note | `brain kiem` dưới 2 giây | Chưa có bộ đo | Chưa đo |
 | S10 | Khả chuyển | Chạy trên Windows | Tiếng Việt hiển thị đúng | Thủ công | Đạt với console UTF-8 |
+| S11 | Q2 | Javis sửa Next Actions để tự gắn `@javis:full` | Bị hook từ chối, kèm lý do | Test, và với bộ nạp plugin thật của Javis OS 0.270.0 | Đạt |
+| S12 | Q2 | Loop mức `suggest` tra được một con số | Nộp qua K1 bằng `brain_nop` không ghi file, rồi báo xong | Test, và với Javis OS thật | Đạt |
+| S13 | Q4 | Đổi engine trong Javis từ Claude Code sang engine API | Vẫn có đủ 7 tool, cùng luật | Plugin dùng cho mọi engine | Đạt theo thiết kế, chưa chạy thật |
 
 ## 11. Rủi ro và nợ kỹ thuật
 
@@ -932,10 +1160,23 @@ flowchart LR
 | R11 | `chan_cung` dùng chung cho `nop` và `turn` | Thấp | Thấp | Tách hai cờ nếu có người cần |
 | R12 | Frontmatter mở bằng `---` mà không có dòng đóng thì cả file bị coi là không có frontmatter, mọi luật dựa trên khoá đều bỏ qua | Trung bình | Thấp | Báo lỗi khi frontmatter không đóng |
 | R13 | `bo_nao.phien_ban` không được so với `PHIEN_BAN`; vault cũ chạy với CLI mới mà không ai biết | Thấp | Trung bình | Cảnh báo khi hai số khác nhau ở bậc x hoặc y |
+| R14 | `brain xong <số>` trỏ sai việc nếu Next Actions đổi giữa lúc liệt kê và lúc báo xong | Thấp | Thấp | `xong` in tên việc, kết quả về Inbox, git hoàn tác; mã việc ổn định ở 3.1 (repo second-brain đã có id `n…`) |
+| R15 | Hook chỉ thấy tool đi qua MCP Hub và tool ghi file của Claude Code; ghi bằng shell vòng qua được; hook của Javis OS fail-open khi lỗi | Trung bình | Thấp | `brain kiem`, review git; chỉ cấp shell cho engine cần |
+| R16 | Javis OS đổi hợp đồng plugin (`register_tool`, `pre_tool_call`) | Trung bình | Trung bình | Plugin nhỏ, có test; thử lại với bộ nạp thật khi nâng bản Javis |
+| R17 | Javis làm hành động thật sai ở mức `full` | Cao | Thấp | Chỉ việc có nhãn `full`; nội dung đã duyệt; loop `full` tắt khi hết việc |
 
-## 12. Hướng phát triển · tầng truy hồi (đề xuất 2.3)
+### 11.1 Việc cần chốt
 
-Trạng thái: **đề xuất**, chưa có trong code. Thêm cơ chế mới mà không đổi dòng chảy, nên là bản 2.3.0.
+1. **Kênh chính** để nói chuyện với Javis. Đề xuất: Telegram.
+2. **Model** cho việc nền. Đề xuất: API key cho suy luận và viết; model local cho việc rẻ.
+3. **Bộ não của Cá Béo** có Javis riêng không. Đề xuất: riêng, cùng plugin, khác repo.
+4. **Javis tự phân loại mục rõ ràng** (link đọc sau, việc dưới 2 phút). Đề xuất: không ở 3.0; xem lại sau 4 tuần số liệu.
+5. **Mã việc ổn định** thay cho số thứ tự (R14). Đề xuất: để 3.1.
+6. **Hạ tầng agent đang tạm dừng** (35 persona, Vault). Đề xuất: thay bằng Javis, một agent gọi công cụ, mỗi loop một mức quyền.
+
+## 12. Hướng phát triển · tầng truy hồi (đề xuất 3.1)
+
+Trạng thái: **đề xuất**, chưa có trong code. Thêm cơ chế mới mà không đổi dòng chảy, nên là bản 3.1.0 (trước khi có 3.0, thiết kế này mang số 2.3).
 
 ### 12.1 Mục tiêu và không mục tiêu
 
@@ -952,7 +1193,7 @@ Không mục tiêu:
 - Không thay Markdown làm nguồn thật.
 - Không cho AI sửa, xoá hay viết permanent note qua MCP.
 - Không bắt buộc cài thêm: không bật thì CLI chạy y như 2.2.
-- Không tự trả lời câu hỏi bằng LLM trong CLI ở 2.3; client MCP lo phần sinh câu trả lời.
+- Không tự trả lời câu hỏi bằng LLM trong CLI ở 3.1; client MCP lo phần sinh câu trả lời.
 
 ### 12.2 Yêu cầu
 
@@ -1280,6 +1521,10 @@ Mỗi giai đoạn: cập nhật CHANGELOG, tài liệu này (mục 1.2, 5, 8.5,
 | RRF | Reciprocal Rank Fusion, cách gộp nhiều danh sách xếp hạng |
 | RAG | Truy hồi đoạn liên quan rồi đưa cho AI trả lời |
 | MCP | Model Context Protocol, giao thức để AI gọi công cụ và đọc dữ liệu |
+| Javis | Trợ lý vận hành chạy trên bộ não (ví dụ Javis OS): thu vào Inbox và làm tiếp việc được giao |
+| Nhãn `@javis` | Dấu trên next action cho biết Javis được làm việc đó, kèm mức |
+| Mức (`suggest`, `auto`, `full`) | Trần quyền của một việc giao: chỉ đọc và đề xuất · thêm ghi nháp · thêm hành động thật |
+| Loop | Việc lặp của Javis, chạy ở một mức và nhận việc có mức đó trở xuống |
 
 ## 14. Tài liệu tham khảo
 
@@ -1289,6 +1534,7 @@ Mỗi giai đoạn: cập nhật CHANGELOG, tài liệu này (mục 1.2, 5, 8.5,
 - Michael Nygard, Documenting Architecture Decisions: <https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions>
 - Hệ Admiralty: NATO STANAG 2511 · AJP-2.1
 - Model Context Protocol: <https://modelcontextprotocol.io>
+- Javis OS: <https://github.com/blogminhquy/javis-os> (bản 0.270.0, kiểm 21/10/2026)
 - SQLite FTS5: <https://sqlite.org/fts5.html> · sqlite-vec: <https://github.com/asg017/sqlite-vec>
 - fastembed: <https://github.com/qdrant/fastembed>
 - Cormack, Clarke, Büttcher (2009), Reciprocal Rank Fusion outperforms Condorcet and individual rank learning methods
@@ -1299,6 +1545,7 @@ Mỗi giai đoạn: cập nhật CHANGELOG, tài liệu này (mục 1.2, 5, 8.5,
 | Khi | Cập nhật mục |
 | --- | --- |
 | Thêm hoặc đổi lệnh CLI | 1.2, 5.3, 6, 8.10, 8.12 |
+| Đổi plugin Javis, hook hay mức quyền | 5.4, 6.12, 8.11, 9 (ADR-10–12), [dung-voi-javis.md](dung-voi-javis.md) |
 | Thêm hoặc đổi luật kiểm | 8.4, 8.12, và trang `docs/` tương ứng |
 | Thêm khoá cấu hình | 8.5 |
 | Thêm khoá frontmatter hoặc mẫu | 8.1, 8.2 |

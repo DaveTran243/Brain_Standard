@@ -1,8 +1,10 @@
-# Brain_Standard · Bộ não 2.2
+# Brain_Standard · Bộ não 3.0
 
 Một bộ não thứ hai bạn tự sở hữu: các file Markdown trong một repo git, một bộ luật để mọi thứ có chỗ của nó, và một bộ quy tắc để bất kỳ AI nào cũng làm việc được với nó.
 
-**Phiên bản 2.2.1** · 20/10/2026 · [Change log](CHANGELOG.md)
+**Phiên bản 3.0.0** · 21/10/2026 · [Change log](CHANGELOG.md) · [DAB 3.0](docs/kien-truc-he-thong.md) · [bản 2.2.1](archive/2.2.1/README.md)
+
+**Mới ở 3.0:** Javis giữ hai đầu dòng chảy. Javis **thu** thông tin vào Inbox, bạn **phân loại** bằng hai câu hỏi và ba làn, rồi giao cho Javis những việc nó được **làm tiếp** bằng nhãn `@javis:<mức>`. Kết quả quay về Inbox để bạn làm rõ lại.
 
 **Mới tới đây? Đọc [Hướng dẫn dùng bộ não](docs/huong-dan.md)**: cài đặt, ngày đầu tiên trong 30 phút, nhịp ngày và tuần. Muốn dùng với AI thì đọc [Dùng bộ não với AI](docs/dung-voi-ai.md).
 
@@ -51,7 +53,7 @@ Bộ não có một khối quy tắc chung, dán được vào bất kỳ AI nà
 | 2 · Chat có tài liệu | Trả lời dựa trên các note bạn đưa vào | Project của Claude hoặc ChatGPT, Gem của Gemini |
 | 3 · Agent trong repo | Đọc, ghi file và tự chạy lệnh `brain` | Claude Code, Codex, Gemini CLI, Cursor, GitHub Copilot |
 
-Cách cài trên từng nền tảng, quy trình mẫu và câu lệnh gợi ý: [docs/dung-voi-ai.md](docs/dung-voi-ai.md).
+Cách cài trên từng nền tảng, quy trình mẫu và câu lệnh gợi ý: [docs/dung-voi-ai.md](docs/dung-voi-ai.md). Chạy bộ não trong agent tự host [Javis OS](https://github.com/blogminhquy/javis-os): [docs/dung-voi-javis.md](docs/dung-voi-javis.md).
 
 ## Dòng chảy
 
@@ -81,16 +83,19 @@ Ba làn trao đổi với nhau qua 7 đường I1–I7, mô tả ở [docs/dong-
 | --- | --- |
 | `docs/huong-dan.md` | Hướng dẫn từng bước cho người mới |
 | `docs/dung-voi-ai.md` | Dùng bộ não với AI trên nhiều nền tảng |
+| `docs/dung-voi-javis.md` | Dùng bộ não với Javis OS: cài đặt, chỗ xung đột, quy trình mẫu |
 | `docs/dong-chay.md` | Inbox, hai câu hỏi, ba làn, 7 đường nối, nhịp ngày, tuần, tháng |
 | `docs/ba-lan.md` | Luật, số đo và dấu hiệu hỏng của từng làn |
 | `docs/kiem-duyet.md` | Cổng K1–K4, hệ mã Admiralty, phiếu nguồn, 10 bước tra cứu |
 | `docs/tang-thuc-thi.md` | Tầng thực thi 2.2: board, milestone, người phụ trách |
-| `docs/kien-truc-he-thong.md` | Kiến trúc hệ thống (DAB) theo arc42: thành phần, luồng chạy, quyết định, rủi ro, thiết kế tầng truy hồi 2.3 |
+| `docs/kien-truc-he-thong.md` | DAB 3.0, kiến trúc hệ thống theo arc42: thành phần, luồng chạy, vòng Javis, quyết định, rủi ro, việc cần chốt, thiết kế tầng truy hồi 3.1 |
 | `vault/` | Khung thư mục và mẫu file để bắt đầu một bộ não mới |
 | `vault/AGENTS.md` | Quy tắc cho agent làm việc trong repo |
-| `brain.toml` | Cấu hình chuẩn 2.2 |
-| `tools/brain.py`, `bin/brain` | CLI: `ghi`, `nop`, `kiem`, `turn`, `weekly` |
-| `tests/` | Test cho CLI |
+| `brain.toml` | Cấu hình chuẩn 3.0 |
+| `archive/` | Ảnh chụp các bản cũ, bắt đầu từ 2.2.1 |
+| `tools/brain.py`, `bin/brain` | CLI: `ghi`, `nop`, `kiem`, `turn`, `weekly`, `giao`, `javis`, `xong` |
+| `integrations/javis/` | Plugin Javis OS và hook Claude Code chặn AI ghi permanent note |
+| `tests/` | Test cho CLI và plugin |
 
 ## Bắt đầu nhanh
 
@@ -110,9 +115,12 @@ bin/brain turn y "ghi ý đầu tiên vào Inbox"
 | --- | --- |
 | `brain ghi "…"` | Ghi lời bạn vào Inbox. Lời bạn không đi qua K1. |
 | `brain nop file.md` | Nộp một mục do AI hoặc agent mang về qua cổng K1. Thiếu phiếu nguồn thì bị trả lại. |
-| `brain kiem` | Rà vault theo luật 2.2 và các cổng K2–K3. |
+| `brain kiem` | Rà vault theo luật 3.0 và các cổng K2–K3. |
 | `brain turn <viec\|y\|file\|xoa> "tóm tắt"` | Đóng một lượt làm việc. Vault còn lỗi thì lượt không đóng được. |
 | `brain weekly [--ghi]` | Tính số đo cho Weekly Review. |
+| `brain giao "…" <suggest\|auto\|full>` | Giao một next action cho Javis. Chỉ bạn chạy lệnh này. |
+| `brain javis [--muc …]` | Liệt kê việc đang giao cho Javis, lọc theo mức. |
+| `brain xong <số> "kết quả"` | Javis báo xong một việc; kết quả vào Inbox. |
 
 ## Luật cốt lõi
 
@@ -121,4 +129,5 @@ bin/brain turn y "ghi ý đầu tiên vào Inbox"
 - Mỗi project ghi tiêu chí xong và tiêu chí dừng ngay khi lập. Project nhiều bước có board riêng.
 - Dữ kiện do AI hoặc agent mang về phải có phiếu nguồn và mã độ tin. Mã quyết định nó được đi xa tới đâu.
 - Mỗi lượt làm việc kết thúc bằng `brain turn`.
+- Javis chỉ làm tiếp việc bạn đã giao bằng `@javis:<mức>`, không vượt mức đó, và trả kết quả về Inbox. Javis không tự giao việc cho mình.
 - Không có giới hạn số project hay next action. Weekly Review đo để bạn tự nhìn thấy khi ôm quá nhiều.

@@ -56,6 +56,7 @@ Tôi dùng Bộ não 2.2 (Brain_Standard). Áp dụng cho mọi cuộc trò chuy
 | Claude Code | 3 | `CLAUDE.md` ở gốc repo. Bản mới cũng đọc `AGENTS.md` khi thư mục không có `CLAUDE.md` | Mở terminal ở gốc repo |
 | Codex | 3 | `AGENTS.md` ở gốc repo | Mở ở gốc repo |
 | Gemini CLI | 3 | `GEMINI.md`, hoặc thêm `AGENTS.md` vào `context.fileName` trong `settings.json` | Mở ở gốc repo |
+| Javis OS (agent tự host, nhiều model) | 3 | Hướng dẫn của một project trong Javis, cùng `AGENTS.md`, `CLAUDE.md` ở gốc repo | Trỏ brain vào gốc repo và cài plugin `brain-standard`, xem [dung-voi-javis.md](dung-voi-javis.md) |
 | Cursor, GitHub Copilot và các agent khác | 3 | `AGENTS.md` ở gốc repo; xem tài liệu của từng công cụ nếu nó cần bật thêm | Mở repo trong công cụ |
 
 Tên mục cài đặt trong các ứng dụng chat có thể đổi theo phiên bản. Hãy tìm mục có tên kiểu "hướng dẫn", "instructions" hay "tuỳ chỉnh".

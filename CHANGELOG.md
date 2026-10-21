@@ -2,6 +2,16 @@
 
 Số phiên bản theo dạng x.y.z: x tăng khi dòng chảy chính đổi hình, y tăng khi thêm cơ chế mà không phá dòng chảy, z cho sửa số liệu, nhãn và câu chữ. Bản mới nhất ở trên cùng.
 
+## Chưa phát hành
+
+Tích hợp. Luật và CLI không đổi.
+
+### Thêm
+- `docs/dung-voi-javis.md`: dùng bộ não với Javis OS, gồm bản đồ khái niệm, các chỗ xung đột (tự học, INGEST, thư mục tự tạo, `.gitignore`), cài đặt từng bước và quy trình mẫu cho ghi nhanh, vòng ngày, Weekly Review, tra cứu qua K1.
+- `integrations/javis/brain-standard/`: plugin Javis đưa `ghi`, `nop`, `kiem`, `turn`, `weekly` thành tool cho mọi engine, và hook chặn AI ghi vào permanent note, `00-Inbox/agent` và file mẫu.
+- `integrations/javis/chan_ghi_claude.py`: hook PreToolUse cho Claude Code, cùng luật chặn.
+- `tests/test_javis_plugin.py`.
+
 ## 2.2.1 · 20/10/2026
 
 Tài liệu. Luật và CLI không đổi cách chạy.

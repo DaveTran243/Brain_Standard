@@ -1,0 +1,17 @@
+name: Bộ não 2.2 (Brain_Standard)
+name_en: "Brain 2.2 (Brain_Standard)"
+slug: brain-standard
+version: 1.0.0
+description: Đưa lệnh brain (ghi, nop, kiem, turn, weekly) thành tool cho mọi engine của Javis, và chặn AI ghi thẳng vào permanent note, file mẫu và 00-Inbox/agent. Cần brain này là một repo Brain_Standard (có brain.toml ở gốc).
+description_en: "Exposes the brain CLI (ghi, nop, kiem, turn, weekly) as tools for every Javis engine, and stops the AI from writing permanent notes, templates or 00-Inbox/agent directly. Needs the brain to be a Brain_Standard repo (brain.toml at its root)."
+author: Brain_Standard
+enabled: false
+min_mode: safe
+tools:
+  - brain_ghi
+  - brain_nop
+  - brain_kiem
+  - brain_turn
+  - brain_weekly
+hooks:
+  - pre_tool_call

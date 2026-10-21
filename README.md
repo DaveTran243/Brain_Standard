@@ -51,7 +51,7 @@ Bộ não có một khối quy tắc chung, dán được vào bất kỳ AI nà
 | 2 · Chat có tài liệu | Trả lời dựa trên các note bạn đưa vào | Project của Claude hoặc ChatGPT, Gem của Gemini |
 | 3 · Agent trong repo | Đọc, ghi file và tự chạy lệnh `brain` | Claude Code, Codex, Gemini CLI, Cursor, GitHub Copilot |
 
-Cách cài trên từng nền tảng, quy trình mẫu và câu lệnh gợi ý: [docs/dung-voi-ai.md](docs/dung-voi-ai.md).
+Cách cài trên từng nền tảng, quy trình mẫu và câu lệnh gợi ý: [docs/dung-voi-ai.md](docs/dung-voi-ai.md). Chạy bộ não trong agent tự host [Javis OS](https://github.com/blogminhquy/javis-os): [docs/dung-voi-javis.md](docs/dung-voi-javis.md).
 
 ## Dòng chảy
 
@@ -81,6 +81,7 @@ Ba làn trao đổi với nhau qua 7 đường I1–I7, mô tả ở [docs/dong-
 | --- | --- |
 | `docs/huong-dan.md` | Hướng dẫn từng bước cho người mới |
 | `docs/dung-voi-ai.md` | Dùng bộ não với AI trên nhiều nền tảng |
+| `docs/dung-voi-javis.md` | Dùng bộ não với Javis OS: cài đặt, chỗ xung đột, quy trình mẫu |
 | `docs/dong-chay.md` | Inbox, hai câu hỏi, ba làn, 7 đường nối, nhịp ngày, tuần, tháng |
 | `docs/ba-lan.md` | Luật, số đo và dấu hiệu hỏng của từng làn |
 | `docs/kiem-duyet.md` | Cổng K1–K4, hệ mã Admiralty, phiếu nguồn, 10 bước tra cứu |
@@ -89,7 +90,8 @@ Ba làn trao đổi với nhau qua 7 đường I1–I7, mô tả ở [docs/dong-
 | `vault/AGENTS.md` | Quy tắc cho agent làm việc trong repo |
 | `brain.toml` | Cấu hình chuẩn 2.2 |
 | `tools/brain.py`, `bin/brain` | CLI: `ghi`, `nop`, `kiem`, `turn`, `weekly` |
-| `tests/` | Test cho CLI |
+| `integrations/javis/` | Plugin Javis OS và hook Claude Code chặn AI ghi permanent note |
+| `tests/` | Test cho CLI và plugin |
 
 ## Bắt đầu nhanh
 

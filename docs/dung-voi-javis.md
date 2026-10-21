@@ -2,13 +2,13 @@
 
 [Javis OS](https://github.com/blogminhquy/javis-os) là một agent AI tự host: chạy trên laptop hoặc VPS, đổi được model (Claude Code, Codex, Grok, Antigravity, OpenRouter, Gemini, Ollama…), nói chuyện qua dashboard, giọng nói, Telegram, Zalo, Slack, và làm việc nền bằng loop, nhắc hẹn, hàng việc Kanban. Nó có một "Second Brain" riêng là một thư mục Markdown.
 
-Trang này chỉ cách cho Javis làm việc trên bộ não 2.2 mà không phá luật của bộ não. Đọc [dung-voi-ai.md](dung-voi-ai.md) trước nếu bạn chưa quen ba mức kết nối và khối quy tắc chung.
+Trang này chỉ cách cho Javis làm việc trên bộ não 3.0 mà không phá luật của bộ não. Ở bản 3.0, Javis giữ hai đầu của [dòng chảy](dong-chay.md#vòng-javis): thu thông tin vào Inbox, và làm tiếp những việc bạn đã phân loại rồi giao cho nó. Đọc [dung-voi-ai.md](dung-voi-ai.md) trước nếu bạn chưa quen ba mức kết nối và khối quy tắc chung.
 
 Khảo sát trên Javis OS bản 0.270.0, ngày 21/10/2026. Javis ra bản mới rất nhanh, nên đối chiếu lại các mục đánh dấu "kiểm lại khi nâng bản".
 
 ## Vì sao hợp nhau
 
-Hai bên cùng một ý: **thuê model, giữ bộ não**. Bộ não là Markdown và git của bạn; Javis là lớp chạy AI, đổi model không mất gì. Javis lấp đúng những chỗ bộ não 2.2 cố ý để trống:
+Hai bên cùng một ý: **thuê model, giữ bộ não**. Bộ não là Markdown và git của bạn; Javis là lớp chạy AI, đổi model không mất gì. Javis lấp đúng những chỗ bộ não 2.2 cố ý để trống, và bản 3.0 dựng vòng làm việc quanh nó:
 
 | Bộ não 2.2 đang thiếu | Javis cho |
 | --- | --- |
@@ -21,7 +21,7 @@ Bù lại, Javis có những thói quen ngược với luật của bộ não. P
 
 ## Bản đồ khái niệm
 
-| Javis | Bộ não 2.2 | Ghi chú |
+| Javis | Bộ não 3.0 | Ghi chú |
 | --- | --- | --- |
 | `sources/` | `30-Knowledge/literature/` | Javis lưu nguồn thô không cần phiếu nguồn |
 | `wiki/` | `30-Knowledge/permanent/`, `40-Maps/` | Javis tự viết wiki. Bộ não cấm AI viết permanent note |
@@ -29,7 +29,8 @@ Bù lại, Javis có những thói quen ngược với luật của bộ não. P
 | INGEST ("lưu vào source") | `brain nop` qua K1 | Javis bỏ qua K1 |
 | Tự học sau mỗi cuộc chat | Không có | Mặc định bật, chế độ tự ghi |
 | Curator, LINT wiki | `brain kiem` | LINT của Javis chỉ gợi ý; `brain kiem` là luật |
-| Kanban task | Next Actions, board của project | Việc nền do bạn giao, không thay Next Actions |
+| Kanban task, loop | Next action có nhãn `@javis:<mức>` | Javis chỉ làm việc bạn đã giao bằng `brain giao` |
+| Mức quyền `suggest`, `auto`, `full` | Mức trên nhãn `@javis` | Cùng ba tên, cùng nghĩa. Mức của loop là trần cho việc nó nhận |
 | Loop, nhắc hẹn | Nhịp ngày, tuần, tháng | Dùng để chạy nhịp, ở mức chỉ đọc |
 | Skill, plugin | `AGENTS.md`, CLI `brain` | Plugin trong gói này nối hai bên |
 
@@ -99,7 +100,7 @@ Không dùng INGEST. Muốn đưa một tài liệu vào bộ não, làm theo qu
 - **Mọi engine:** tạo một project trong Javis, ví dụ "Bộ não", mở bảng của project (tab **Hướng dẫn**) và dán [khối quy tắc chung](dung-voi-ai.md#khối-quy-tắc-chung) vào, thêm ba dòng:
 
   ```text
-  8. Trong Javis: dùng tool brain_ghi, brain_nop, brain_kiem, brain_turn, brain_weekly thay cho lệnh shell.
+  8. Trong Javis: dùng tool brain_ghi, brain_nop, brain_kiem, brain_turn, brain_weekly, brain_viec_javis, brain_xong thay cho lệnh shell.
   9. Phiếu nguồn viết vào thư mục nhap/ ở gốc repo, rồi nộp bằng brain_nop. Không ghi vào vault/00-Inbox/agent.
   10. Không dùng INGEST, không ghi vào sources/ hay wiki/.
   ```
@@ -110,8 +111,19 @@ Không dùng INGEST. Muốn đưa một tài liệu vào bộ não, làm theo qu
 
 Gói này có sẵn plugin ở `integrations/javis/brain-standard/`. Plugin làm hai việc:
 
-- Đưa năm lệnh thành tool cho mọi engine: `brain_ghi`, `brain_nop`, `brain_kiem`, `brain_turn`, `brain_weekly`. `brain_kiem` và `brain_weekly` chỉ đọc, chạy được cả ở mức `suggest`; ba tool còn lại ghi file nên cần mức `auto` trở lên.
-- Hook `pre_tool_call` chặn AI ghi bằng `javis_write_file`, `javis_edit_file` vào `30-Knowledge/permanent/`, `00-Inbox/agent/` và mọi file hay thư mục bắt đầu bằng `_` trong `vault/`. AI nhận lại câu giải thích và cách làm đúng.
+- Đưa bảy lệnh thành tool cho mọi engine:
+
+  | Tool | Lệnh | Mức tối thiểu |
+  | --- | --- | --- |
+  | `brain_ghi` | `brain ghi` · thu lời bạn | `auto` |
+  | `brain_nop` | `brain nop` · thu dữ kiện qua K1 | `auto` |
+  | `brain_turn` | `brain turn` | `auto` |
+  | `brain_kiem`, `brain_weekly` | `brain kiem`, `brain weekly` | `suggest` |
+  | `brain_viec_javis` | `brain javis --muc` · nhận việc được giao | `suggest` |
+  | `brain_xong` | `brain xong` · trả kết quả về Inbox | `suggest` |
+
+  `brain_xong` chạy được ở `suggest` vì chỗ ghi duy nhất của nó là sổ sách của CLI: đánh dấu xong và một dòng Inbox. Không có tool cho `brain giao`: chỉ bạn giao việc.
+- Hook `pre_tool_call` chặn AI ghi bằng `javis_write_file`, `javis_edit_file` vào `30-Knowledge/permanent/`, `00-Inbox/agent/` và mọi file hay thư mục bắt đầu bằng `_` trong `vault/`, và chặn AI tự gắn hay nâng mức nhãn `@javis` trong Next Actions. AI nhận lại câu giải thích và cách làm đúng.
 
 Chép vào brain (gốc repo):
 
@@ -183,6 +195,24 @@ Một loop mức `suggest` hợp với Inbox dày:
 
 Loop chỉ gợi ý, bạn chuyển mục. Đừng dùng loop "tiêu hoá sources" mẫu của Javis.
 
+### Vòng 3.0: Javis làm tiếp việc đã giao
+
+Bạn giao việc sau khi phân loại:
+
+```sh
+bin/brain giao "kế toán" auto        # gắn @javis:auto · giao <hôm nay> vào next action đó
+```
+
+Rồi tạo mỗi mức một loop, mức của loop bằng mức việc nó nhận:
+
+> Tạo loop 30 phút, mức chỉ đọc, tên "Javis · suggest": mỗi chu kỳ gọi brain_viec_javis với muc_toi_da suggest. Không có việc thì dừng. Có thì làm việc số 1: tra cứu và đề xuất; dữ kiện tự tra viết phiếu trong nhap/ rồi nộp bằng brain_nop. Xong gọi brain_xong số 1, muc_toi_da suggest, kết quả là một câu nói đã làm gì và kết quả ở đâu.
+
+> Tạo loop 30 phút, mức ghi nháp (auto), tên "Javis · auto": như trên nhưng muc_toi_da auto; được viết nháp trong nhap/, code trong khu 5x, issue trên board.
+
+Mức `full` chỉ tạo khi có việc cần làm thật bên ngoài, như gửi email đã duyệt, và tắt khi hết việc.
+
+Mỗi kết quả là một dòng `(javis) Kết quả "…": …` trong Inbox. Bạn làm rõ nó như mọi mục khác: nháp thành việc tiếp theo, dữ kiện thành literature, hay xoá. `brain kiem` cảnh báo việc giao quá 7 ngày chưa xong; `brain weekly` đếm việc giao, việc xong và việc treo.
+
 ### Đóng lượt
 
 Cuối mỗi lượt làm việc trong project "Bộ não", Javis gọi `brain_kiem`, sửa lỗi nếu được, rồi `brain_turn`. Commit vẫn là việc của bạn hoặc của engine có shell.
@@ -190,7 +220,7 @@ Cuối mỗi lượt làm việc trong project "Bộ não", Javis gọi `brain_k
 ## Giữ an toàn
 
 - **Javis chạy AI với toàn quyền trên máy.** Khi chạy trên VPS, Javis bắt đăng nhập; vẫn nên để repo bộ não private và không để Javis mở ra internet nếu không cần.
-- **Loop và nhắc hẹn cho bộ não dùng mức `suggest`.** Chỉ nâng lên `auto` cho việc cần ghi, như `brain_ghi`. Không cần `full`.
+- **Loop và nhắc hẹn cho bộ não dùng mức `suggest`.** Chỉ nâng lên `auto` cho việc cần ghi, như `brain_ghi` hay loop "Javis · auto". Chỉ dùng `full` cho loop làm việc `@javis:full`, và tắt khi hết việc.
 - **Sao lưu bằng git của chính repo bộ não.** Không cần bật "sao lưu GitHub" của Javis cho brain này.
 - **Plugin chạy code Python thật trong server Javis.** Đọc `plugin.py` trước khi bật.
 - **Hook không thay được luật.** Nó chặn đường ghi phổ biến nhất, không chặn được mọi cách ghi, ví dụ một lệnh shell. `brain kiem` và review của bạn vẫn là cổng cuối.

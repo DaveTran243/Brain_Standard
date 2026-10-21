@@ -2,15 +2,30 @@
 
 Số phiên bản theo dạng x.y.z: x tăng khi dòng chảy chính đổi hình, y tăng khi thêm cơ chế mà không phá dòng chảy, z cho sửa số liệu, nhãn và câu chữ. Bản mới nhất ở trên cùng.
 
-## Chưa phát hành
+## 3.0.0 · 21/10/2026
 
-Tích hợp. Luật và CLI không đổi.
+Bộ não có người vận hành. Dòng chảy đổi hình: Javis giữ hai đầu, **thu** ở đầu vào và **làm tiếp** ở đầu ra; bộ não, tức bạn, **phân loại** ở giữa. Ba làn, I1–I7, K1–K4 và tầng thực thi của 2.2 giữ nguyên. Bản 2.2.1 chụp lại ở `archive/2.2.1/`.
 
 ### Thêm
-- `docs/dung-voi-javis.md`: dùng bộ não với Javis OS, gồm bản đồ khái niệm, các chỗ xung đột (tự học, INGEST, thư mục tự tạo, `.gitignore`), cài đặt từng bước và quy trình mẫu cho ghi nhanh, vòng ngày, Weekly Review, tra cứu qua K1.
-- `integrations/javis/brain-standard/`: plugin Javis đưa `ghi`, `nop`, `kiem`, `turn`, `weekly` thành tool cho mọi engine, và hook chặn AI ghi vào permanent note, `00-Inbox/agent` và file mẫu.
+- Vòng Javis trong `docs/dong-chay.md`: thu → phân loại → giao → làm tiếp → kết quả về Inbox.
+- Nhãn `@javis:<suggest|auto|full>` trên next action, kèm `giao YYYY-MM-DD`. Mức trên nhãn là trần cho việc Javis được làm.
+- CLI: `brain giao "…" <mức>` (chỉ chủ bộ não), `brain javis [--muc]`, `brain xong <số> "kết quả"`. `brain xong` đánh dấu xong và ghi một dòng `(javis) Kết quả …` vào Inbox.
+- `brain kiem`: lỗi khi nhãn `@javis` thiếu mức; cảnh báo khi việc giao quá `treo_toi_da_ngay` chưa xong.
+- `brain weekly`: việc giao Javis đang mở, xong trong 7 ngày, đang treo.
+- Mục `[javis]` trong `brain.toml`: `nhan`, `treo_toi_da_ngay`.
+- `docs/dab-3.0.md`: DAB 3.0, tài liệu thiết kế để duyệt kiến trúc.
+- `docs/dung-voi-javis.md`: dùng bộ não với Javis OS, gồm bản đồ khái niệm, các chỗ xung đột, cài đặt từng bước và quy trình mẫu, cả loop làm tiếp theo từng mức.
+- `integrations/javis/brain-standard/` (plugin 3.0.0): tool `brain_ghi`, `brain_nop`, `brain_kiem`, `brain_turn`, `brain_weekly`, `brain_viec_javis`, `brain_xong` cho mọi engine; hook chặn AI ghi vào permanent note, `00-Inbox/agent`, file mẫu, và chặn AI tự gắn hay nâng nhãn `@javis`.
 - `integrations/javis/chan_ghi_claude.py`: hook PreToolUse cho Claude Code, cùng luật chặn.
-- `tests/test_javis_plugin.py`.
+- `archive/`: ảnh chụp bản cũ.
+
+### Đổi
+- `vault/AGENTS.md` và khối quy tắc chung: thêm luật vòng Javis (quy tắc 8).
+- Nguồn vào: lời bạn nhắn qua Javis vẫn không qua K1; dữ kiện Javis tự tra qua K1; kết quả `brain xong` vào Inbox.
+- Nhịp ngày và Weekly Review: thêm bước giao việc và rà việc đã giao.
+
+### Giữ
+- Permanent note chỉ do bạn viết. Javis không xoá dữ liệu, không bỏ qua K1, không tự chốt hay dừng project, ở mọi mức.
 
 ## 2.2.1 · 20/10/2026
 

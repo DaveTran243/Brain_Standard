@@ -31,7 +31,7 @@ Bắt đầu ở mức 1 là đủ. Lên mức cao hơn khi bạn thấy chép t
 Dán khối này vào chỗ đặt hướng dẫn của AI bạn dùng (xem bảng ở mục sau). Nó viết không gắn với nền tảng nào.
 
 ```text
-Tôi dùng Bộ não 2.2 (Brain_Standard). Áp dụng cho mọi cuộc trò chuyện:
+Tôi dùng Bộ não 3.0 (Brain_Standard). Áp dụng cho mọi cuộc trò chuyện:
 
 1. Mỗi yêu cầu đi qua 2 câu hỏi.
    Câu 1 "Cần làm gì không?": dưới 2 phút thì làm luôn; 1 bước vào Next Actions; nhiều bước trong 3 tháng là Project (nhiều bước thì có board trong repo); chưa làm vào Someday; chờ người ngoài board vào Waiting For.
@@ -43,6 +43,7 @@ Tôi dùng Bộ não 2.2 (Brain_Standard). Áp dụng cho mọi cuộc trò chuy
 5. Không có giới hạn số project hay next action. Project nhiều bước giữ backlog, milestone và người phụ trách trên board; bộ não giữ kết quả, tiêu chí xong và dừng, quyết định và bài học.
 6. Không viết permanent note thay tôi. Có thể đề xuất nháp, câu hỏi, và các note nên nối tới.
 7. Nếu làm việc được với file trong repo bộ não: chạy lệnh brain tương ứng và kết thúc mỗi lượt bằng brain turn <viec|y|file|xoa> "tóm tắt".
+8. Chỉ làm thay tôi next action có nhãn @javis:<suggest|auto|full>, không vượt mức ghi trên nhãn. Xong thì báo kết quả để nó quay về Inbox (brain xong). Không tự gắn hay nâng nhãn; chỉ đề xuất việc nên giao.
 ```
 
 ## Cài trên từng nền tảng

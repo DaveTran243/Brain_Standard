@@ -67,9 +67,13 @@ class PluginTest(unittest.TestCase):
                                                    mode="full", vault_root=str(self.tmp), turn=None)
 
     def test_dang_ky_du_tool_va_hook(self):
-        self.assertEqual(set(self.ctx.tools), {"brain_ghi", "brain_nop", "brain_kiem", "brain_turn", "brain_weekly"})
+        self.assertEqual(set(self.ctx.tools), {"brain_ghi", "brain_nop", "brain_kiem", "brain_turn", "brain_weekly",
+                                               "brain_viec_javis", "brain_xong"})
+        self.assertNotIn("brain_giao", self.ctx.tools)
         self.assertEqual(self.ctx.tools["brain_kiem"]["min_mode"], "readonly")
         self.assertEqual(self.ctx.tools["brain_ghi"]["min_mode"], "safe")
+        self.assertEqual(self.ctx.tools["brain_viec_javis"]["min_mode"], "readonly")
+        self.assertEqual(self.ctx.tools["brain_xong"]["min_mode"], "readonly")
         self.assertIn("pre_tool_call", self.ctx.hooks)
 
     def test_ghi_vao_inbox(self):
@@ -126,6 +130,44 @@ class PluginTest(unittest.TestCase):
         self.assertEqual(self.hook_claude("Edit", "vault/30-Knowledge/fleeting/a.md").returncode, 0)
         self.assertEqual(self.hook_claude("Read", "vault/30-Knowledge/permanent/a.md").returncode, 0)
 
+
+    def them_viec(self, *dong: str) -> Path:
+        p = self.tmp / "vault/10-Action/11-next-actions.md"
+        p.write_text(p.read_text(encoding="utf-8") + "".join(f"{d}\n" for d in dong), encoding="utf-8")
+        return p
+
+    def test_viec_javis_va_xong(self):
+        self.them_viec("- [ ] Tra giá máy in · @javis:suggest · giao 2026-10-20", "- [ ] Gửi báo giá · @javis:full")
+        self.assertNotIn("Gửi báo giá", self.ctx.goi("brain_viec_javis", {"muc_toi_da": "suggest"}))
+        ra = self.ctx.goi("brain_xong", {"so": 1, "ket_qua": "ba báo giá ở nhap/", "muc_toi_da": "suggest"})
+        self.assertIn("Đã xong: Tra giá máy in", ra)
+        self.assertIn("(javis) Kết quả", (self.tmp / "vault/00-Inbox/Inbox.md").read_text(encoding="utf-8"))
+        self.assertTrue(self.ctx.goi("brain_xong", {"ket_qua": "x"}).startswith("ERROR"))
+
+    def test_hook_chan_tu_gan_nhan(self):
+        na = "vault/10-Action/11-next-actions.md"
+        self.them_viec("- [ ] Gọi mẹ", "- [ ] Tra lịch · @javis:suggest · giao 2026-10-20")
+        hook = self.ctx.hooks["pre_tool_call"][0]
+
+        def goi(tool, **args):
+            return hook(tool_name=tool, args={"path": na, **args}, vault_root=str(self.tmp))
+
+        self.assertIn("brain giao", goi("javis_edit_file", old_string="- [ ] Gọi mẹ",
+                                        new_string="- [ ] Gọi mẹ · @javis:auto")["deny"])
+        self.assertIn("brain giao", goi("javis_edit_file", old_string="@javis:suggest", new_string="@javis:full")["deny"])
+        cu = (self.tmp / na).read_text(encoding="utf-8")
+        self.assertIn("brain giao", goi("javis_write_file", content=cu + "- [ ] Mới · @javis:auto\n")["deny"])
+        self.assertIsNone(goi("javis_write_file", content=cu + "- [ ] Mới, không nhãn\n"))
+        self.assertIsNone(goi("javis_edit_file", old_string="- [ ] Tra lịch", new_string="- [x] Tra lịch"))
+
+    def test_hook_claude_code_chan_tu_gan_nhan(self):
+        vao = json.dumps({"tool_name": "Edit", "cwd": str(self.tmp),
+                          "tool_input": {"file_path": str(self.tmp / "vault/10-Action/11-next-actions.md"),
+                                         "old_string": "## Việc", "new_string": "## Việc\n- [ ] X · @javis:full"}})
+        r = subprocess.run([sys.executable, str(GOC_REPO / "integrations/javis/chan_ghi_claude.py")],
+                           input=vao, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("brain giao", r.stderr)
 
 if __name__ == "__main__":
     unittest.main()

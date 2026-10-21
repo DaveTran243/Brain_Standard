@@ -209,5 +209,64 @@ class BoNaoTest(unittest.TestCase):
         self.assertTrue((self.vault / "weekly/2026-W43.md").is_file())
 
 
+    # ---- Javis · 3.0
+    def them_viec(self, *dong: str) -> Path:
+        p = self.vault / "10-Action/11-next-actions.md"
+        p.write_text(p.read_text(encoding="utf-8") + "".join(f"{d}\n" for d in dong), encoding="utf-8")
+        return p
+
+    def test_giao_gan_nhan_va_ngay(self):
+        p = self.them_viec("- [ ] Soạn email hỏi kế toán · @máy", "- [ ] Gọi mẹ")
+        ma, out = self.chay("giao", "kế toán", "auto")
+        self.assertEqual(ma, 0, out)
+        self.assertIn("- [ ] Soạn email hỏi kế toán · @máy · @javis:auto · giao 2026-10-20", p.read_text(encoding="utf-8"))
+        ma, out = self.chay("giao", "kế toán", "full")
+        self.assertEqual(ma, 2)
+        self.assertIn("đã giao cho Javis", out)
+
+    def test_giao_can_dung_mot_viec(self):
+        self.them_viec("- [ ] Gọi mẹ", "- [ ] Gọi bố")
+        ma, out = self.chay("giao", "Gọi", "auto")
+        self.assertEqual(ma, 2)
+        self.assertIn("đang thấy 2", out)
+
+    def test_javis_loc_theo_muc(self):
+        self.them_viec("- [ ] Tra giá máy in · @javis:suggest", "- [ ] Gửi báo giá · @javis:full",
+                       "- [x] Việc cũ · @javis:auto · xong 2026-10-19", "- [ ] Việc của tôi")
+        ma, out = self.chay("javis")
+        self.assertEqual(ma, 0)
+        self.assertIn("1 · suggest · Tra giá máy in", out)
+        self.assertIn("2 · full · Gửi báo giá", out)
+        self.assertNotIn("Việc cũ", out)
+        self.assertNotIn("Việc của tôi", out)
+        _, out = self.chay("javis", "--muc", "auto")
+        self.assertNotIn("Gửi báo giá", out)
+
+    def test_xong_danh_dau_va_ve_inbox(self):
+        p = self.them_viec("- [ ] Tra giá máy in · @web · @javis:suggest · giao 2026-10-18")
+        ma, out = self.chay("xong", "1", "Ba", "báo", "giá", "trong", "nhap/may-in.md")
+        self.assertEqual(ma, 0, out)
+        self.assertIn("- [x] Tra giá máy in · @web · @javis:suggest · giao 2026-10-18 · xong 2026-10-20",
+                      p.read_text(encoding="utf-8"))
+        inbox = (self.vault / "00-Inbox/Inbox.md").read_text(encoding="utf-8")
+        self.assertIn('- [2026-10-20 21:30] (javis) Kết quả "Tra giá máy in · @web": Ba báo giá trong nhap/may-in.md', inbox)
+        ma, _ = self.chay("xong", "1", "lần nữa")
+        self.assertEqual(ma, 2)
+
+    def test_kiem_javis_thieu_muc_va_treo(self):
+        self.them_viec("- [ ] Gọi mẹ · @javis", "- [ ] Tra lịch · @javis:auto · giao 2026-10-01",
+                       "- [x] Xong rồi · @javis · xong 2026-10-01")
+        ma, out = self.chay("kiem")
+        self.assertEqual(ma, 1)
+        self.assertIn("@javis cần mức suggest, auto, full", out)
+        self.assertIn("giao Javis đã 19 ngày chưa xong", out)
+        self.assertEqual(out.count("Javis ·"), 2)
+
+    def test_weekly_dem_viec_javis(self):
+        self.them_viec("- [ ] A · @javis:auto · giao 2026-10-01", "- [ ] B · @javis:auto · giao 2026-10-19",
+                       "- [x] C · @javis:auto · giao 2026-10-15 · xong 2026-10-18")
+        _, out = self.chay("weekly")
+        self.assertIn("| Việc giao Javis đang mở · xong trong 7 ngày · treo | 2 · 1 · 1 |", out)
+
 if __name__ == "__main__":
     unittest.main()

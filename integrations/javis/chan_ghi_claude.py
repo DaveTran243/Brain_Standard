@@ -29,7 +29,14 @@ def main() -> int:
         return 0
     vao = su_kien.get("tool_input") or {}
     duong = vao.get("file_path") or vao.get("notebook_path") or ""
-    ly_do = plugin.ly_do_chan("javis_write_file", {"path": duong}, su_kien.get("cwd") or ".")
+    args = {"path": duong}
+    if "content" in vao:
+        args["content"] = vao["content"]
+    else:
+        sua = vao.get("edits") or [vao]
+        args["old_string"] = "\n".join(str(e.get("old_string") or "") for e in sua)
+        args["new_string"] = "\n".join(str(e.get("new_string") or "") for e in sua)
+    ly_do = plugin.ly_do_chan("javis_write_file", args, su_kien.get("cwd") or ".")
     if ly_do:
         print(ly_do, file=sys.stderr)
         return 2

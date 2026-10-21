@@ -2,6 +2,8 @@
 
 Cổng chỉ áp cho thông tin do agent mang về: kết quả tra cứu web, tóm tắt tài liệu, số liệu lấy qua API, và dữ kiện Claude ghi vào bộ não. Ý bạn tự ghi không đi qua K1.
 
+Export chat là trường hợp riêng: không qua K1 khi nhập, nhưng mang nhãn chưa kiểm và đi tối đa tới Fleeting, như mã F6. Dữ kiện trong export muốn đi xa hơn thì lập phiếu và nộp qua K1. Xem [dong-chay.md](dong-chay.md).
+
 Mỗi khẳng định được chấm trên hai trục độc lập theo hệ Admiralty: nguồn có đáng tin không (A–F) và thông tin có đúng không (1–6). Nguồn tốt không tự làm thông tin đúng, nên hai trục chấm riêng.
 
 ## Bốn cổng

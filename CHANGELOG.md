@@ -2,6 +2,17 @@
 
 Số phiên bản theo dạng x.y.z: x tăng khi dòng chảy chính đổi hình, y tăng khi thêm cơ chế mà không phá dòng chảy, z cho sửa số liệu, nhãn và câu chữ. Bản mới nhất ở trên cùng.
 
+## Chưa phát hành
+
+Tài liệu và luật export chat. CLI không đổi cách chạy.
+
+### Đổi
+- Export chat: không qua K1 khi nhập, nhưng mang nhãn chưa kiểm và đi tối đa tới Fleeting, như mã F6; dữ kiện trong đó muốn đi xa hơn thì lập phiếu và qua K1. Trước đây `docs/dong-chay.md` ghi export phải qua K1, trái với cách lõi second-brain đang chạy. Cập nhật `docs/dong-chay.md`, `docs/kiem-duyet.md`, `docs/dung-voi-ai.md`, `vault/AGENTS.md`, `docs/kien-truc-he-thong.md`.
+
+### Thêm
+- `docs/kien-truc-he-thong.md`: tài liệu kiến trúc hệ thống (DAB) chuẩn hoá theo arc42, gồm yêu cầu và ca sử dụng, mục tiêu chất lượng, ràng buộc, bối cảnh, khối xây dựng, đặc tả từng lệnh, triển khai, mô hình dữ liệu, ngữ pháp các dòng, danh mục luật kiểm có mã, tham chiếu cấu hình, mã thoát, mô hình mối đe doạ, ma trận truy vết test, 9 ADR, kịch bản chất lượng, 13 rủi ro và nợ kỹ thuật.
+- Thiết kế đề xuất cho 2.3: tầng truy hồi với chỉ mục SQLite (FTS5 + sqlite-vec), embeddings local, lệnh `brain index`, `brain tim`, `brain mcp` và MCP server chỉ ghi qua cổng K1; kèm lược đồ SQL, thuật toán index và xếp hạng theo độ tin, schema tool MCP, ngân sách hiệu năng, kế hoạch kiểm thử và tiêu chí nghiệm thu.
+
 ## 2.2.1 · 20/10/2026
 
 Tài liệu. Luật và CLI không đổi cách chạy.

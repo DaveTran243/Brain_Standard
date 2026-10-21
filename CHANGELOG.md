@@ -4,7 +4,10 @@ Số phiên bản theo dạng x.y.z: x tăng khi dòng chảy chính đổi hìn
 
 ## Chưa phát hành
 
-Tài liệu. Luật và CLI không đổi cách chạy.
+Tài liệu và luật export chat. CLI không đổi cách chạy.
+
+### Đổi
+- Export chat: không qua K1 khi nhập, nhưng mang nhãn chưa kiểm và đi tối đa tới Fleeting, như mã F6; dữ kiện trong đó muốn đi xa hơn thì lập phiếu và qua K1. Trước đây `docs/dong-chay.md` ghi export phải qua K1, trái với cách lõi second-brain đang chạy. Cập nhật `docs/dong-chay.md`, `docs/kiem-duyet.md`, `docs/dung-voi-ai.md`, `vault/AGENTS.md`, `docs/kien-truc-he-thong.md`.
 
 ### Thêm
 - `docs/kien-truc-he-thong.md`: tài liệu kiến trúc hệ thống (DAB) chuẩn hoá theo arc42, gồm yêu cầu và ca sử dụng, mục tiêu chất lượng, ràng buộc, bối cảnh, khối xây dựng, đặc tả từng lệnh, triển khai, mô hình dữ liệu, ngữ pháp các dòng, danh mục luật kiểm có mã, tham chiếu cấu hình, mã thoát, mô hình mối đe doạ, ma trận truy vết test, 9 ADR, kịch bản chất lượng, 13 rủi ro và nợ kỹ thuật.

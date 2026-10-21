@@ -665,6 +665,8 @@ Kết quả theo mặc định (hàng nguồn, cột tin):
 | K3 | Cửa permanent | `brain kiem` (khi có `ma`) | Tin 1–2 |
 | K4 | Cửa bộ thẻ | Chủ bộ não | Tin 1–2; số liệu có hạn dùng |
 
+Export chat không qua K1 khi nhập (`brain ghi --kenh export`), nhưng được coi như mã F6: chưa kiểm, đi tối đa tới Fleeting. Dữ kiện trong export muốn lên literature trở lên phải lập phiếu và qua K1. CLI chưa kiểm luật này, vì Inbox không giữ nhãn của mục sau khi được chuyển sang làn khác (R3).
+
 ### 8.4 Danh mục luật kiểm
 
 Mỗi luật có mã để tài liệu, test và (sau này) chỉ mục truy hồi tham chiếu. Mã luật chưa hiện trong thông báo của CLI.

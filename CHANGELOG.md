@@ -2,6 +2,14 @@
 
 Số phiên bản theo dạng x.y.z: x tăng khi dòng chảy chính đổi hình, y tăng khi thêm cơ chế mà không phá dòng chảy, z cho sửa số liệu, nhãn và câu chữ. Bản mới nhất ở trên cùng.
 
+## Chưa phát hành
+
+Tài liệu. Luật và CLI không đổi cách chạy.
+
+### Thêm
+- `docs/kien-truc-he-thong.md`: tài liệu kiến trúc hệ thống (DAB) chuẩn hoá theo arc42, gồm mục tiêu chất lượng, ràng buộc, bối cảnh, khối xây dựng, luồng chạy của từng lệnh, triển khai, mô hình dữ liệu, mã thoát, 8 quyết định kiến trúc, kịch bản chất lượng, rủi ro và nợ kỹ thuật.
+- Thiết kế đề xuất cho 2.3: tầng truy hồi với chỉ mục SQLite (FTS5 + sqlite-vec), embeddings local, lệnh `brain index`, `brain tim`, `brain mcp` và MCP server chỉ ghi qua cổng K1.
+
 ## 2.2.1 · 20/10/2026
 
 Tài liệu. Luật và CLI không đổi cách chạy.

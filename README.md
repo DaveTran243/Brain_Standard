@@ -85,6 +85,7 @@ Ba làn trao đổi với nhau qua 7 đường I1–I7, mô tả ở [docs/dong-
 | `docs/ba-lan.md` | Luật, số đo và dấu hiệu hỏng của từng làn |
 | `docs/kiem-duyet.md` | Cổng K1–K4, hệ mã Admiralty, phiếu nguồn, 10 bước tra cứu |
 | `docs/tang-thuc-thi.md` | Tầng thực thi 2.2: board, milestone, người phụ trách |
+| `docs/kien-truc-he-thong.md` | Kiến trúc hệ thống (DAB) theo arc42: thành phần, luồng chạy, quyết định, rủi ro, thiết kế tầng truy hồi 2.3 |
 | `vault/` | Khung thư mục và mẫu file để bắt đầu một bộ não mới |
 | `vault/AGENTS.md` | Quy tắc cho agent làm việc trong repo |
 | `brain.toml` | Cấu hình chuẩn 2.2 |

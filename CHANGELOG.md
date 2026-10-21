@@ -15,7 +15,7 @@ Bộ não có người vận hành. Dòng chảy đổi hình: Javis giữ hai �
 - Mục `[javis]` trong `brain.toml`: `nhan`, `treo_toi_da_ngay`.
 - `docs/dab-3.0.md`: DAB 3.0, tài liệu thiết kế để duyệt kiến trúc.
 - `docs/dung-voi-javis.md`: dùng bộ não với Javis OS, gồm bản đồ khái niệm, các chỗ xung đột, cài đặt từng bước và quy trình mẫu, cả loop làm tiếp theo từng mức.
-- `integrations/javis/brain-standard/` (plugin 3.0.0): tool `brain_ghi`, `brain_nop`, `brain_kiem`, `brain_turn`, `brain_weekly`, `brain_viec_javis`, `brain_xong` cho mọi engine; hook chặn AI ghi vào permanent note, `00-Inbox/agent`, file mẫu, và chặn AI tự gắn hay nâng nhãn `@javis`.
+- `integrations/javis/brain-standard/` (plugin 3.0.0): tool `brain_ghi`, `brain_nop`, `brain_kiem`, `brain_turn`, `brain_weekly`, `brain_viec_javis`, `brain_xong` cho mọi engine; hook chặn AI ghi vào permanent note, `00-Inbox/agent`, file mẫu, và chặn AI tự gắn hay nâng nhãn `@javis`. `brain_nop` nhận nội dung phiếu dạng chữ và chạy ở mức `suggest`, nên loop chỉ đọc vẫn nộp được dữ kiện tự tra qua K1.
 - `integrations/javis/chan_ghi_claude.py`: hook PreToolUse cho Claude Code, cùng luật chặn.
 - `archive/`: ảnh chụp bản cũ.
 

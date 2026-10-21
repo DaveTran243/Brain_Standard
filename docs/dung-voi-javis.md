@@ -73,7 +73,7 @@ Javis/skill-usage.json
 nhap/
 ```
 
-`memory/conversations/` là hội thoại thô, có thể chứa thứ bạn lỡ dán. `attachments/` và `inbox/` là vùng cache Javis tự dọn sau 30 ngày (khác `vault/00-Inbox/`). `nhap/` là chỗ Javis viết phiếu nguồn trước khi nộp (bước 5).
+`memory/conversations/` là hội thoại thô, có thể chứa thứ bạn lỡ dán. `attachments/` và `inbox/` là vùng cache Javis tự dọn sau 30 ngày (khác `vault/00-Inbox/`). `nhap/` là chỗ Javis để bản nháp ở mức `auto`, và chỗ engine có shell viết phiếu nguồn trước khi nộp.
 
 ### 4. Hạ tự học xuống mức không ghi
 
@@ -101,7 +101,7 @@ Không dùng INGEST. Muốn đưa một tài liệu vào bộ não, làm theo qu
 
   ```text
   8. Trong Javis: dùng tool brain_ghi, brain_nop, brain_kiem, brain_turn, brain_weekly, brain_viec_javis, brain_xong thay cho lệnh shell.
-  9. Phiếu nguồn viết vào thư mục nhap/ ở gốc repo, rồi nộp bằng brain_nop. Không ghi vào vault/00-Inbox/agent.
+  9. Dữ kiện tự tra: mỗi khẳng định soạn thành một phiếu nguồn theo vault/_mau/phieu-nguon.md và nộp bằng brain_nop, truyền cả nội dung phiếu vào tham số phieu. Không ghi vào vault/00-Inbox/agent.
   10. Không dùng INGEST, không ghi vào sources/ hay wiki/.
   ```
 
@@ -116,13 +116,13 @@ Gói này có sẵn plugin ở `integrations/javis/brain-standard/`. Plugin làm
   | Tool | Lệnh | Mức tối thiểu |
   | --- | --- | --- |
   | `brain_ghi` | `brain ghi` · thu lời bạn | `auto` |
-  | `brain_nop` | `brain nop` · thu dữ kiện qua K1 | `auto` |
   | `brain_turn` | `brain turn` | `auto` |
+  | `brain_nop` | `brain nop` · thu dữ kiện qua K1 | `suggest` |
   | `brain_kiem`, `brain_weekly` | `brain kiem`, `brain weekly` | `suggest` |
   | `brain_viec_javis` | `brain javis --muc` · nhận việc được giao | `suggest` |
   | `brain_xong` | `brain xong` · trả kết quả về Inbox | `suggest` |
 
-  `brain_xong` chạy được ở `suggest` vì chỗ ghi duy nhất của nó là sổ sách của CLI: đánh dấu xong và một dòng Inbox. Không có tool cho `brain giao`: chỉ bạn giao việc.
+  `brain_nop` và `brain_xong` chạy được ở `suggest` vì chỗ ghi duy nhất vào bộ não là của CLI: mục đã qua K1, dấu xong và một dòng Inbox. `brain_nop` nhận cả nội dung phiếu (`phieu`), tự ghi nó ra thư mục tạm ngoài vault rồi nộp, nên lượt chỉ đọc vẫn nộp được dữ kiện tự tra. Phiếu đã nằm trong file thì truyền `file`. Không có tool cho `brain giao`: chỉ bạn giao việc.
 - Hook `pre_tool_call` chặn AI ghi bằng `javis_write_file`, `javis_edit_file` vào `30-Knowledge/permanent/`, `00-Inbox/agent/` và mọi file hay thư mục bắt đầu bằng `_` trong `vault/`, và chặn AI tự gắn hay nâng mức nhãn `@javis` trong Next Actions. AI nhận lại câu giải thích và cách làm đúng.
 
 Chép vào brain (gốc repo):
@@ -183,9 +183,9 @@ Bạn ngồi xuống, quyết định, rồi tự lưu số đo bằng `brain we
 
 ### Tra cứu có kiểm chứng
 
-> Tra giúp tôi: <câu hỏi>. Tách thành các khẳng định đơn. Mỗi khẳng định viết thành một file trong nhap/ theo mẫu vault/_mau/phieu-nguon.md, rồi nộp bằng brain_nop.
+> Tra giúp tôi: <câu hỏi>. Tách thành các khẳng định đơn. Mỗi khẳng định soạn thành một phiếu nguồn theo mẫu vault/_mau/phieu-nguon.md, rồi nộp bằng brain_nop với tham số phieu.
 
-Engine CLI có web sẵn; engine API dùng `javis_web_search`, `javis_web_fetch`. Mục thiếu phiếu bị K1 trả lại, mục mã E hoặc tin 5 vào `_log/k1.md`. Xong thì xoá các file trong `nhap/`.
+Engine CLI có web sẵn; engine API dùng `javis_web_search`, `javis_web_fetch`. Mục thiếu phiếu bị K1 trả lại, mục mã E hoặc tin 5 vào `_log/k1.md`. Phiếu truyền bằng `phieu` không để lại file nào; engine có shell viết phiếu vào `nhap/` thì xoá chúng sau khi nộp.
 
 ### Làm rõ Inbox
 
@@ -205,7 +205,7 @@ bin/brain giao "kế toán" auto        # gắn @javis:auto · giao <hôm nay> v
 
 Rồi tạo mỗi mức một loop, mức của loop bằng mức việc nó nhận:
 
-> Tạo loop 30 phút, mức chỉ đọc, tên "Javis · suggest": mỗi chu kỳ gọi brain_viec_javis với muc_toi_da suggest. Không có việc thì dừng. Có thì làm việc số 1: tra cứu và đề xuất; dữ kiện tự tra viết phiếu trong nhap/ rồi nộp bằng brain_nop. Xong gọi brain_xong số 1, muc_toi_da suggest, kết quả là một câu nói đã làm gì và kết quả ở đâu.
+> Tạo loop 30 phút, mức chỉ đọc, tên "Javis · suggest": mỗi chu kỳ gọi brain_viec_javis với muc_toi_da suggest. Không có việc thì dừng. Có thì làm việc số 1: tra cứu và đề xuất; mỗi dữ kiện tự tra soạn thành một phiếu nguồn và nộp bằng brain_nop với tham số phieu. Xong gọi brain_xong số 1, muc_toi_da suggest, kết quả là một câu nói đã làm gì và kết quả ở đâu.
 
 > Tạo loop 30 phút, mức ghi nháp (auto), tên "Javis · auto": như trên nhưng muc_toi_da auto; được viết nháp trong nhap/, code trong khu 5x, issue trên board.
 

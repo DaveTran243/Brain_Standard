@@ -17,6 +17,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import tomllib
 from pathlib import Path
 
@@ -79,9 +80,22 @@ def _ghi(args, ctx):
 
 
 def _nop(args, ctx):
-    file = str((args or {}).get("file") or "").strip()
+    """Nộp qua K1, từ 'phieu' (nội dung phiếu dạng chữ) hoặc 'file' (đường dẫn có sẵn).
+
+    Với 'phieu', plugin tự ghi phiếu ra một thư mục tạm NGOÀI vault rồi chạy brain nop, nên lượt ở
+    mức suggest (không được ghi file) vẫn nộp được qua K1. CLI quyết định mục đi đâu như mọi lần nộp.
+    """
+    args = args or {}
+    phieu = str(args.get("phieu") or "")
+    if phieu.strip():
+        ten = re.sub(r"[^\w-]+", "-", str(args.get("ten") or "phieu"), flags=re.UNICODE).strip("-")[:60] or "phieu"
+        with tempfile.TemporaryDirectory(prefix="brain-nop-") as tam:
+            p = Path(tam) / f"{ten}.md"
+            p.write_text(phieu, encoding="utf-8", newline="\n")
+            return _chay(ctx, "nop", str(p))
+    file = str(args.get("file") or "").strip()
     if not file:
-        return "ERROR: cần 'file' (đường dẫn tới phiếu nguồn .md)."
+        return "ERROR: cần 'phieu' (nội dung phiếu nguồn) hoặc 'file' (đường dẫn tới phiếu nguồn .md)."
     p = Path(file)
     if not p.is_absolute() and getattr(ctx, "vault_root", None):
         p = Path(ctx.vault_root) / p
@@ -197,12 +211,17 @@ def register(ctx):
     )
     ctx.register_tool(
         name="brain_nop",
-        description=("Nộp một phiếu nguồn do AI mang về qua cổng K1. File .md cần frontmatter nguon, ngay_lay, "
-                     "luu_tru, ma (A–F + 1–6), cach_kiem theo vault/_mau/phieu-nguon.md. Không bịa mã."),
-        handler=_nop, min_mode="safe",
+        description=("Nộp một khẳng định do AI tự tra qua cổng K1. Truyền 'phieu': cả nội dung phiếu nguồn, "
+                     "frontmatter nguon, ngay_lay, luu_tru, ma (A–F + 1–6), cach_kiem theo vault/_mau/phieu-nguon.md, "
+                     "rồi tiêu đề là khẳng định. Một khẳng định mỗi lần nộp. Không bịa mã. "
+                     "Dùng 'file' thay cho 'phieu' khi phiếu đã nằm sẵn trong một file."),
+        # readonly có chủ ý, như brain_xong: phiếu ghi ra thư mục tạm ngoài vault, và chỗ ghi duy nhất vào
+        # bộ não là của CLI sau khi K1 duyệt. Lượt mức suggest cần nó để nộp được dữ kiện tự tra.
+        handler=_nop, min_mode="readonly",
         schema={"type": "object",
-                "properties": {"file": {"type": "string", "description": "Đường dẫn tới file phiếu nguồn"}},
-                "required": ["file"]},
+                "properties": {"phieu": {"type": "string", "description": "Nội dung phiếu nguồn: frontmatter rồi tiêu đề"},
+                               "ten": {"type": "string", "description": "Tên ngắn cho phiếu, ví dụ gia-may-in"},
+                               "file": {"type": "string", "description": "Đường dẫn tới file phiếu nguồn có sẵn"}}},
     )
     ctx.register_tool(
         name="brain_kiem",

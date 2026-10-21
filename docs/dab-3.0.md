@@ -164,9 +164,10 @@ sequenceDiagram
   J->>P: brain_ghi(noi_dung, kenh=telegram)
   P->>C: brain ghi … --kenh telegram
   C->>I: - [2026-10-21 09:00] (telegram) hỏi kế toán…
-  J->>J: tra web, viết phiếu nguồn trong nhap/
-  J->>P: brain_nop(file=nhap/phieu.md)
-  P->>C: brain nop nhap/phieu.md
+  J->>J: tra web, soạn phiếu nguồn (frontmatter + khẳng định)
+  J->>P: brain_nop(phieu=…, ten=…)
+  P->>P: ghi phiếu ra thư mục tạm ngoài vault
+  P->>C: brain nop <tạm>/<ten>.md
   alt đủ phiếu, mã đạt
     C->>I: mục agent · mã B2 · tối đa literature
   else thiếu phiếu
@@ -215,7 +216,7 @@ sequenceDiagram
 
 | Mức | Được | Không được |
 | --- | --- | --- |
-| `suggest` | Đọc vault, tra cứu, nộp qua K1, đề xuất, báo xong | Ghi file khác |
+| `suggest` | Đọc vault, tra cứu, nộp qua K1 (`brain_nop` với phiếu dạng chữ), đề xuất, báo xong | Ghi file khác |
 | `auto` | Thêm: viết nháp, code trong khu 50–59, issue trên board | Hành động ra ngoài |
 | `full` | Thêm: gửi tin, đăng bài, đặt hàng theo đúng việc được giao | Như mọi mức: permanent note, xoá dữ liệu, bỏ K1, chốt hay dừng project |
 
@@ -239,9 +240,9 @@ sequenceDiagram
 | Tool | Gọi | `min_mode` |
 | --- | --- | --- |
 | `brain_ghi` | `brain ghi` | `safe` |
-| `brain_nop` | `brain nop` | `safe` |
 | `brain_turn` | `brain turn` | `safe` |
 | `brain_kiem`, `brain_weekly` | `brain kiem`, `brain weekly` | `readonly` |
+| `brain_nop(phieu, ten)` hoặc `brain_nop(file)` | `brain nop` | `readonly`: phiếu ghi ra thư mục tạm ngoài vault; chỗ ghi duy nhất vào bộ não là của CLI sau khi K1 duyệt, để lượt mức `suggest` nộp được dữ kiện tự tra |
 | `brain_viec_javis(muc_toi_da)` | `brain javis --muc` | `readonly` |
 | `brain_xong(so, ket_qua, muc_toi_da)` | `brain xong` | `readonly`: chỗ ghi duy nhất là sổ sách của CLI, để loop mức `suggest` trả được kết quả |
 
@@ -265,6 +266,7 @@ Bỏ nhãn, đánh dấu xong, sửa chữ khác đều được.
 | Next Actions đổi giữa lúc `brain javis` và `brain xong` | `<số>` có thể trỏ sai việc. `brain xong` in tên việc đã đánh dấu; kết quả về Inbox nên chủ bộ não thấy ngay. Git hoàn tác được. Ghi nhận ở rủi ro R2 |
 | Loop gọi `brain xong` hai lần | Lần hai không thấy việc (đã xong), trả mã 2, không ghi gì |
 | CLI treo hay lỗi | Plugin chặn sau 60 giây, trả lỗi cho model; không ghi dở vì mỗi lệnh ghi một lần |
+| `brain_nop` với phiếu dạng chữ | Phiếu nằm trong thư mục tạm của hệ điều hành, xoá ngay sau lần nộp dù K1 đạt, trả lại hay loại. Không có file thừa trong repo |
 | Brain trong Javis không phải repo bộ não | Tool trả lỗi rõ ràng; hook không chặn gì (không có luật để áp) |
 | Hook của Javis OS ném lỗi | Javis OS cho tool chạy tiếp (fail-open, theo thiết kế của nó). `brain kiem` và review là cổng cuối |
 | Javis ghi bằng shell thay vì tool | Hook không thấy. `brain kiem` bắt các lỗi luật; git cho thấy ai đổi gì |
@@ -358,3 +360,4 @@ stateDiagram-v2
 3. **Bộ não của Cá Béo** có Javis riêng không. Đề xuất: riêng, cùng plugin, khác repo.
 4. **Javis tự phân loại mục rõ ràng** (link đọc sau, việc dưới 2 phút). Đề xuất: không ở 3.0; xem lại sau 4 tuần số liệu.
 5. **Mã việc ổn định** thay cho số thứ tự (R2). Đề xuất: để 3.1.
+6. **Hạ tầng agent đang tạm dừng** (35 persona, Vault). Đề xuất: thay bằng Javis, một agent gọi công cụ, mỗi loop một mức quyền.

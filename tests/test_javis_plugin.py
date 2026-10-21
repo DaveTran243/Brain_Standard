@@ -72,6 +72,7 @@ class PluginTest(unittest.TestCase):
         self.assertNotIn("brain_giao", self.ctx.tools)
         self.assertEqual(self.ctx.tools["brain_kiem"]["min_mode"], "readonly")
         self.assertEqual(self.ctx.tools["brain_ghi"]["min_mode"], "safe")
+        self.assertEqual(self.ctx.tools["brain_nop"]["min_mode"], "readonly")
         self.assertEqual(self.ctx.tools["brain_viec_javis"]["min_mode"], "readonly")
         self.assertEqual(self.ctx.tools["brain_xong"]["min_mode"], "readonly")
         self.assertIn("pre_tool_call", self.ctx.hooks)
@@ -86,6 +87,22 @@ class PluginTest(unittest.TestCase):
         (self.tmp / "nhap/phieu.md").write_text(PHIEU, encoding="utf-8")
         ra = self.ctx.goi("brain_nop", {"file": "nhap/phieu.md"})
         self.assertIn("K1 đạt", ra)
+
+    def test_nop_tu_noi_dung_phieu(self):
+        ra = self.ctx.goi("brain_nop", {"phieu": PHIEU, "ten": "giá máy in"})
+        self.assertIn("K1 đạt", ra)
+        muc = list((self.tmp / "vault/00-Inbox/agent").glob("*.md"))
+        self.assertEqual(len(muc), 1)
+        self.assertIn("ma: B2", muc[0].read_text(encoding="utf-8"))
+        self.assertEqual(sorted(p.name for p in self.tmp.iterdir()), ["brain.toml", "tools", "vault"])
+
+    def test_nop_tu_noi_dung_bi_loai(self):
+        ra = self.ctx.goi("brain_nop", {"phieu": PHIEU.replace("ma: B2", "ma: E2")})
+        self.assertIn("[mã thoát 3]", ra)
+        self.assertEqual(list((self.tmp / "vault/00-Inbox/agent").glob("*.md")), [])
+
+    def test_nop_khong_co_gi(self):
+        self.assertTrue(self.ctx.goi("brain_nop", {}).startswith("ERROR"))
 
     def test_nop_thieu_phieu_bi_tra_lai(self):
         (self.tmp / "thieu.md").write_text("# không có phiếu\n", encoding="utf-8")

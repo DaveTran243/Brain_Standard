@@ -1,6 +1,6 @@
 # Inbox
 
-Mọi thứ vào đây trước khi phân loại. Lời bạn ghi bằng `brain ghi`, mục từ agent nộp bằng `brain nop` và nằm trong `agent/`.
-Mỗi dòng: `- [YYYY-MM-DD HH:MM] (kênh) nội dung`. Dọn hết trong Weekly Review; không mục nào ở đây quá 7 ngày.
+Everything lands here before it is clarified. Your own words come in with `brain capture`; items from an agent come in with `brain submit` and live in `agent/`.
+Each line: `- [YYYY-MM-DD HH:MM] (channel) content`. Clear it in the Weekly Review; nothing stays here longer than 7 days.
 
-## Mục
+## Items

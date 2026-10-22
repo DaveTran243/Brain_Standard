@@ -1,7 +1,7 @@
 # Someday/Maybe
 
-Việc chưa làm trong 3 tháng tới, hoặc ý có thể thành việc (I2). Rà mỗi tuần để nâng lên Projects.
+Things you will not do in the next 3 months, or ideas that could become tasks (I2). Review every week and promote to Projects.
 
-Dạng: `- <việc> · gác vì: … · nâng lên khi: …`
+Format: `- <task> · parked because: … · promote when: …`
 
-## Danh sách
+## List

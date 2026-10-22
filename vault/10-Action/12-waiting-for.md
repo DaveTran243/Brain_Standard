@@ -1,8 +1,8 @@
 # Waiting For
 
-Chỉ việc chờ người ngoài, không thuộc board nào. Việc giao trong project thì gán người phụ trách trên board.
-Rà mỗi tuần.
+Only things you wait for from people outside any board. Work handed out inside a project gets an owner on its board.
+Review every week.
 
-Dạng: `- [ ] Chờ <ai> <việc gì> · từ YYYY-MM-DD · [[project]]`
+Format: `- [ ] Waiting for <who> to <what> · since YYYY-MM-DD · [[project]]`
 
-## Đang chờ
+## Waiting

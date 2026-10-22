@@ -1,50 +1,18 @@
-# Brain_Standard · cấu hình chuẩn bộ não 3.0.0
-# Từ 2.2.0 không còn mục [gioi_han]: không giới hạn số project hay next action.
+# Brain_Standard · configuration of this brain.
+# Every parameter has a default in tools/brain/defaults.toml. Copy a key here only to change it.
+# Names are explained in docs/glossary.md.
 
-[bo_nao]
-phien_ban = "3.0.0"
+[brain]
+version = "4.0.0"
 vault = "vault"
 
-[duong_dan]
-inbox = "00-Inbox/Inbox.md"
-inbox_agent = "00-Inbox/agent"
-next_actions = "10-Action/11-next-actions.md"
-waiting_for = "10-Action/12-waiting-for.md"
-projects = "10-Action/13-Projects"
-someday = "10-Action/14-someday.md"
-fleeting = "30-Knowledge/fleeting"
-literature = "30-Knowledge/literature"
-permanent = "30-Knowledge/permanent"
-maps = "40-Maps"
-weekly = "weekly"
-log = "_log"
-
-[lam_ro]
-fleeting_toi_da_ngay = 7     # fleeting cũ hơn thì cảnh báo
-moc_khi_du_note = 7
-
-[nhip]
-vong_ngay_chon_toi_da = 3    # nhịp ngày, không chặn việc ghi
-
-[kiem_duyet]
-chan_cung = true             # K1: thiếu phiếu nguồn thì brain nop trả lại; vault còn lỗi thì brain turn không đóng lượt
-truong_bat_buoc = ["nguon", "ngay_lay", "luu_tru", "ma", "cach_kiem"]
-loai_nguon = ["E"]           # nguồn bị loại ở K1
-loai_tin = [5]               # tin bị loại ở K1
-chi_toi_fleeting = ["D", "F"]
-literature_nguon = ["A", "B", "C"]   # K2
-permanent_tin = [1, 2]               # K3
-the_tin = [1, 2]                     # K4
-
-[thuc_thi]
-canh_bao_milestone_khong_board = true
-canh_bao_project_khong_viec = true
-
-[johnny_decimal]
-khu = "50-59"
-toi_da_category = 10
-
-[javis]
-# 3.0: Javis thu ở đầu vào, làm tiếp ở đầu ra; bộ não phân loại ở giữa.
-nhan = "@javis"              # nhãn trên next action giao cho Javis, dạng @javis:<suggest|auto|full>
-treo_toi_da_ngay = 7         # việc giao quá số ngày này chưa xong thì brain kiem cảnh báo
+# Examples of overrides:
+# [clarify]
+# fleeting_max_days = 10
+#
+# [gates]
+# strict = false
+#
+# [assistant]
+# name = "Javis"
+# stale_after_days = 5

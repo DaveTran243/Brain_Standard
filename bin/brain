@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
-# brain · CLI của Brain_Standard. Cần Python 3.11 trở lên.
+# brain · Brain_Standard CLI. Needs Python 3.11 or later.
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
-exec python3 "$DIR/tools/brain.py" "$@"
+PYTHONPATH="$DIR/tools${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m brain "$@"

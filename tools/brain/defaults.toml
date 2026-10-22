@@ -1,0 +1,103 @@
+# Brain_Standard · default configuration.
+# Every parameter the CLI, the Javis plugin and the Claude hook use lives here.
+# A brain overrides any of these in its own brain.toml; keys it leaves out keep these values.
+# Names are explained in docs/glossary.md.
+
+[brain]
+version = "4.0.0"
+vault = "vault"                     # vault folder, relative to the folder that holds brain.toml
+
+[paths]                             # relative to the vault
+inbox = "00-Inbox/Inbox.md"
+inbox_agent = "00-Inbox/agent"
+next_actions = "10-Action/11-next-actions.md"
+waiting_for = "10-Action/12-waiting-for.md"
+projects = "10-Action/13-Projects"
+someday = "10-Action/14-someday.md"
+areas = "20-Areas"
+fleeting = "30-Knowledge/fleeting"
+literature = "30-Knowledge/literature"
+permanent = "30-Knowledge/permanent"
+maps = "40-Maps"
+code = "Code"
+archive = "90-Archive"
+weekly = "weekly"
+log = "_log"
+turn_log = "_log/turns.md"
+rejected_log = "_log/rejected.md"
+templates = "_templates"
+
+[files]
+template_prefix = "_"               # files and folders starting with this are templates or logs: skipped by checks
+inbox_header = "# Inbox\n\n## Items\n"
+turn_log_header = "# Turns\n\n"
+rejected_log_header = "# G1 · rejected items\n\n"
+weekly_title = "# Weekly Review · {week}\n\n"
+
+[capture]
+default_channel = "hand"
+
+[clarify]
+fleeting_max_days = 7               # older fleeting notes raise a warning
+moc_min_notes = 7                   # guidance: make a map of content once a cluster has this many notes
+
+[rhythm]
+daily_pick_max = 3                  # guidance for the daily loop; never blocks capture
+
+[turn]
+types = ["task", "idea", "file", "drop"]
+
+[project]
+statuses = ["someday", "active", "done", "stopped"]
+active_status = "active"
+done_status = "done"
+stopped_status = "stopped"
+required_when_active = ["outcome", "done_when", "stop_when"]
+
+[notes]
+date_keys = ["date", "read_on", "retrieved", "started"]   # first one present gives the note's date
+link_keys = ["links"]                                      # frontmatter keys that may hold [[links]]
+
+[gates]
+strict = true                       # G1 returns incomplete records; brain turn refuses to close while the vault has errors
+required_fields = ["source", "retrieved", "archived", "grade", "verification"]
+sources = "ABCDEF"                  # source reliability, best first
+credibility = [1, 2, 3, 4, 5, 6]    # information credibility, best first
+reject_sources = ["E"]
+reject_credibility = [5]
+fleeting_only_sources = ["D", "F"]
+literature_sources = ["A", "B", "C"]   # G2
+permanent_credibility = [1, 2]         # G3
+card_credibility = [1, 2]              # G4
+unverified_label = "unverified"
+
+[gates.reach_names]                 # how a reach is written in the Inbox line
+card = "flashcard"
+literature = "literature"
+fleeting = "fleeting (unverified)"
+
+[execution]
+warn_milestone_without_board = true    # EX-01
+warn_project_without_task = true       # EX-02
+
+[johnny_decimal]
+area = "50-59"
+max_categories = 10
+
+[assistant]
+name = "Javis"
+label = "@javis"                    # written on a next action as @javis:<level>
+levels = ["suggest", "auto", "full"]   # lowest first; a level is the ceiling for a task
+stale_after_days = 7                # AS-02
+result_channel = "javis"            # channel of the result line written to the Inbox by brain report
+
+[assistant.plugin]
+timeout_seconds = 60                # a brain command run by the plugin is stopped after this
+default_channel = "javis"           # channel brain_capture uses when the caller gives none
+
+[assistant.guard]
+# Paths (keys of [paths]) an AI may never write to directly.
+protected = ["permanent", "inbox_agent"]
+# The file where an AI may not add or raise an assignment label.
+label_file = "next_actions"
+write_tools = ["javis_write_file", "javis_edit_file", "Write", "Edit", "MultiEdit", "NotebookEdit"]

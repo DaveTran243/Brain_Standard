@@ -1,9 +1,9 @@
-# Bản cũ
+# Older versions
 
-Mỗi thư mục là ảnh chụp bộ chuẩn ngay trước khi lên bản mới: tài liệu, `brain.toml`, `vault/AGENTS.md` và CLI. Chỉ để tra lại, không dùng để chạy. `brain kiem` không rà thư mục này.
+Each folder is a snapshot of the standard taken just before an upgrade: the docs, `brain.toml`, `vault/AGENTS.md` and the CLI. They are for reference only, not for running. `brain check` does not scan this folder. The snapshots are kept exactly as they were, so their file names and content are in Vietnamese; [docs/glossary.md](../docs/glossary.md) maps their terms to the current ones.
 
-| Thư mục | Bản | Chụp ngày | Ghi chú |
+| Folder | Version | Taken on | Notes |
 | --- | --- | --- | --- |
-| `2.2.1/` | Bộ não 2.2.1 | 21/10/2026 | Trước khi lên 3.0. Gồm DAB 1.1 (`docs/kien-truc-he-thong.md`, bản arc42 trên `main`) và phần tích hợp Javis chưa phát hành (`docs/dung-voi-javis.md`) |
+| `2.2.1/` | Brain 2.2.1 | 21/10/2026 | Before 3.0. Includes DAB 1.1 (`docs/kien-truc-he-thong.md`, the arc42 version on `main`) and the unreleased Javis integration (`docs/dung-voi-javis.md`) |
 
-Lịch sử đầy đủ vẫn nằm trong git.
+Version 3.0 has no snapshot folder: it is the last Vietnamese version, and its full state is in git history (commit `55248b9` on `main`). The full history of every version is in git.

@@ -1,133 +1,158 @@
-# Brain_Standard · Bộ não 3.0
+# Brain_Standard · Brain 4.0
 
-Một bộ não thứ hai bạn tự sở hữu: các file Markdown trong một repo git, một bộ luật để mọi thứ có chỗ của nó, và một bộ quy tắc để bất kỳ AI nào cũng làm việc được với nó.
+A second brain you own: Markdown files in a git repository, a set of rules so everything has its place, and one rule set so any AI can work with it.
 
-**Phiên bản 3.0.0** · 21/10/2026 · [Change log](CHANGELOG.md) · [DAB 3.0](docs/kien-truc-he-thong.md) · [bản 2.2.1](archive/2.2.1/README.md)
+**Version 4.0.0** · 22/10/2026 · [Change log](CHANGELOG.md) · [Architecture (DAB 4.0)](docs/architecture.md) · [Glossary](docs/glossary.md) · [version 2.2.1](archive/2.2.1/README.md)
 
-**Mới ở 3.0:** Javis giữ hai đầu dòng chảy. Javis **thu** thông tin vào Inbox, bạn **phân loại** bằng hai câu hỏi và ba làn, rồi giao cho Javis những việc nó được **làm tiếp** bằng nhãn `@javis:<mức>`. Kết quả quay về Inbox để bạn làm rõ lại.
+**New in 4.0:** everything is in English: commands, configuration, rule codes, file names and docs, with names chosen for what they mean. The CLI is a package of small reusable modules, and every parameter lives in a configuration file. Upgrading from 3.0 is one command: `brain migrate`. See [docs/migration.md](docs/migration.md).
 
-**Mới tới đây? Đọc [Hướng dẫn dùng bộ não](docs/huong-dan.md)**: cài đặt, ngày đầu tiên trong 30 phút, nhịp ngày và tuần. Muốn dùng với AI thì đọc [Dùng bộ não với AI](docs/dung-voi-ai.md).
+**New here? Read [Getting started](docs/getting-started.md)**: install, your first day in 30 minutes, the daily and weekly rhythm. To use it with AI, read [Using the brain with AI](docs/using-with-ai.md).
 
-## Bộ não dùng để làm gì
+## What the brain is for
 
-Đầu óc là chỗ để nghĩ, không phải chỗ để chứa. Bộ não này nhận phần chứa, để đầu bạn rảnh cho phần nghĩ. Nó giải quyết năm vấn đề quen thuộc:
+Your head is for thinking, not for storing. The brain takes over the storing so your head is free to think. It solves five familiar problems:
 
-| Vấn đề | Bộ não xử lý thế nào |
+| Problem | How the brain handles it |
 | --- | --- |
-| Việc, ý và link rơi rớt khắp nơi: chat, ghi chú điện thoại, tab trình duyệt, trong đầu | Mọi thứ vào **một Inbox duy nhất**. Mỗi mục được trả lời hai câu hỏi rồi đi vào đúng một chỗ. Không gì bị bỏ quên. |
-| Đọc nhiều mà không nhớ, kiến thức không thành của mình | **Làn tri thức**: tóm nguồn bằng lời mình, chưng thành note một ý, nối các note với nhau, rồi ôn bằng thẻ để nhớ lâu. |
-| Nhiều dự án dở dang, không rõ bước tiếp theo, không biết khi nào nên dừng | **Làn hành động**: mỗi project có kết quả, tiêu chí xong và tiêu chí dừng; mỗi việc là một bước cụ thể. Project nhiều bước có board riêng với milestone và người phụ trách. |
-| File, script, log nằm lung tung, tìm lại không ra | **Làn file và code**: mỗi thứ một địa chỉ số cố định, ví dụ `51.03`, ghi chú chỉ cần trỏ tới số. |
-| Dùng AI nhiều nhưng AI quên giữa các cuộc chat, đôi khi bịa, và mỗi nền tảng một kiểu | Bộ não là **trí nhớ bền nằm ở chỗ của bạn**, không khoá vào hãng nào. **Cổng kiểm duyệt** buộc mọi dữ kiện AI mang về có nguồn và mã độ tin. Một bộ quy tắc dùng cho mọi AI. |
+| Tasks, ideas and links scattered everywhere: chats, phone notes, browser tabs, your head | Everything goes into **one Inbox**. Each item answers two questions, then goes to exactly one place. Nothing is forgotten. |
+| Reading a lot without remembering, knowledge that never becomes yours | **The knowledge lane**: summarise sources in your own words, distil them into one-idea notes, link the notes, and review with flashcards to remember for longer. |
+| Many half-finished projects, no clear next step, no idea when to stop | **The action lane**: every project has an outcome, a done condition and a stop condition; every task is one concrete step. A multi-step project has its own board with milestones and owners. |
+| Files, scripts and logs all over the place, impossible to find again | **The files and code lane**: everything has a fixed numeric address, such as `51.03`; notes only need to point at the number. |
+| Using AI a lot, but AI forgets between chats, sometimes makes things up, and every platform works differently | The brain is **durable memory that lives with you**, locked to no vendor. **Trust gates** make every fact an AI brings in carry a source and a grade. One rule set works for every AI. |
 
-### Hợp với ai
+### Who it suits
 
-- **Người tự học dài hạn**, như học một ngoại ngữ hay một chuyên ngành trong nhiều năm: đọc thành literature note, nghĩ thành permanent note, ôn bằng thẻ.
-- **Người làm nhiều project cá nhân hoặc side project**: thấy rõ project nào đang chạy, project nào đang treo, và rút được bài học khi xong.
-- **Người nghiên cứu cần thông tin có kiểm chứng**: mỗi khẳng định có phiếu nguồn, mã độ tin, hạn dùng, và được kiểm lại hằng tháng.
-- **Người làm việc với nhiều AI**, như Claude, ChatGPT, Gemini, hay các agent viết code: một trí nhớ chung, đổi AI không mất gì.
+- **Long-term self-learners**, studying a language or a field over years: read into literature notes, think into permanent notes, review with flashcards.
+- **People running many personal or side projects**: see which projects are moving and which are stalled, and draw lessons when they finish.
+- **Researchers who need verified information**: every claim has a source record, a grade, a valid-until date, and a monthly recheck.
+- **People working with many AIs**, such as Claude, ChatGPT, Gemini or coding agents: one shared memory, and switching AI loses nothing.
 
-### Chưa hợp khi
+### Not a fit when
 
-- Bạn cần một không gian ghi chú cho cả nhóm cùng sửa theo thời gian thực. Bộ não này thiết kế cho một người; phần làm nhóm nằm ở board của từng project.
-- Bạn không muốn đụng tới git hay dòng lệnh. Vẫn dùng tay được với các file Markdown, nhưng bạn sẽ mất phần CLI tự kiểm lỗi và đóng lượt.
+- You need a notes space a whole team edits in real time. This brain is designed for one person; teamwork happens on each project's board.
+- You don't want to touch git or the command line. The Markdown files still work by hand, but you lose the CLI's checks and turn closing.
 
-### Nguyên tắc
+### Principles
 
-1. **Bạn sở hữu dữ liệu.** Chỉ là Markdown và git: mở bằng trình soạn nào cũng được, sao lưu ở đâu cũng được.
-2. **AI là trợ lý, không phải tác giả.** AI giúp làm rõ, tra cứu, viết nháp. Permanent note, nơi giữ suy nghĩ của bạn, luôn do bạn viết bằng lời mình.
-3. **Không tin AI vô điều kiện.** Dữ kiện AI mang về phải qua cổng K1. Mã độ tin quyết định nó được đi tới đâu: chỉ là ý thoáng qua, thành tóm tắt nguồn, hay đủ chắc để học thuộc.
-4. **Đo thay vì cấm.** Không giới hạn số project hay số việc. Weekly Review đo để bạn tự thấy khi mình ôm quá nhiều.
+1. **You own the data.** It is just Markdown and git: open it in any editor, back it up anywhere.
+2. **AI is an assistant, not the author.** AI helps clarify, research and draft. Permanent notes, where your thinking lives, are always written by you, in your own words.
+3. **Never trust AI unconditionally.** Facts an AI brings in must pass gate G1. The grade decides how far they may go: a passing thought, a source summary, or solid enough to memorise.
+4. **Measure, don't forbid.** No limit on projects or tasks. The Weekly Review measures, so you can see for yourself when you are carrying too much.
 
-## Dùng với AI
+## Using it with AI
 
-Bộ não có một khối quy tắc chung, dán được vào bất kỳ AI nào. Từ đó, AI làm việc theo cùng một cách dù bạn đang ở nền tảng nào:
+The brain has one shared rule block you can paste into any AI. From then on, the AI works the same way whichever platform you are on:
 
-- Mỗi yêu cầu được đi qua hai câu hỏi, và mỗi câu trả lời kết thúc bằng một dòng `Bộ não: …` cho biết mục đó đi vào làn nào.
-- Tin nhắn bắt đầu bằng `ghi:` chỉ để ghi; `hôm nay` chạy vòng ngày; `weekly` chạy Weekly Review.
-- Dữ kiện AI tự tra hay tự suy ra phải kèm mã độ tin. AI không được bịa mã.
+- Every request goes through the two questions, and every answer ends with a `Brain: …` line saying which lane the item goes to.
+- A message starting with `capture:` is only captured; `today` runs the daily loop; `weekly` runs the Weekly Review.
+- Facts the AI looked up or inferred carry a grade. The AI never invents a grade.
 
-| Mức | AI làm được gì | Ví dụ nền tảng |
+| Level | What the AI can do | Example platforms |
 | --- | --- | --- |
-| 1 · Chat | Trả lời và đề xuất; bạn chép vào bộ não | Claude, ChatGPT, Gemini, model chạy local |
-| 2 · Chat có tài liệu | Trả lời dựa trên các note bạn đưa vào | Project của Claude hoặc ChatGPT, Gem của Gemini |
-| 3 · Agent trong repo | Đọc, ghi file và tự chạy lệnh `brain` | Claude Code, Codex, Gemini CLI, Cursor, GitHub Copilot |
+| 1 · Chat | Answer and suggest; you copy into the brain | Claude, ChatGPT, Gemini, local models |
+| 2 · Chat with documents | Answer from the notes you give it | Claude or ChatGPT Projects, Gemini Gems |
+| 3 · Agent in the repository | Read and write files, run `brain` commands itself | Claude Code, Codex, Gemini CLI, Cursor, GitHub Copilot |
 
-Cách cài trên từng nền tảng, quy trình mẫu và câu lệnh gợi ý: [docs/dung-voi-ai.md](docs/dung-voi-ai.md). Chạy bộ não trong agent tự host [Javis OS](https://github.com/blogminhquy/javis-os): [docs/dung-voi-javis.md](docs/dung-voi-javis.md).
+Setup per platform, sample workflows and prompts: [docs/using-with-ai.md](docs/using-with-ai.md). Running the brain in the self-hosted agent [Javis OS](https://github.com/blogminhquy/javis-os): [docs/using-with-javis-os.md](docs/using-with-javis-os.md).
 
-## Dòng chảy
+## The flow
 
 ```mermaid
 flowchart TD
-  T["Lời bạn: ghi tay, nói, gõ"] --> IN["Inbox · nơi thật duy nhất"]
-  AG["AI hoặc agent tra cứu: web, paper, API"] --> K1{{"K1 · phiếu nguồn, mã A–F · 1–6"}}
-  K1 -- "đạt" --> IN
-  K1 -- "nguồn E hoặc tin 5" --> LOG["_log"]
-  IN --> Q1{"Cần làm gì không?"}
-  Q1 -- "có" --> HD["Làn hành động · GTD + PARA"]
-  Q1 -- "không" --> Q2{"Có đáng giữ không?"}
-  Q2 -- "ý" --> TT["Làn tri thức · Zettelkasten + LYT + FSRS"]
-  Q2 -- "file, code" --> FC["Làn file và code · Johnny Decimal"]
-  Q2 -- "không" --> X["Xoá"]
-  HD -- "project nhiều bước" --> BD["Board trong repo · backlog, milestone, người"]
-  HD --> TR["Tạo ra: sản phẩm, quyết định, code"]
-  TT --> TR
-  FC --> TR
+  T["Your words: written, spoken, typed"] --> IN["Inbox · the one real place"]
+  AG["AI or agent research: web, papers, APIs"] --> G1{{"G1 · source record, grade A–F · 1–6"}}
+  G1 -- "passed" --> IN
+  G1 -- "source E or credibility 5" --> LOG["_log"]
+  JV["Javis: Telegram, voice"] --> IN
+  IN --> Q1{"Is it actionable?"}
+  Q1 -- "yes" --> AC["Action lane · GTD + PARA"]
+  Q1 -- "no" --> Q2{"Is it worth keeping?"}
+  Q2 -- "idea" --> KN["Knowledge lane · Zettelkasten + LYT + FSRS"]
+  Q2 -- "file, code" --> FC["Files and code lane · Johnny Decimal"]
+  Q2 -- "no" --> X["Delete"]
+  AC -- "multi-step project" --> BD["Board in the repository · backlog, milestones, people"]
+  AC -- "brain assign" --> JF["Javis follows up · @javis:level"]
+  JF -- "result" --> IN
+  AC --> OUT["Output: products, decisions, code"]
+  KN --> OUT
+  FC --> OUT
 ```
 
-Ba làn trao đổi với nhau qua 7 đường I1–I7, mô tả ở [docs/dong-chay.md](docs/dong-chay.md).
+The three lanes exchange items through 7 links, I1–I7, described in [docs/flow.md](docs/flow.md).
 
-## Trong gói có gì
+## What's in the package
 
-| Đường dẫn | Là gì |
+| Path | What it is |
 | --- | --- |
-| `docs/huong-dan.md` | Hướng dẫn từng bước cho người mới |
-| `docs/dung-voi-ai.md` | Dùng bộ não với AI trên nhiều nền tảng |
-| `docs/dung-voi-javis.md` | Dùng bộ não với Javis OS: cài đặt, chỗ xung đột, quy trình mẫu |
-| `docs/dong-chay.md` | Inbox, hai câu hỏi, ba làn, 7 đường nối, nhịp ngày, tuần, tháng |
-| `docs/ba-lan.md` | Luật, số đo và dấu hiệu hỏng của từng làn |
-| `docs/kiem-duyet.md` | Cổng K1–K4, hệ mã Admiralty, phiếu nguồn, 10 bước tra cứu |
-| `docs/tang-thuc-thi.md` | Tầng thực thi 2.2: board, milestone, người phụ trách |
-| `docs/kien-truc-he-thong.md` | DAB 3.0, kiến trúc hệ thống theo arc42: thành phần, luồng chạy, vòng Javis, quyết định, rủi ro, việc cần chốt, thiết kế tầng truy hồi 3.1 |
-| `vault/` | Khung thư mục và mẫu file để bắt đầu một bộ não mới |
-| `vault/AGENTS.md` | Quy tắc cho agent làm việc trong repo |
-| `brain.toml` | Cấu hình chuẩn 3.0 |
-| `archive/` | Ảnh chụp các bản cũ, bắt đầu từ 2.2.1 |
-| `tools/brain.py`, `bin/brain` | CLI: `ghi`, `nop`, `kiem`, `turn`, `weekly`, `giao`, `javis`, `xong` |
-| `integrations/javis/` | Plugin Javis OS và hook Claude Code chặn AI ghi permanent note |
-| `tests/` | Test cho CLI và plugin |
+| `docs/getting-started.md` | Step-by-step guide for newcomers |
+| `docs/using-with-ai.md` | Using the brain with AI on any platform |
+| `docs/using-with-javis-os.md` | Using the brain with Javis OS: setup, conflicts, sample workflows |
+| `docs/flow.md` | The Inbox, the two questions, the three lanes, the 7 links, the assistant loop, the rhythm |
+| `docs/lanes.md` | Rules, metrics and warning signs for each lane |
+| `docs/trust-gates.md` | Gates G1–G4, Admiralty grades, the source record, the 10 research steps |
+| `docs/execution-layer.md` | The execution layer: boards, milestones, owners |
+| `docs/architecture.md` | DAB 4.0, the system architecture in arc42 form: modules, runtime, the assistant loop, decisions, risks, the 4.1 retrieval layer design |
+| `docs/glossary.md` | Every term, command, key and rule code, with its 3.0 name |
+| `docs/migration.md` | Upgrading a 3.0 brain to 4.0 |
+| `vault/` | Folder layout and templates to start a new brain |
+| `vault/AGENTS.md` | Rules for agents working in the repository |
+| `brain.toml` | The brain's own settings; only what differs from the defaults |
+| `tools/brain/` | The `brain` package: `config`, `notes`, `gates`, `intake`, `checks`, `metrics`, `assistant`, `guard`, `migrate`, `cli` |
+| `tools/brain/defaults.toml` | Every parameter with its default value |
+| `bin/brain`, `bin/brain.cmd` | Run the CLI without installing anything |
+| `integrations/javis/` | Javis OS plugin, and a Claude Code hook that stops AI from writing permanent notes |
+| `tests/` | Tests for the CLI, the plugin and the migration |
+| `archive/` | Snapshots of older versions, from 2.2.1; kept as they were |
 
-## Bắt đầu nhanh
+## Quick start
 
-Cần Python 3.11 trở lên và git. Bộ não chứa ghi chú cá nhân, nên hãy tạo một repo **private** từ gói này. Các bước đầy đủ nằm trong [hướng dẫn](docs/huong-dan.md).
+You need Python 3.11 or newer and git. The brain holds personal notes, so create a **private** repository from this package. The full steps are in [Getting started](docs/getting-started.md).
 
 ```sh
-git clone https://github.com/DaveTran243/Brain_Standard.git bo-nao-cua-toi
-cd bo-nao-cua-toi
-bin/brain kiem                                   # Windows: bin\brain.cmd kiem
-bin/brain ghi "Đọc chương 5 sách DDIA"
-bin/brain turn y "ghi ý đầu tiên vào Inbox"
+git clone https://github.com/DaveTran243/Brain_Standard.git my-brain
+cd my-brain
+bin/brain check                                   # Windows: bin\brain.cmd check
+bin/brain capture "Read chapter 5 of DDIA"
+bin/brain turn idea "captured my first idea"
 ```
 
-## Lệnh
+## Commands
 
-| Lệnh | Việc |
+| Command | What it does |
 | --- | --- |
-| `brain ghi "…"` | Ghi lời bạn vào Inbox. Lời bạn không đi qua K1. |
-| `brain nop file.md` | Nộp một mục do AI hoặc agent mang về qua cổng K1. Thiếu phiếu nguồn thì bị trả lại. |
-| `brain kiem` | Rà vault theo luật 3.0 và các cổng K2–K3. |
-| `brain turn <viec\|y\|file\|xoa> "tóm tắt"` | Đóng một lượt làm việc. Vault còn lỗi thì lượt không đóng được. |
-| `brain weekly [--ghi]` | Tính số đo cho Weekly Review. |
-| `brain giao "…" <suggest\|auto\|full>` | Giao một next action cho Javis. Chỉ bạn chạy lệnh này. |
-| `brain javis [--muc …]` | Liệt kê việc đang giao cho Javis, lọc theo mức. |
-| `brain xong <số> "kết quả"` | Javis báo xong một việc; kết quả vào Inbox. |
+| `brain capture "…" [--channel …]` | Write your words to the Inbox. Your words don't go through G1. |
+| `brain submit file.md` | Submit an item an AI or agent brought in through gate G1. Without a full source record it is returned. |
+| `brain check` | Check the vault against the rules and gates G1–G3. Each finding starts with its rule code. |
+| `brain turn <task\|idea\|file\|drop> "summary"` | Close a turn of work. While the vault has errors the turn does not close. |
+| `brain weekly [--save]` | Metrics for the Weekly Review. |
+| `brain assign "…" <suggest\|auto\|full>` | Assign a next action to Javis. Only you run this. |
+| `brain assigned [--level …]` | List the tasks assigned to Javis, filtered by level. |
+| `brain report <n> "result"` | Javis reports an assigned task done; the result goes to the Inbox. |
+| `brain migrate [--dry-run]` | Convert a 3.0 brain to the 4.0 names, once. |
 
-## Luật cốt lõi
+## Configuration
 
-- Mọi thứ vào một Inbox trước khi phân loại. Mỗi mục đi vào đúng một làn.
-- Permanent note chỉ chứa một ý, viết bằng lời của bạn, và nối tới ít nhất một note cũ.
-- Mỗi project ghi tiêu chí xong và tiêu chí dừng ngay khi lập. Project nhiều bước có board riêng.
-- Dữ kiện do AI hoặc agent mang về phải có phiếu nguồn và mã độ tin. Mã quyết định nó được đi xa tới đâu.
-- Mỗi lượt làm việc kết thúc bằng `brain turn`.
-- Javis chỉ làm tiếp việc bạn đã giao bằng `@javis:<mức>`, không vượt mức đó, và trả kết quả về Inbox. Javis không tự giao việc cho mình.
-- Không có giới hạn số project hay next action. Weekly Review đo để bạn tự nhìn thấy khi ôm quá nhiều.
+Every parameter, from folder paths and thresholds to the assistant's name, label and levels, has a default in `tools/brain/defaults.toml`. Your `brain.toml` lists only what you change:
+
+```toml
+[brain]
+version = "4.0.0"
+vault = "vault"
+
+[clarify]
+fleeting_max_days = 10       # keep passing thoughts a little longer
+
+[assistant]
+name = "Friday"
+label = "@friday"
+```
+
+## Core rules
+
+- Everything goes into one Inbox before it is sorted. Each item goes to exactly one lane.
+- A permanent note holds one idea, in your own words, and links to at least one older note.
+- Every project records its done and stop conditions when it is created. A multi-step project has its own board.
+- Facts an AI or agent brings in need a source record and a grade. The grade decides how far they may go.
+- Every turn of work ends with `brain turn`.
+- Javis only follows up on tasks you assigned with `@javis:<level>`, never above that level, and sends the result back to the Inbox. Javis never assigns work to itself.
+- There is no limit on projects or next actions. The Weekly Review measures, so you see for yourself when you are carrying too much.

@@ -26,7 +26,7 @@ The architecture design document (DAB) for Brain_Standard. It follows the [arc42
 | Item | Value |
 | --- | --- |
 | System | Brain_Standard · a second brain made of Markdown + git + the `brain` CLI |
-| System version described | 4.0.0 (current: English names, modular package, defaults in configuration, `brain migrate`) and 4.1 (proposed, section 12) |
+| System version described | 4.0.1 (current: 4.0.0 plus a Docker image and CI; 4.0.0 brought English names, the modular package, defaults in configuration, `brain migrate`) and 4.1 (proposed, section 12) |
 | Document version | 4.0. Version 3.0 (in Vietnamese) is in git history; version 1.1 is kept at [`archive/2.2.1/docs/kien-truc-he-thong.md`](../archive/2.2.1/docs/kien-truc-he-thong.md) |
 | Status | Awaiting Design Authority Board review; code, tests and plugin are done; Javis OS has not yet run on a real brain |
 | Owner | The owner of the Brain_Standard repository |
@@ -65,6 +65,7 @@ The document covers the vault's data standard, the `brain` CLI, the check rules,
 | 1.1 | 21/10/2026 | Full detail: use cases, per-command specifications, rule catalogue, configuration reference, line grammar, threat model, test traceability, full ADRs, retrieval layer DDL and algorithms, MCP tool schemas, acceptance criteria |
 | 3.0 | 21/10/2026 | DAB 3.0: the Javis loop in every view (requirements F13–F18, use cases UC10–UC12, success metrics, new containers and components, the assign, list and report commands, Javis OS deployment, label grammar, rules for labels, the `[javis]` table, threats, tests, ADR-10–12, risks R14–R17, open decisions). The retrieval layer moved from 2.3 to 3.1 |
 | 4.0 | 22/10/2026 | DAB 4.0, in English: every command, key, rule code and file name in English; the CLI split into a package of modules (ADR-13, superseding ADR-02); every parameter in `defaults.toml`; rule codes in CLI messages; `brain migrate` (6.13); R9 fixed; English naming (ADR-14, superseding ADR-09). The retrieval layer moved from 3.1 to 4.1 |
+| 4.0.1 | 29/10/2026 | Packaging: the Docker image as a deployment node (7.1, 7.2), CI and the release workflow in the test strategy (8.12), R7 resolved. No change to the flow, the rules or the data |
 
 ## 1. Introduction and goals
 
@@ -722,11 +723,12 @@ flowchart LR
 | Second machine | Working elsewhere | Pull before working, push when done |
 | Cloud agent | Works on a temporary clone | Must commit and push before the session ends |
 | Javis OS | Captures from channels, runs follow-up loops | A laptop, mini PC or VPS with a checkout of the repository; Python 3.12 for Javis; background work on an API key |
+| Docker (optional) | Runs the CLI where Python 3.11+ is missing | Docker; the image `dfat243/brain_standard` holds only `tools/brain/`, the brain is mounted at `/brain` at run time |
 
 ### 7.2 Install and upgrade
 
 1. Create a private repository from the Brain_Standard package and clone it.
-2. Run `bin/brain --version`; it must print `brain 4.0.0`. There is no build or install step.
+2. Run `bin/brain --version`; it must print `brain 4.0.1`. There is no build or install step. Without Python, run the image from the brain's folder instead: `docker run --rm -v "$PWD:/brain" dfat243/brain_standard --version`.
 3. Copy `vault/AGENTS.md` to the root under the name your tool reads.
 4. Upgrade: pull the new `tools/`, `bin/`, `docs/` and `integrations/`, and read the CHANGELOG. New parameters arrive with `tools/brain/defaults.toml`, so `brain.toml` only changes when you want to override something. Details: [getting-started.md](getting-started.md), section 11.
 5. From 3.0 (or 2.2) to 4.0: after pulling, run `brain migrate --dry-run`, then `brain migrate`, `brain check`, review the diff and commit. Copy `vault/AGENTS.md` and the templates from the standard again if you want them in English. See [migration.md](migration.md).
@@ -905,7 +907,7 @@ Notes: G2 and G3 apply only when a note has a `grade`, because literature and pe
 
 | Key | Type | Default | Used by |
 | --- | --- | --- | --- |
-| `brain.version` | String | `"4.0.0"` | `brain --version`, `migrate` |
+| `brain.version` | String | `"4.0.1"` | `brain --version`, `migrate` |
 | `brain.vault` | Path | `"vault"` | Every command |
 | `paths.*` | Paths, relative to the vault | the standard layout (section 5.2) | Every command |
 | `files.template_prefix` | String | `"_"` | Every check, the guard |
@@ -1004,6 +1006,8 @@ Agents should rely on exit codes, not on the message text.
 ### 8.12 Test strategy and traceability
 
 Run: `python3 -m unittest discover -s tests`. Each test copies `brain.toml`, `vault/` (and, for the plugin, `tools/`) to a temporary folder, sets `BRAIN_NOW=2026-10-20T21:30:00`, calls `brain.cli.main(["--root", tmp, …])`, and checks the exit code, the output and the files produced. The migrate tests start from `tests/fixtures/brain-3.0/`, a 3.0 brain kept in its original Vietnamese names on purpose.
+
+CI (`.github/workflows/ci.yml`) runs the suite on every push to `main` and every pull request, on Linux and Windows with Python 3.11 and the newest 3.x; it also runs `brain check` through both wrappers and builds the Docker image, checking `--version`, `check` on the template brain, and that the image holds nothing but `tools/`. The release workflow (`release.yml`) runs CI again before publishing a `vX.Y.Z` tag. Both run only in the Brain_Standard repository.
 
 | Test | Rule · requirement |
 | --- | --- |
@@ -1204,7 +1208,7 @@ flowchart LR
 | R4 | Appends don't lock the file; two processes writing at once can interleave lines | Low | Low | Add a file lock if agents run in parallel |
 | R5 | Two `submit` runs in the same second with the same slug: the second overwrites the first | Low | Low | Add a suffix when the name exists |
 | R6 | Times have no time zone; machines in different zones can disagree on the date | Low | Low | Add `brain.time_zone` if needed |
-| R7 | No CI runs the tests on push in Brain_Standard | Medium | Medium | Add a workflow running `unittest` |
+| R7 | **Fixed in 4.0.1.** No CI ran the tests on push in Brain_Standard | | | `.github/workflows/ci.yml` (section 8.12) |
 | R8 | Notes can't be found by meaning; an AI only knows the notes pasted into it | High on large vaults | High | The retrieval layer, section 12 |
 | R9 | **Fixed in 4.0.** A comment-only field such as `archived:   # none yet` was read as the value `"# none yet"` and counted as filled, so the item slipped through G1 | | | `notes._value` returns empty for a comment; `test_comment_only_field_counts_as_empty` |
 | R10 | A mistyped `valid_until` or `due` is ignored silently | Low | Medium | Warn when a value is present but unreadable |

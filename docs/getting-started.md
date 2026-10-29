@@ -56,7 +56,7 @@ git push -u origin main
 Check that the CLI runs. `brain` works from anywhere inside the repository; it finds `brain.toml` at the root by itself.
 
 ```sh
-bin/brain --version     # prints: brain 4.0.0
+bin/brain --version     # prints: brain 4.0.1
 bin/brain check         # prints: Vault is clean.
 ```
 

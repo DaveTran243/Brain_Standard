@@ -54,7 +54,7 @@ Brain 4.0 renames everything in English: commands, configuration keys, frontmatt
 
 | Where | Change |
 | --- | --- |
-| `brain.toml` | Tables and keys renamed (`[kiem_duyet]` → `[gates]`, `chan_cung` → `strict`, `[javis]` → `[assistant]`…), version set to 4.0.0. Comments in the file are not kept; defaults now live in `tools/brain/defaults.toml` |
+| `brain.toml` | Tables and keys renamed (`[kiem_duyet]` → `[gates]`, `chan_cung` → `strict`, `[javis]` → `[assistant]`…), version set to the CLI's version (4.0.0 or later). Comments in the file are not kept; defaults now live in `tools/brain/defaults.toml` |
 | Files and folders | `_mau/` → `_templates/` (`phieu-nguon.md` → `source-record.md`); every `_mau-*.md` → `_template-*.md`; `Coding/` → `Code/` and `50 He thong` → `50 System`; `_log/k1.md` → `_log/rejected.md` |
 | Frontmatter, in every note | Keys renamed (`trang_thai` → `status`, `tieu_chi_xong` → `done_when`, `ma` → `grade`, `luu_tru` → `archived`…), including commented-out keys in templates. Values `the` → `card` and `chua-kiem` → `unverified` |
 | Next Actions | `· giao <date>` → `· assigned <date>`, `· xong <date>` → `· done <date>` |

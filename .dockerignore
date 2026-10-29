@@ -1,0 +1,6 @@
+# The image needs tools/ and nothing else. Allow-list it, so that a vault,
+# notes, keys or .env files can never end up in the build context or the image.
+*
+!tools/
+**/__pycache__
+**/*.pyc

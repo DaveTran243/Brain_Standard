@@ -4,7 +4,7 @@
 # Names are explained in docs/glossary.md.
 
 [brain]
-version = "4.0.0"
+version = "4.0.1"
 vault = "vault"                     # vault folder, relative to the folder that holds brain.toml
 
 [paths]                             # relative to the vault

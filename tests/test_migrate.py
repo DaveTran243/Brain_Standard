@@ -15,6 +15,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "tools"))
 
 from brain import notes  # noqa: E402
+from brain.config import defaults  # noqa: E402
 from brain.cli import main  # noqa: E402
 
 FIXTURE = REPO / "tests/fixtures/brain-3.0"
@@ -53,7 +54,7 @@ class MigrateTest(unittest.TestCase):
         self.run_brain("migrate")
         with (self.tmp / "brain.toml").open("rb") as f:
             cfg = tomllib.load(f)
-        self.assertEqual(cfg["brain"]["version"], "4.0.0")
+        self.assertEqual(cfg["brain"]["version"], defaults()["brain"]["version"])
         self.assertEqual(cfg["gates"]["required_fields"], ["source", "retrieved", "archived", "grade", "verification"])
         self.assertEqual(cfg["gates"]["fleeting_only_sources"], ["D", "F"])
         self.assertEqual(cfg["assistant"], {"label": "@javis", "stale_after_days": 7})

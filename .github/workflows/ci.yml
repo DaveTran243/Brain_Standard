@@ -1,0 +1,83 @@
+# CI: the tests, the CLI through both wrappers, and the Docker image,
+# on every push to main and every pull request. The Release workflow runs it too.
+#
+# Runs only in the Brain_Standard repository itself. A personal brain created from
+# this package holds real notes, which these template checks are not written for,
+# so in a copy every job is skipped.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test · Python ${{ matrix.python }} · ${{ matrix.os }}
+    if: github.repository == 'DaveTran243/Brain_Standard'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.x"]   # the oldest supported (N1) and the newest stable
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Tests
+        run: python -m unittest discover -s tests
+
+      - name: CLI through bin/brain
+        if: runner.os != 'Windows'
+        run: |
+          bin/brain --version
+          bin/brain check
+
+      - name: CLI through bin\brain.cmd
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call bin\brain.cmd --version || exit /b 1
+          call bin\brain.cmd check || exit /b 1
+
+  image:
+    name: docker image
+    if: github.repository == 'DaveTran243/Brain_Standard'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: brain_standard:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        run: |
+          set -eu
+          want="brain $(python3 -c "import tomllib; print(tomllib.load(open('tools/brain/defaults.toml', 'rb'))['brain']['version'])")"
+          got="$(docker run --rm brain_standard:ci --version)"
+          [ "$got" = "$want" ] || { echo "::error::The image prints '$got', expected '$want'"; exit 1; }
+
+          # The template brain at the repository root, mounted the way users run it.
+          docker run --rm -v "$PWD:/brain" --user "$(id -u):$(id -g)" brain_standard:ci check
+
+          # The image holds the package and nothing else: no vault, no notes.
+          [ "$(docker run --rm --entrypoint ls brain_standard:ci -A /opt/brain)" = "tools" ] \
+            || { echo "::error::/opt/brain must hold only tools/"; exit 1; }
+          [ -z "$(docker run --rm --entrypoint ls brain_standard:ci -A /brain)" ] \
+            || { echo "::error::/brain must be empty in the image; the brain is mounted at run time"; exit 1; }

@@ -107,6 +107,8 @@ The three lanes exchange items through 7 links, I1–I7, described in [docs/flow
 | `bin/brain`, `bin/brain.cmd` | Run the CLI without installing anything |
 | `integrations/` | One thin adapter per platform: `mcp/` (MCP server for any client), `claude-code/` (hooks and write guard), `javis/` (Javis OS plugin and setup guide) |
 | `tests/` | Tests for the CLI, the knowledge graph, the integrations and the migration |
+| `Dockerfile`, `.dockerignore` | The image that runs the CLI without installing Python; it holds only `tools/brain/` |
+| `.github/workflows/` | CI on every push and pull request; publishing on a `vX.Y.Z` tag. Both run only in Brain_Standard itself, never in a brain made from it |
 | `archive/` | Snapshots of older versions, from 2.2.1; kept as they were |
 
 ## Quick start
@@ -120,6 +122,18 @@ bin/brain check                                   # Windows: bin\brain.cmd check
 bin/brain capture "Read chapter 5 of DDIA"
 bin/brain turn idea "captured my first idea"
 ```
+
+### With Docker instead of Python
+
+The image [`dfat243/brain_standard`](https://hub.docker.com/r/dfat243/brain_standard) runs the same CLI. Your brain stays on your disk: run the image from the brain's folder and mount it.
+
+```sh
+cd my-brain
+docker run --rm -v "$PWD:/brain" dfat243/brain_standard check
+docker run --rm -v "$PWD:/brain" --user "$(id -u):$(id -g)" dfat243/brain_standard capture "Read chapter 5 of DDIA"
+```
+
+`--user` keeps new files owned by you on Linux; Docker Desktop on Windows and macOS doesn't need it (in PowerShell write `${PWD}`). The image holds only `tools/brain/`, never a vault. Tags follow the versions: `4.0.1`, `4.0`, `latest`.
 
 ## Commands
 

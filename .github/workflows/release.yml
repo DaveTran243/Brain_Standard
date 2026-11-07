@@ -1,0 +1,117 @@
+# Release: pushing a tag vX.Y.Z publishes that version.
+#   1. The tag must match brain.version in tools/brain/defaults.toml and have a CHANGELOG section.
+#   2. CI runs in full.
+#   3. The image goes to Docker Hub as dfat243/brain_standard:X.Y.Z, X.Y, latest and sha-<commit>,
+#      for linux/amd64 and linux/arm64.
+#   4. A GitHub Release is created with the CHANGELOG section as its notes.
+#
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   DOCKERHUB_USERNAME  the Docker Hub account, dfat243
+#   DOCKERHUB_TOKEN     a Docker Hub personal access token with Read & Write
+#
+# Runs only in the Brain_Standard repository itself, never in a personal brain made from it.
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: dfat243/brain_standard
+
+jobs:
+  version:
+    name: tag matches version
+    if: github.repository == 'DaveTran243/Brain_Standard'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: check
+        run: |
+          set -eu
+          tag="${GITHUB_REF_NAME#v}"
+          code="$(python3 -c "import tomllib; print(tomllib.load(open('tools/brain/defaults.toml', 'rb'))['brain']['version'])")"
+          [ "$tag" = "$code" ] \
+            || { echo "::error::Tag $GITHUB_REF_NAME does not match brain.version $code in tools/brain/defaults.toml"; exit 1; }
+          grep -q "^## $tag " CHANGELOG.md \
+            || { echo "::error::CHANGELOG.md has no '## $tag · …' section"; exit 1; }
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
+
+  ci:
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  docker:
+    name: publish to Docker Hub
+    needs: [version, ci]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Secrets are set
+        env:
+          USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          [ -n "$USERNAME" ] && [ -n "$TOKEN" ] \
+            || { echo "::error::Add the DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets, then re-run this workflow"; exit 1; }
+
+      - uses: actions/checkout@v7
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Pull and check the published image
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -eu
+          got="$(docker run --rm "$IMAGE:$VERSION" --version)"
+          [ "$got" = "brain $VERSION" ] || { echo "::error::$IMAGE:$VERSION prints '$got'"; exit 1; }
+          echo "Published $IMAGE:$VERSION"
+
+  github-release:
+    name: GitHub Release
+    needs: [version, docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Create the release from the CHANGELOG section
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -eu
+          awk -v head="## $VERSION " 'index($0, head) == 1 { on = 1; next } /^## / { if (on) exit } on' CHANGELOG.md > notes.md
+          printf '\n---\nDocker: `docker pull %s:%s`\n' "$IMAGE" "$VERSION" >> notes.md
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "Brain_Standard $VERSION" --notes-file notes.md

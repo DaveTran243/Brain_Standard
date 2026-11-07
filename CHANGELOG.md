@@ -20,6 +20,23 @@ A knowledge graph agents read before answering and update after each turn, and a
 - Javis OS is an adapter only: `integrations/javis/brain-standard/plugin.py` registers the shared tools and calls the shared guard; the guide moved from `docs/using-with-javis-os.md` to `integrations/javis/README.md`; the Claude Code write guard moved to `integrations/claude-code/write_guard.py`.
 - `brain migrate` also converts 4.0 labels (`@javis` → the configured label).
 
+## 4.0.1 · 29/10/2026
+
+Packaging and automation. The brain package, the rules, the commands and the data format are the same as 4.0.0, so there is nothing to migrate.
+
+### Added
+- `Dockerfile` and `.dockerignore`: an image, `dfat243/brain_standard`, that runs the CLI without installing Python. It holds only `tools/brain/`; the brain is mounted at run time: `docker run --rm -v "$PWD:/brain" dfat243/brain_standard check`. The build context allow-lists `tools/`, so a vault, notes or keys can never end up in the image.
+- `.github/workflows/ci.yml`: on every push to `main` and every pull request, the tests on Linux and Windows with Python 3.11 and the newest 3.x, `brain check` through `bin/brain` and `bin/brain.cmd`, and a build and smoke test of the image (`--version`, `check` on the template brain, nothing but `tools/` inside).
+- `.github/workflows/release.yml`: on a `vX.Y.Z` tag, checks that the tag matches `brain.version` and has a CHANGELOG section, runs CI, publishes the image as `X.Y.Z`, `X.Y`, `latest` and `sha-<commit>` for linux/amd64 and linux/arm64, then creates the GitHub Release with the CHANGELOG section as its notes. Needs the repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
+- Both workflows run only in the Brain_Standard repository, so a personal brain made from this package skips them.
+
+### Changed
+- `brain.version` is `4.0.1`. `tests/test_migrate.py` compares the migrated version with the CLI's version instead of a fixed string.
+- README: running with Docker. `docs/architecture.md`: a Docker deployment node (7.1, 7.2), CI in the test strategy (8.12), R7 resolved. `docs/getting-started.md` and `docs/migration.md`: the version numbers.
+
+### Fixed
+- R7: no CI ran the tests on push.
+
 ## 4.0.0 · 22/10/2026
 
 English and modular. The flow, the lanes, the gates and the assistant loop work exactly as in 3.0; every name changes, so this is a major version with a one-time migration. Version 3.0 is the last Vietnamese version and stays in git history.

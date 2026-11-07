@@ -220,6 +220,7 @@ class ProjectTest(BrainTestCase):
             lines += [f"- [ ] Do task {i}-{j} · [[p{i}]]" for j in range(5)]
         na = self.vault / "10-Action/11-next-actions.md"
         na.write_text(na.read_text(encoding="utf-8") + "\n".join(lines) + "\n", encoding="utf-8")
+        self.run_brain("kg", "build")
         code, out = self.run_brain("check")
         self.assertEqual(code, 0, out)
         self.assertIn("Vault is clean", out)
@@ -267,11 +268,11 @@ class AssistantTest(BrainTestCase):
         p = self.add_tasks("- [ ] Draft an email to the accountant · @computer", "- [ ] Call mum")
         code, out = self.run_brain("assign", "accountant", "auto")
         self.assertEqual(code, 0, out)
-        self.assertIn("- [ ] Draft an email to the accountant · @computer · @javis:auto · assigned 2026-10-20",
+        self.assertIn("- [ ] Draft an email to the accountant · @computer · @agent:auto · assigned 2026-10-20",
                       p.read_text(encoding="utf-8"))
         code, out = self.run_brain("assign", "accountant", "full")
         self.assertEqual(code, 2)
-        self.assertIn("already assigned to Javis", out)
+        self.assertIn("already assigned to the assistant", out)
 
     def test_assign_needs_exactly_one_match(self):
         self.add_tasks("- [ ] Call mum", "- [ ] Call dad")
@@ -280,8 +281,8 @@ class AssistantTest(BrainTestCase):
         self.assertIn("found 2", out)
 
     def test_assigned_filters_by_level(self):
-        self.add_tasks("- [ ] Compare printer prices · @javis:suggest", "- [ ] Send the quote · @javis:full",
-                       "- [x] Old task · @javis:auto · done 2026-10-19", "- [ ] My own task")
+        self.add_tasks("- [ ] Compare printer prices · @agent:suggest", "- [ ] Send the quote · @agent:full",
+                       "- [x] Old task · @agent:auto · done 2026-10-19", "- [ ] My own task")
         code, out = self.run_brain("assigned")
         self.assertEqual(code, 0)
         self.assertIn("1 · suggest · Compare printer prices", out)
@@ -292,19 +293,19 @@ class AssistantTest(BrainTestCase):
         self.assertNotIn("Send the quote", out)
 
     def test_report_checks_off_and_writes_inbox(self):
-        p = self.add_tasks("- [ ] Compare printer prices · @web · @javis:suggest · assigned 2026-10-18")
+        p = self.add_tasks("- [ ] Compare printer prices · @web · @agent:suggest · assigned 2026-10-18")
         code, out = self.run_brain("report", "1", "Three", "quotes", "in", "drafts/printer.md")
         self.assertEqual(code, 0, out)
-        self.assertIn("- [x] Compare printer prices · @web · @javis:suggest · assigned 2026-10-18 · done 2026-10-20",
+        self.assertIn("- [x] Compare printer prices · @web · @agent:suggest · assigned 2026-10-18 · done 2026-10-20",
                       p.read_text(encoding="utf-8"))
-        self.assertIn('- [2026-10-20 21:30] (javis) Result "Compare printer prices · @web": Three quotes in drafts/printer.md',
+        self.assertIn('- [2026-10-20 21:30] (assistant) Result "Compare printer prices · @web": Three quotes in drafts/printer.md',
                       self.read("00-Inbox/Inbox.md"))
         code, _ = self.run_brain("report", "1", "again")
         self.assertEqual(code, 2)
 
     def test_check_assignment_rules(self):
-        self.add_tasks("- [ ] Call mum · @javis", "- [ ] Look up the schedule · @javis:auto · assigned 2026-10-01",
-                       "- [x] Done already · @javis · done 2026-10-01")
+        self.add_tasks("- [ ] Call mum · @agent", "- [ ] Look up the schedule · @agent:auto · assigned 2026-10-01",
+                       "- [x] Done already · @agent · done 2026-10-01")
         code, out = self.run_brain("check")
         self.assertEqual(code, 1)
         self.assertIn("AS-01 · next action line", out)
@@ -313,10 +314,10 @@ class AssistantTest(BrainTestCase):
         self.assertEqual(out.count("AS-0"), 2)
 
     def test_weekly_counts_assignments(self):
-        self.add_tasks("- [ ] A · @javis:auto · assigned 2026-10-01", "- [ ] B · @javis:auto · assigned 2026-10-19",
-                       "- [x] C · @javis:auto · assigned 2026-10-15 · done 2026-10-18")
+        self.add_tasks("- [ ] A · @agent:auto · assigned 2026-10-01", "- [ ] B · @agent:auto · assigned 2026-10-19",
+                       "- [x] C · @agent:auto · assigned 2026-10-15 · done 2026-10-18")
         _, out = self.run_brain("weekly")
-        self.assertIn("| Assigned to Javis: open · done in 7 days · stale | 2 · 1 · 1 |", out)
+        self.assertIn("| Assigned to the assistant: open · done in 7 days · stale | 2 · 1 · 1 |", out)
 
     def test_assistant_name_and_label_from_config(self):
         (self.tmp / "brain.toml").write_text('[brain]\nvault = "vault"\n[assistant]\nname = "Ada"\nlabel = "@ada"\n',

@@ -1,6 +1,7 @@
-"""brain migrate: convert a brain from the 3.0 Vietnamese names to the 4.0 English names.
+"""brain migrate: convert a brain from the 3.0 Vietnamese names to the 4.0 English names, and the assistant of a
+4.0 brain to the platform-neutral 4.2 label (@javis → @agent unless brain.toml keeps @javis).
 
-Run once after pulling 4.0. It is safe to run again: names already converted are left alone.
+Run once after pulling a new version. It is safe to run again: names already converted are left alone.
 Every rename here is listed in docs/glossary.md.
 """
 from __future__ import annotations
@@ -228,4 +229,22 @@ def run(root: Path, vault_rel: str | None = None, dry_run: bool = False) -> Plan
         if dry_run:  # files were not renamed yet: old names hold the rules
             paths = {**paths, "rejected_log": "_log/k1.md"}
         migrate_notes(vault, paths, plan, dry_run)
+        label = {**defaults()["assistant"], **cfg.get("assistant", {})}.get("label", OLD_LABEL)
+        migrate_label(vault, paths, label, plan, dry_run)
     return plan
+
+
+OLD_LABEL = "@javis"
+
+
+def migrate_label(vault: Path, paths: dict, label: str, plan: Plan, dry_run: bool) -> None:
+    """4.2: the assistant is no longer Javis unless brain.toml still says so. @javis:<level> → the configured label."""
+    p = vault / paths["next_actions"]
+    if label == OLD_LABEL or not p.is_file():
+        return
+    text = notes.read(p)
+    new = re.sub(rf"(?<=\s){re.escape(OLD_LABEL)}(?=:|\s|$)", label, text)
+    if new != text:
+        plan.add(f"update {paths['next_actions']} ({OLD_LABEL} → {label})")
+        if not dry_run:
+            notes.write(p, new)

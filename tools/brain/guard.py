@@ -1,4 +1,4 @@
-"""Write guard shared by the Javis plugin hook and the Claude Code hook.
+"""Write guard shared by the Claude Code hook and every agent integration (MCP clients, the Javis OS plugin…).
 
 It stops an AI from writing where only the owner, or only a brain command, may write:
 protected folders (permanent notes, agent items), templates and logs, and adding or raising
@@ -26,10 +26,11 @@ def adds_label(old: str, new: str, brain: Brain) -> bool:
     return any(after[k] > before.get(k, 0) for k in after)
 
 
-def block_reason(brain: Brain, tool: str, args: dict, cwd: str | Path | None = None) -> str | None:
-    """Why this file write must be blocked, or None to let it through."""
+def block_reason(brain: Brain, tool: str, args: dict, cwd: str | Path | None = None, write_tools=None) -> str | None:
+    """Why this file write must be blocked, or None to let it through. An integration passes the names of its
+    platform's own file-writing tools in write_tools; [assistant.guard] write_tools holds Claude Code's."""
     guard = brain.assistant["guard"]
-    if str(tool or "").rsplit("__", 1)[-1] not in guard["write_tools"]:
+    if str(tool or "").rsplit("__", 1)[-1] not in set(guard["write_tools"]) | set(write_tools or ()):
         return None
     target = str(args.get("path") or args.get("file_path") or args.get("notebook_path") or "").strip()
     if not target:

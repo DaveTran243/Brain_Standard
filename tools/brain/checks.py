@@ -107,4 +107,12 @@ def check(brain: Brain) -> tuple[list[str], list[str]]:
         elif assistant.is_stale(brain, a):
             warnings.append(f"AS-02 · next action line {a.line + 1}: assigned {(today - a.assigned).days} days ago "
                             "and still open")
+    # KG-01 · the knowledge graph is missing or lags the vault (hooks keep it current; hand edits do not)
+    if brain.cfg["kg"]["enabled"]:
+        from . import kg
+        behind = kg.stale(brain)
+        if not brain.path("kg_triples").is_file() and behind:
+            warnings.append("KG-01 · no knowledge graph yet: brain kg build")
+        elif behind > brain.cfg["kg"]["max_stale_documents"]:
+            warnings.append(f"KG-01 · {behind} documents changed since the knowledge graph was built: brain kg build")
     return errors, warnings

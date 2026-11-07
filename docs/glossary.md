@@ -38,18 +38,31 @@ Brain_Standard 4.0 uses English for every name in the system: commands, configur
 | Strict mode | `gates.strict = true`: G1 returns incomplete records and `brain turn` refuses to close while the vault has errors | Chặn cứng (`chan_cung`) |
 | Unverified | Label on a fact graded D or F; it may go no further than Fleeting | Chưa kiểm (`chua-kiem`) |
 
-## The assistant (Javis)
+## The assistant
 
 | Term | Meaning | Up to 3.0 |
 | --- | --- | --- |
-| Assistant | An operator that runs on top of the brain, for example Javis OS. It captures into the Inbox and follows up on assigned tasks | Javis |
+| Assistant | An operator that runs on top of the brain, on any agent platform (Javis OS, OpenClaw, Hermes Agent, an MCP client). It captures into the Inbox and follows up on assigned tasks | Javis (the only platform until 4.0) |
 | Capture (assistant) | The assistant writes your words, or a fact through G1, into the Inbox | Thu |
 | Assign | You mark a next action as one the assistant may do, at a given level | Giao |
 | Follow up | The assistant does an assigned task and reports the result | Làm tiếp |
 | Report | The assistant marks the task done; a result line goes back to the Inbox | Trả kết quả (`brain xong`) |
 | Level | The ceiling for an assigned task: `suggest` (read, research, propose), `auto` (also write drafts, code, issues), `full` (also act outside: send, post, order) | Mức |
-| Assignment label | `@javis:<level>` on a next action, followed by `assigned YYYY-MM-DD` and, once done, `done YYYY-MM-DD` | Nhãn `@javis` · `giao` · `xong` |
+| Assignment label | `@agent:<level>` on a next action (`@javis:` until 4.0), followed by `assigned YYYY-MM-DD` and, once done, `done YYYY-MM-DD` | Nhãn `@javis` · `giao` · `xong` |
 | Stale assignment | An assigned task still open after `assistant.stale_after_days` | Việc giao treo |
+
+## Knowledge graph and integrations (4.2)
+
+| Term | Meaning |
+| --- | --- |
+| Knowledge graph | The clarified vault as subject → predicate → object triples with source and trust, in `vault/_kg/triples.jsonl` ([knowledge-graph.md](knowledge-graph.md)) |
+| Triple kind | `note` (from a document), `memory` (from a conversation), `inferred` (added by a rule) |
+| Trust | `owner` (your own notes and words), `graded` (passed G1, with its grade), `unverified`, `agent` |
+| Recall, remember | Reading the graph before answering (`brain kg ask`, `brain_recall`, `brain hook prompt`); folding a turn into it after (`brain kg remember`, `brain_remember`, `brain hook stop`) |
+| Agent tools | The one definition of the tools every platform gets (`tools/brain/agent_tools.py`) |
+| Integration, adapter | A thin layer giving one platform the agent tools and the guard (`integrations/`) |
+| Design suggestion | A proposed change to the design, vetted with V1–V8 before the owner decides ([design-suggestions.md](design-suggestions.md)) |
+| KG-01 | Warning: the knowledge graph is missing or lags the vault |
 
 ## Commands
 
@@ -71,7 +84,7 @@ The line every AI answer ends with is now `Brain: <task|idea|file|drop> · <dest
 
 Destinations: Do now, Next Actions, Project, Someday, Waiting For, Fleeting, Literature, Permanent, Code (50–59), Delete.
 
-Capture channels: `hand` (typed or written, was `tay`), `voice` (was `noi`), `telegram`, `mcp`, `export`, `javis`.
+Capture channels: `hand` (typed or written, was `tay`), `voice` (was `noi`), `telegram`, `mcp`, `export`, `assistant` (results from `brain report`; `javis` until 4.0).
 
 ## Configuration (`brain.toml`)
 
@@ -153,12 +166,12 @@ Capture channels: `hand` (typed or written, was `tay`), `voice` (was `noi`), `te
 | `vault/Code/50 System/50.00 Index (JDex).md` | `vault/Coding/50 He thong/50.00 Index (JDex).md` |
 | `vault/_log/rejected.md` | `vault/_log/k1.md` |
 | `tools/brain/` (package) | `tools/brain.py` |
-| `integrations/javis/claude_write_guard.py` | `integrations/javis/chan_ghi_claude.py` |
+| `integrations/claude-code/write_guard.py` (4.2; `integrations/javis/claude_write_guard.py` in 4.0) | `integrations/javis/chan_ghi_claude.py` |
 | `docs/getting-started.md` | `docs/huong-dan.md` |
 | `docs/flow.md` | `docs/dong-chay.md` |
 | `docs/lanes.md` | `docs/ba-lan.md` |
 | `docs/trust-gates.md` | `docs/kiem-duyet.md` |
 | `docs/execution-layer.md` | `docs/tang-thuc-thi.md` |
 | `docs/using-with-ai.md` | `docs/dung-voi-ai.md` |
-| `docs/using-with-javis-os.md` | `docs/dung-voi-javis.md` |
+| `integrations/javis/README.md` | `docs/dung-voi-javis.md` |
 | `docs/architecture.md` | `docs/kien-truc-he-thong.md` |

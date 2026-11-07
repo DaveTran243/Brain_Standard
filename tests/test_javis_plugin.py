@@ -1,4 +1,5 @@
-"""Tests for the Javis OS plugin and the Claude Code hook. Run: python3 -m unittest discover -s tests"""
+"""Tests for the Javis OS adapter (the shared agent tools and guard) and the Claude Code write guard.
+Run: python3 -m unittest discover -s tests"""
 from __future__ import annotations
 
 import importlib.util
@@ -53,14 +54,21 @@ class PluginTest(unittest.TestCase):
         shutil.copy(REPO / "brain.toml", self.tmp / "brain.toml")
         shutil.copytree(REPO / "vault", self.tmp / "vault")
         shutil.copytree(REPO / "tools", self.tmp / "tools", ignore=shutil.ignore_patterns("__pycache__"))
-        os.environ.pop(plugin.ROOT_ENV, None)
+        os.environ.pop("BRAIN_ROOT", None)
         os.environ["BRAIN_NOW"] = "2026-10-20T21:30:00"
+        # the plugin imports the temporary copy's brain package; put the repository's back afterwards
+        self._modules = {n: m for n, m in sys.modules.items() if n == "brain" or n.startswith("brain.")}
+        self._path = list(sys.path)
         self.ctx = FakeContext(str(self.tmp))
         plugin.register(self.ctx)
 
     def tearDown(self) -> None:
         shutil.rmtree(self.tmp)
         os.environ.pop("BRAIN_NOW", None)
+        for n in [n for n in sys.modules if n == "brain" or n.startswith("brain.")]:
+            del sys.modules[n]
+        sys.modules.update(self._modules)
+        sys.path[:] = self._path
 
     def inbox(self) -> str:
         return (self.tmp / "vault/00-Inbox/Inbox.md").read_text(encoding="utf-8")
@@ -75,12 +83,16 @@ class PluginTest(unittest.TestCase):
                                                   mode="full", vault_root=str(self.tmp), turn=None)
 
     def test_registers_tools_and_hook(self):
-        self.assertEqual(set(self.ctx.tools), {"brain_capture", "brain_submit", "brain_check", "brain_turn",
-                                               "brain_weekly", "brain_assigned", "brain_report"})
+        sys.path.insert(0, str(REPO / "tools"))
+        from brain import agent_tools
+        self.assertEqual(set(self.ctx.tools), {t["name"] for t in agent_tools.TOOLS})
+        manifest = (REPO / "integrations/javis/brain-standard/plugin.yaml").read_text(encoding="utf-8")
+        self.assertEqual({l.strip()[2:] for l in manifest.splitlines() if l.strip().startswith("- brain_")},
+                         set(self.ctx.tools))
         self.assertNotIn("brain_assign", self.ctx.tools)
-        for name in ("brain_submit", "brain_check", "brain_weekly", "brain_assigned", "brain_report"):
+        for name in ("brain_recall", "brain_submit", "brain_check", "brain_weekly", "brain_assigned", "brain_report"):
             self.assertEqual(self.ctx.tools[name]["min_mode"], "readonly", name)
-        for name in ("brain_capture", "brain_turn"):
+        for name in ("brain_capture", "brain_turn", "brain_remember"):
             self.assertEqual(self.ctx.tools[name]["min_mode"], "safe", name)
         self.assertIn("pre_tool_call", self.ctx.hooks)
 
@@ -114,11 +126,14 @@ class PluginTest(unittest.TestCase):
         self.assertIn("Metrics · 2026-W43", self.ctx.call("brain_weekly"))
 
     def test_assigned_and_report(self):
-        self.add_tasks("- [ ] Compare printer prices · @javis:suggest · assigned 2026-10-20", "- [ ] Send the quote · @javis:full")
+        self.add_tasks("- [ ] Compare printer prices · @agent:suggest · assigned 2026-10-20", "- [ ] Send the quote · @agent:full")
         self.assertNotIn("Send the quote", self.ctx.call("brain_assigned", {"max_level": "suggest"}))
         out = self.ctx.call("brain_report", {"number": 1, "result": "three quotes in drafts/", "max_level": "suggest"})
         self.assertIn("Done: Compare printer prices", out)
-        self.assertIn("(javis) Result", self.inbox())
+        self.assertIn("(assistant) Result", self.inbox())
+        sys.path.insert(0, str(REPO / "tools"))
+        from brain import agent_tools
+        self.assertIn("Only the brain's owner assigns", agent_tools.run(self.tmp, ["assign", "Send the quote", "auto"]))
         self.assertTrue(self.ctx.call("brain_report", {"result": "x"}).startswith("ERROR"))
 
     def test_not_a_brain(self):
@@ -142,15 +157,18 @@ class PluginTest(unittest.TestCase):
 
     def test_guard_blocks_self_assignment(self):
         na = "vault/10-Action/11-next-actions.md"
-        self.add_tasks("- [ ] Call mum", "- [ ] Look up the schedule · @javis:suggest · assigned 2026-10-20")
+        self.add_tasks("- [ ] Call mum", "- [ ] Look up the schedule · @agent:suggest · assigned 2026-10-20")
         self.assertIn("brain assign", self.guard(na, "javis_edit_file", old_string="- [ ] Call mum",
-                                                 new_string="- [ ] Call mum · @javis:auto")["deny"])
-        self.assertIn("brain assign", self.guard(na, "javis_edit_file", old_string="@javis:suggest",
-                                                 new_string="@javis:full")["deny"])
+                                                 new_string="- [ ] Call mum · @agent:auto")["deny"])
+        self.assertIn("brain assign", self.guard(na, "javis_edit_file", old_string="@agent:suggest",
+                                                 new_string="@agent:full")["deny"])
         current = (self.tmp / na).read_text(encoding="utf-8")
-        self.assertIn("brain assign", self.guard(na, content=current + "- [ ] New · @javis:auto\n")["deny"])
+        self.assertIn("brain assign", self.guard(na, content=current + "- [ ] New · @agent:auto\n")["deny"])
         self.assertIsNone(self.guard(na, content=current + "- [ ] New, no label\n"))
         self.assertIsNone(self.guard(na, "javis_edit_file", old_string="- [ ] Look up", new_string="- [x] Look up"))
+
+    def test_guard_blocks_the_graph_files(self):
+        self.assertIn("Templates and logs", self.guard("vault/_kg/triples.jsonl")["deny"])
 
     def test_guard_paths_from_config(self):
         (self.tmp / "brain.toml").write_text(
@@ -161,9 +179,9 @@ class PluginTest(unittest.TestCase):
 
 class ClaudeHookTest(PluginTest):
     def hook(self, event: dict) -> subprocess.CompletedProcess:
-        script = self.tmp / "integrations/javis/claude_write_guard.py"
+        script = self.tmp / "integrations/claude-code/write_guard.py"
         script.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(REPO / "integrations/javis/claude_write_guard.py", script)
+        shutil.copy(REPO / "integrations/claude-code/write_guard.py", script)
         return subprocess.run([sys.executable, str(script)], input=json.dumps({"cwd": str(self.tmp), **event}),
                               capture_output=True, text=True, encoding="utf-8")
 
@@ -173,7 +191,7 @@ class ClaudeHookTest(PluginTest):
         self.assertIn("permanent", r.stderr)
         r = self.hook({"tool_name": "Edit", "tool_input": {
             "file_path": str(self.tmp / "vault/10-Action/11-next-actions.md"),
-            "old_string": "## Tasks", "new_string": "## Tasks\n- [ ] X · @javis:full"}})
+            "old_string": "## Tasks", "new_string": "## Tasks\n- [ ] X · @agent:full"}})
         self.assertEqual(r.returncode, 2)
         self.assertIn("brain assign", r.stderr)
 

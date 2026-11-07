@@ -43,7 +43,8 @@ I use Brain 4.0 (Brain_Standard). Apply this in every conversation:
 5. There is no limit on projects or next actions. A multi-step project keeps its backlog, milestones and owners on its board; the brain keeps the outcome, done and stop criteria, decisions and lessons.
 6. Never write a permanent note for me. You may suggest drafts, questions, and notes it should link to.
 7. If you can work with files in the brain repository: run the matching brain command, and close every turn with brain turn <task|idea|file|drop> "summary".
-8. Only work for me on next actions labelled @javis:<suggest|auto|full>, and never above the level on the label. When done, report the result so it goes back to the Inbox (brain report). Never add or raise a label yourself; only suggest tasks worth assigning.
+0. Before answering, read what the brain already holds about the request (the knowledge graph: `brain kg ask`, or the `brain_recall` tool) and use it.
+8. Only work for me on next actions labelled @agent:<suggest|auto|full>, and never above the level on the label. When done, report the result so it goes back to the Inbox (brain report). Never add or raise a label yourself; only suggest tasks worth assigning.
 ```
 
 ## Setup per platform
@@ -57,8 +58,9 @@ I use Brain 4.0 (Brain_Standard). Apply this in every conversation:
 | Claude Code | 3 | `CLAUDE.md` at the repository root. Recent versions also read `AGENTS.md` when there is no `CLAUDE.md` | Opening a terminal at the repository root |
 | Codex | 3 | `AGENTS.md` at the repository root | Opening it at the repository root |
 | Gemini CLI | 3 | `GEMINI.md`, or add `AGENTS.md` to `context.fileName` in `settings.json` | Opening it at the repository root |
-| Javis OS (self-hosted agent, many models) | 3 | A Javis project's instructions, plus `AGENTS.md` or `CLAUDE.md` at the repository root | Pointing the brain at the repository root and installing the `brain-standard` plugin; see [using-with-javis-os.md](using-with-javis-os.md) |
+| Javis OS (self-hosted agent, many models) | 3 | A Javis project's instructions, plus `AGENTS.md` or `CLAUDE.md` at the repository root | Pointing the brain at the repository root and installing the `brain-standard` plugin; see [integrations/javis/README.md](../integrations/javis/README.md) |
 | Cursor, GitHub Copilot and other agents | 3 | `AGENTS.md` at the repository root; check each tool's docs in case it needs switching on | Opening the repository in the tool |
+| Any MCP client, anywhere (Claude Desktop, Codex, Gemini CLI, Cursor, Kiro, OpenClaw, Hermes Agent, Goose…) | 4 | The server's own instructions, plus `AGENTS.md` | Adding `integrations/mcp/brain_mcp.py` to the client's MCP settings; see [integrations/mcp/README.md](../integrations/mcp/README.md) and [integrations.md](integrations.md) |
 
 Settings names in chat apps change between versions. Look for something called "instructions", "custom instructions" or "personalisation".
 

@@ -1,10 +1,12 @@
-# Brain_Standard · Brain 4.0
+# Brain_Standard · Brain 4.2
 
 A second brain you own: Markdown files in a git repository, a set of rules so everything has its place, and one rule set so any AI can work with it.
 
-**Version 4.0.1** · 29/10/2026 · [Change log](CHANGELOG.md) · [Architecture (DAB 4.0)](docs/architecture.md) · [Glossary](docs/glossary.md) · [version 2.2.1](archive/2.2.1/README.md)
+**Version 4.2.0** · 07/11/2026 · [Change log](CHANGELOG.md) · [Architecture (DAB 4.2)](docs/architecture.md) · [Glossary](docs/glossary.md) · [version 2.2.1](archive/2.2.1/README.md)
 
-**New in 4.0:** everything is in English: commands, configuration, rule codes, file names and docs, with names chosen for what they mean. The CLI is a package of small reusable modules, and every parameter lives in a configuration file. Upgrading from 3.0 is one command: `brain migrate`. See [docs/migration.md](docs/migration.md).
+**New in 4.2:** a **knowledge graph** of the vault that agents read before answering and update after each turn ([docs/knowledge-graph.md](docs/knowledge-graph.md)), and a **platform-neutral assistant**: one set of agent tools served to any platform through an MCP server, with Javis OS as one integration among many ([docs/integrations.md](docs/integrations.md)). Design suggestions are vetted before they are adopted ([docs/design-suggestions.md](docs/design-suggestions.md)). Upgrading: `brain migrate`, then `brain kg build`.
+
+**New in 4.0:** everything is in English, the CLI is a package of small reusable modules, and every parameter lives in a configuration file. See [docs/migration.md](docs/migration.md).
 
 **New here? Read [Getting started](docs/getting-started.md)**: install, your first day in 30 minutes, the daily and weekly rhythm. To use it with AI, read [Using the brain with AI](docs/using-with-ai.md).
 
@@ -52,8 +54,9 @@ The brain has one shared rule block you can paste into any AI. From then on, the
 | 1 · Chat | Answer and suggest; you copy into the brain | Claude, ChatGPT, Gemini, local models |
 | 2 · Chat with documents | Answer from the notes you give it | Claude or ChatGPT Projects, Gemini Gems |
 | 3 · Agent in the repository | Read and write files, run `brain` commands itself | Claude Code, Codex, Gemini CLI, Cursor, GitHub Copilot |
+| 4 · Agent with the brain's tools | Call `brain_recall`, `brain_capture`, `brain_submit`, `brain_remember`… from anywhere, through the MCP server | Claude Desktop, Codex, Gemini CLI, Cursor, Kiro, OpenClaw, Hermes Agent, Javis OS, Goose… |
 
-Setup per platform, sample workflows and prompts: [docs/using-with-ai.md](docs/using-with-ai.md). Running the brain in the self-hosted agent [Javis OS](https://github.com/blogminhquy/javis-os): [docs/using-with-javis-os.md](docs/using-with-javis-os.md).
+Setup per platform, sample workflows and prompts: [docs/using-with-ai.md](docs/using-with-ai.md). Every agent and automation platform, and how each one reaches the brain: [docs/integrations.md](docs/integrations.md). Adapters: [integrations/mcp/](integrations/mcp/README.md) (any MCP client), [integrations/claude-code/](integrations/claude-code/README.md) (hooks), [integrations/javis/](integrations/javis/README.md) (Javis OS).
 
 ## The flow
 
@@ -63,7 +66,7 @@ flowchart TD
   AG["AI or agent research: web, papers, APIs"] --> G1{{"G1 · source record, grade A–F · 1–6"}}
   G1 -- "passed" --> IN
   G1 -- "source E or credibility 5" --> LOG["_log"]
-  JV["Javis: Telegram, voice"] --> IN
+  JV["Assistant: Telegram, voice"] --> IN
   IN --> Q1{"Is it actionable?"}
   Q1 -- "yes" --> AC["Action lane · GTD + PARA"]
   Q1 -- "no" --> Q2{"Is it worth keeping?"}
@@ -71,7 +74,7 @@ flowchart TD
   Q2 -- "file, code" --> FC["Files and code lane · Johnny Decimal"]
   Q2 -- "no" --> X["Delete"]
   AC -- "multi-step project" --> BD["Board in the repository · backlog, milestones, people"]
-  AC -- "brain assign" --> JF["Javis follows up · @javis:level"]
+  AC -- "brain assign" --> JF["The assistant follows up · @agent:level"]
   JF -- "result" --> IN
   AC --> OUT["Output: products, decisions, code"]
   KN --> OUT
@@ -86,22 +89,24 @@ The three lanes exchange items through 7 links, I1–I7, described in [docs/flow
 | --- | --- |
 | `docs/getting-started.md` | Step-by-step guide for newcomers |
 | `docs/using-with-ai.md` | Using the brain with AI on any platform |
-| `docs/using-with-javis-os.md` | Using the brain with Javis OS: setup, conflicts, sample workflows |
 | `docs/flow.md` | The Inbox, the two questions, the three lanes, the 7 links, the assistant loop, the rhythm |
 | `docs/lanes.md` | Rules, metrics and warning signs for each lane |
 | `docs/trust-gates.md` | Gates G1–G4, Admiralty grades, the source record, the 10 research steps |
 | `docs/execution-layer.md` | The execution layer: boards, milestones, owners |
-| `docs/architecture.md` | DAB 4.0, the system architecture in arc42 form: modules, runtime, the assistant loop, decisions, risks, the 4.1 retrieval layer design |
+| `docs/architecture.md` | DAB 4.2, the system architecture in arc42 form: modules, runtime, the assistant loop, the knowledge graph, decisions, risks, the retrieval layer design |
+| `docs/knowledge-graph.md` | The knowledge graph: read before a turn, remembered after, trust on every fact |
+| `docs/integrations.md` | Agent and automation platforms and how each reaches the brain |
+| `docs/design-suggestions.md` | Finding design suggestions through the brain and vetting them |
 | `docs/glossary.md` | Every term, command, key and rule code, with its 3.0 name |
-| `docs/migration.md` | Upgrading a 3.0 brain to 4.0 |
+| `docs/migration.md` | Upgrading a 3.0 or 4.0 brain |
 | `vault/` | Folder layout and templates to start a new brain |
 | `vault/AGENTS.md` | Rules for agents working in the repository |
 | `brain.toml` | The brain's own settings; only what differs from the defaults |
-| `tools/brain/` | The `brain` package: `config`, `notes`, `gates`, `intake`, `checks`, `metrics`, `assistant`, `guard`, `migrate`, `cli` |
+| `tools/brain/` | The `brain` package: `config`, `notes`, `gates`, `intake`, `checks`, `metrics`, `assistant`, `guard`, `kgcore`, `kg`, `agent_tools`, `migrate`, `cli` |
 | `tools/brain/defaults.toml` | Every parameter with its default value |
 | `bin/brain`, `bin/brain.cmd` | Run the CLI without installing anything |
-| `integrations/javis/` | Javis OS plugin, and a Claude Code hook that stops AI from writing permanent notes |
-| `tests/` | Tests for the CLI, the plugin and the migration |
+| `integrations/` | One thin adapter per platform: `mcp/` (MCP server for any client), `claude-code/` (hooks and write guard), `javis/` (Javis OS plugin and setup guide) |
+| `tests/` | Tests for the CLI, the knowledge graph, the integrations and the migration |
 | `Dockerfile`, `.dockerignore` | The image that runs the CLI without installing Python; it holds only `tools/brain/` |
 | `.github/workflows/` | CI on every push and pull request; publishing on a `vX.Y.Z` tag. Both run only in Brain_Standard itself, never in a brain made from it |
 | `archive/` | Snapshots of older versions, from 2.2.1; kept as they were |
@@ -139,10 +144,12 @@ docker run --rm -v "$PWD:/brain" --user "$(id -u):$(id -g)" dfat243/brain_standa
 | `brain check` | Check the vault against the rules and gates G1–G3. Each finding starts with its rule code. |
 | `brain turn <task\|idea\|file\|drop> "summary"` | Close a turn of work. While the vault has errors the turn does not close. |
 | `brain weekly [--save]` | Metrics for the Weekly Review. |
-| `brain assign "…" <suggest\|auto\|full>` | Assign a next action to Javis. Only you run this. |
-| `brain assigned [--level …]` | List the tasks assigned to Javis, filtered by level. |
-| `brain report <n> "result"` | Javis reports an assigned task done; the result goes to the Inbox. |
-| `brain migrate [--dry-run]` | Convert a 3.0 brain to the 4.0 names, once. |
+| `brain assign "…" <suggest\|auto\|full>` | Assign a next action to the assistant. Only you run this; it is refused when an agent runs it. |
+| `brain assigned [--level …]` | List the tasks assigned to the assistant, filtered by level. |
+| `brain report <n> "result"` | The assistant reports an assigned task done; the result goes to the Inbox. |
+| `brain kg build \| ask \| stats \| suggest \| export \| remember` | The knowledge graph: build it, read it, see its gaps, fold a turn into it. |
+| `brain hook prompt\|stop` | Turn hooks for Claude Code: read the graph before, remember after. |
+| `brain migrate [--dry-run]` | Convert a 3.0 brain to the 4.0 names, and `@javis` labels to the 4.2 label, once. |
 
 ## Configuration
 
@@ -150,7 +157,7 @@ Every parameter, from folder paths and thresholds to the assistant's name, label
 
 ```toml
 [brain]
-version = "4.0.0"
+version = "4.2.0"
 vault = "vault"
 
 [clarify]
@@ -168,5 +175,6 @@ label = "@friday"
 - Every project records its done and stop conditions when it is created. A multi-step project has its own board.
 - Facts an AI or agent brings in need a source record and a grade. The grade decides how far they may go.
 - Every turn of work ends with `brain turn`.
-- Javis only follows up on tasks you assigned with `@javis:<level>`, never above that level, and sends the result back to the Inbox. Javis never assigns work to itself.
+- The assistant, on any platform, only follows up on tasks you assigned with `@agent:<level>`, never above that level, and sends the result back to the Inbox. It never assigns work to itself.
+- Agents read the knowledge graph before answering and fold each turn into it; an agent's own answers never become facts in it.
 - There is no limit on projects or next actions. The Weekly Review measures, so you see for yourself when you are carrying too much.

@@ -2,6 +2,24 @@
 
 Versions are x.y.z: x goes up when the main flow changes shape or a migration is needed, y when a mechanism is added without breaking the flow, z for fixes to numbers, labels and wording. The newest version is at the top. Entries before 4.0 use the names of their time; [docs/glossary.md](docs/glossary.md) maps them to the current ones.
 
+## 4.2.0 · 07/11/2026
+
+A knowledge graph agents read before answering and update after each turn, and an assistant loop that names no platform. Minor version: the flow is unchanged; `brain migrate` moves `@javis` labels to the new default.
+
+### Added
+- The knowledge graph: `tools/brain/kgcore.py` (portable, adapted from robert-mcdermott/ai-knowledge-graph, Apache-2.0, see `NOTICE.md`) and `tools/brain/kg.py`. The clarified vault as triples in `vault/_kg/triples.jsonl`, each with source, kind (`note`, `memory`, `inferred`), method and trust (`owner`, `graded`, `unverified`, `agent`); built incrementally from links, tags, fields and short sentences, plus an optional OpenAI-compatible LLM (`[kg]`). The Inbox is never read; an agent's answers are never stored as facts.
+- `brain kg build | ask | stats | suggest | export | remember` and `brain hook prompt | stop` (read before, remember after); rule KG-01.
+- `tools/brain/agent_tools.py`: one definition of the tools every platform gets, each running the CLI with `BRAIN_ACTOR=agent`.
+- `integrations/mcp/brain_mcp.py`: the tools as an MCP server over stdio (standard library, `--root`, `--read-only`), with client configurations; `integrations/claude-code/` with the hook settings.
+- Docs: `docs/knowledge-graph.md`, `docs/integrations.md` (agent and automation platforms and how each reaches the brain), `docs/design-suggestions.md`; DAB 4.2 with sections 5.5 and 6.14 and ADR-15 to ADR-19.
+- `tests/test_kg.py`: the graph, the hooks, the MCP protocol.
+
+### Changed
+- `[assistant]` defaults to `name = "the assistant"`, `label = "@agent"`, `result_channel = "assistant"`; the guard's default tools are Claude Code's, and `guard.block_reason` takes an integration's own `write_tools`.
+- `brain assign` is refused when an agent runs it (`BRAIN_ACTOR=agent`).
+- Javis OS is an adapter only: `integrations/javis/brain-standard/plugin.py` registers the shared tools and calls the shared guard; the guide moved from `docs/using-with-javis-os.md` to `integrations/javis/README.md`; the Claude Code write guard moved to `integrations/claude-code/write_guard.py`.
+- `brain migrate` also converts 4.0 labels (`@javis` → the configured label).
+
 ## 4.0.1 · 29/10/2026
 
 Packaging and automation. The brain package, the rules, the commands and the data format are the same as 4.0.0, so there is nothing to migrate.

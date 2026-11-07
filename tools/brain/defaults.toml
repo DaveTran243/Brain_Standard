@@ -1,10 +1,10 @@
 # Brain_Standard · default configuration.
-# Every parameter the CLI, the Javis plugin and the Claude hook use lives here.
+# Every parameter the CLI, the hooks and the agent integrations use lives here.
 # A brain overrides any of these in its own brain.toml; keys it leaves out keep these values.
 # Names are explained in docs/glossary.md.
 
 [brain]
-version = "4.0.1"
+version = "4.2.0"
 vault = "vault"                     # vault folder, relative to the folder that holds brain.toml
 
 [paths]                             # relative to the vault
@@ -26,6 +26,9 @@ log = "_log"
 turn_log = "_log/turns.md"
 rejected_log = "_log/rejected.md"
 templates = "_templates"
+kg_triples = "_kg/triples.jsonl"   # the knowledge graph; under "_", so the write guard keeps AIs out
+kg_state = "_kg/state.json"
+hook_state = "_log/.hooks"         # what the prompt hook hands to the Stop hook, per session
 
 [files]
 template_prefix = "_"               # files and folders starting with this are templates or logs: skipped by checks
@@ -85,19 +88,55 @@ area = "50-59"
 max_categories = 10
 
 [assistant]
-name = "Javis"
-label = "@javis"                    # written on a next action as @javis:<level>
+# Platform-neutral: any agent (Javis OS, OpenClaw, Hermes, n8n, Claude…) follows up through the shared tools in
+# tools/brain/agent_tools.py. Each platform's adapter lives in integrations/.
+name = "the assistant"
+label = "@agent"                    # written on a next action as @agent:<level>
 levels = ["suggest", "auto", "full"]   # lowest first; a level is the ceiling for a task
 stale_after_days = 7                # AS-02
-result_channel = "javis"            # channel of the result line written to the Inbox by brain report
+result_channel = "assistant"        # channel of the result line written to the Inbox by brain report
 
 [assistant.plugin]
-timeout_seconds = 60                # a brain command run by the plugin is stopped after this
-default_channel = "javis"           # channel brain_capture uses when the caller gives none
+timeout_seconds = 60                # a brain command run by an integration is stopped after this
+default_channel = "assistant"       # channel brain_capture uses when the caller gives none
 
 [assistant.guard]
 # Paths (keys of [paths]) an AI may never write to directly.
 protected = ["permanent", "inbox_agent"]
 # The file where an AI may not add or raise an assignment label.
 label_file = "next_actions"
-write_tools = ["javis_write_file", "javis_edit_file", "Write", "Edit", "MultiEdit", "NotebookEdit"]
+write_tools = ["Write", "Edit", "MultiEdit", "NotebookEdit"]   # Claude Code's; an integration passes its own
+
+[kg]
+# The knowledge graph (tools/brain/kg.py, docs/knowledge-graph.md): read before every conversation, updated after it.
+enabled = true
+read_on_prompt = true          # brain hook prompt adds what the graph holds about the prompt
+update_on_stop = true          # brain hook stop folds the turn into the graph
+kinds = ["permanent", "literature", "fleeting", "project", "area", "moc", "next"]   # the Inbox is never read
+max_facts = 15
+hops = 2
+max_seeds = 6
+max_memory_facts = 8
+max_stale_documents = 20       # KG-01 warns when more documents than this changed since the last build
+stopwords = []
+sentence_rules = true
+sentence_verbs = ["is a", "is an", "is", "are", "uses", "requires", "causes", "depends on", "replaces", "contains", "leads to", "decides", "là", "gồm", "dùng", "cần", "gây ra", "phụ thuộc vào", "thay thế", "thuộc", "quyết định", "dẫn tới"]
+sentence_max_subject_words = 6
+sentence_max_object_words = 8
+infer_taxonomy = true
+infer_min_chars = 4
+infer_max_words = 4
+max_inferred_ratio = 0.5
+llm = "auto"                   # auto: use the LLM when llm_base_url and llm_model are set · on · off
+llm_base_url = ""              # OpenAI-compatible chat completions URL, e.g. http://localhost:11434/v1/chat/completions
+llm_model = ""
+llm_api_key_env = ""           # name of the environment variable holding the key (never the key itself)
+llm_temperature = 0.2
+llm_timeout = 120
+llm_in_hooks = false
+chunk_words = 100
+chunk_overlap = 20
+max_predicate_words = 3
+suggest_min_degree = 4
+suggest_hubs = 25
+suggest_min_chats = 3

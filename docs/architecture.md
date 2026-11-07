@@ -1,4 +1,4 @@
-# System architecture · Brain 4.0
+# System architecture · Brain 4.2
 
 The architecture design document (DAB) for Brain_Standard. It follows the [arc42](https://arc42.org) template and the viewpoints of ISO/IEC/IEEE 42010; diagrams follow the C4 model; decisions are recorded as Michael Nygard-style ADRs. The business rules are explained in the other `docs/` pages; this page describes how the system is built, how it runs and why it was built this way, in enough detail to rewrite the CLI from scratch without reading the code. Terms are defined in [glossary.md](glossary.md).
 
@@ -26,13 +26,13 @@ The architecture design document (DAB) for Brain_Standard. It follows the [arc42
 | Item | Value |
 | --- | --- |
 | System | Brain_Standard · a second brain made of Markdown + git + the `brain` CLI |
-| System version described | 4.0.1 (current: 4.0.0 plus a Docker image and CI; 4.0.0 brought English names, the modular package, defaults in configuration, `brain migrate`) and 4.1 (proposed, section 12) |
-| Document version | 4.0. Version 3.0 (in Vietnamese) is in git history; version 1.1 is kept at [`archive/2.2.1/docs/kien-truc-he-thong.md`](../archive/2.2.1/docs/kien-truc-he-thong.md) |
+| System version described | 4.2.0 (current: 4.0.1, which added a Docker image and CI, plus the knowledge graph and the platform-neutral assistant, sections 5.5, 6.14, ADR-15–19) and the retrieval layer (proposed, section 12) |
+| Document version | 4.2. Version 3.0 (in Vietnamese) is in git history; version 1.1 is kept at [`archive/2.2.1/docs/kien-truc-he-thong.md`](../archive/2.2.1/docs/kien-truc-he-thong.md) |
 | Status | Awaiting Design Authority Board review; code, tests and plugin are done; Javis OS has not yet run on a real brain |
 | Owner | The owner of the Brain_Standard repository |
-| Last updated | 22/10/2026 |
-| Sources of truth | `tools/brain/` (package and `defaults.toml`), `brain.toml`, `tests/`, `integrations/javis/`, `vault/`, the `docs/` pages |
-| Related systems | [Javis OS](https://github.com/blogminhquy/javis-os) 0.270.0, Claude Code |
+| Last updated | 07/11/2026 |
+| Sources of truth | `tools/brain/` (package and `defaults.toml`), `brain.toml`, `tests/`, `integrations/`, `vault/`, the `docs/` pages |
+| Related systems | Any agent platform through `integrations/` ([integrations.md](integrations.md)): Claude Code, MCP clients, [Javis OS](https://github.com/blogminhquy/javis-os); [ai-knowledge-graph](https://github.com/robert-mcdermott/ai-knowledge-graph), which the knowledge graph adapts |
 
 ### 0.1 Scope
 
@@ -66,6 +66,7 @@ The document covers the vault's data standard, the `brain` CLI, the check rules,
 | 3.0 | 21/10/2026 | DAB 3.0: the Javis loop in every view (requirements F13–F18, use cases UC10–UC12, success metrics, new containers and components, the assign, list and report commands, Javis OS deployment, label grammar, rules for labels, the `[javis]` table, threats, tests, ADR-10–12, risks R14–R17, open decisions). The retrieval layer moved from 2.3 to 3.1 |
 | 4.0 | 22/10/2026 | DAB 4.0, in English: every command, key, rule code and file name in English; the CLI split into a package of modules (ADR-13, superseding ADR-02); every parameter in `defaults.toml`; rule codes in CLI messages; `brain migrate` (6.13); R9 fixed; English naming (ADR-14, superseding ADR-09). The retrieval layer moved from 3.1 to 4.1 |
 | 4.0.1 | 29/10/2026 | Packaging: the Docker image as a deployment node (7.1, 7.2), CI and the release workflow in the test strategy (8.12), R7 resolved. No change to the flow, the rules or the data |
+| 4.2 | 07/11/2026 | DAB 4.2: the knowledge graph (5.5, 6.14, ADR-15–17, [knowledge-graph.md](knowledge-graph.md)); the platform-neutral assistant with one tool definition and adapters per platform (5.5, ADR-18, amending ADR-10; [integrations.md](integrations.md)); design suggestions vetted before adoption (ADR-19, [design-suggestions.md](design-suggestions.md)). **Reading note:** sections written for 3.0 and 4.0 say "Javis" for the assistant; since 4.2 read "the assistant, on any platform". The label is `@agent` by default, the result channel `assistant`, and the Claude Code write guard moved to `integrations/claude-code/write_guard.py` |
 
 ## 1. Introduction and goals
 
@@ -73,7 +74,7 @@ The document covers the vault's data standard, the `brain` CLI, the check rules,
 
 Someone who juggles many tasks, reads a lot, writes code and uses several AIs runs into five problems: tasks and ideas get scattered; reading a lot without remembering; half-finished projects with no clear next step; files all over the place; and AIs that forget between sessions, sometimes make things up, and behave differently on every platform. The brain answers with a single flow: everything goes into **one Inbox**, is clarified with **two questions**, then goes into exactly **one of three lanes**. The lanes exchange items through **7 links, I1–I7**. Facts an AI brings in must pass **gates G1–G4**. See [flow.md](flow.md).
 
-Version 3.0 added **Javis**, an operations assistant, at both ends of the flow: Javis **captures** from Telegram, voice and the web into the Inbox, and **follows up** on next actions the owner has clarified and assigned with a `@javis:<level>` label. The middle, the two questions and the choice of lane, stays with the owner. Javis's results come back to the Inbox. See [flow.md](flow.md#the-assistant-loop) and [using-with-javis-os.md](using-with-javis-os.md).
+Version 3.0 added **Javis**, an operations assistant, at both ends of the flow: Javis **captures** from Telegram, voice and the web into the Inbox, and **follows up** on next actions the owner has clarified and assigned with a `@javis:<level>` label. The middle, the two questions and the choice of lane, stays with the owner. Javis's results come back to the Inbox. See [flow.md](flow.md#the-assistant-loop) and [integrations/javis/README.md](../integrations/javis/README.md).
 
 Version 4.0 changes no behaviour of the flow. It makes the system readable for anyone (English names that say what they mean), reusable (one package of small modules shared by the CLI, the plugin and the hook) and configurable (every parameter in a configuration file, none hardcoded).
 
@@ -325,7 +326,7 @@ flowchart TB
 | `tests/test_javis_plugin.py` | 24 test runs for the plugin and the Claude Code hook | |
 | `tests/test_migrate.py` | 6 tests on a copy of a real 3.0 brain (`tests/fixtures/brain-3.0/`) | |
 | `integrations/javis/brain-standard/` | Javis OS plugin: 7 tools that run the CLI, a `pre_tool_call` hook | Copy rules; offer an assign tool |
-| `integrations/javis/claude_write_guard.py` | PreToolUse hook for Claude Code, using the same guard as the plugin | |
+| `integrations/claude-code/write_guard.py` | PreToolUse hook for Claude Code, using the same guard as the plugin | |
 | `docs/` | The standard and guides | |
 
 ### 5.2 Level 2 · Vault layout
@@ -371,7 +372,7 @@ flowchart LR
   guard --> assistant
   guard --> notes
   plugin["Javis plugin"] --> guard
-  hook["claude_write_guard.py"] --> guard
+  hook["write_guard.py"] --> guard
   config --> defaults[("defaults.toml")]
 ```
 
@@ -390,7 +391,7 @@ flowchart LR
 
 `Brain` is a dataclass holding `root`, `cfg` and `now`, with the properties `vault`, `gates` (the `[gates]` table), `assistant` (the `[assistant]` table), `stamp` (`YYYY-MM-DD HH:MM`), `today`, the method `path(key)` returning `vault / paths[key]`, and `rel(p)` for messages.
 
-### 5.4 Level 3 · The Javis plugin and the hook
+### 5.4 Level 3 · The Javis plugin and the hook (3.0–4.0; since 4.2 see 5.5)
 
 | Part | Role | Note |
 | --- | --- | --- |
@@ -400,7 +401,7 @@ flowchart LR
 | `run(ctx, …)` | Runs `python -m brain --root <root> …`, stopped after `[assistant.plugin] timeout_seconds` | A non-zero exit code is put at the top of the result |
 | Tools | `brain_capture`, `brain_submit`, `brain_check`, `brain_turn`, `brain_weekly`, `brain_assigned`, `brain_report` | `min_mode` in section 6.12 |
 | `brain.guard.block_reason(brain, tool, args, cwd)` | The shared write guard | Used by the Javis hook and the Claude Code hook |
-| `claude_write_guard.py` | Reads the PreToolUse JSON, calls `block_reason`, exits 2 with the reason | Declared in `.claude/settings.json` |
+| `write_guard.py` | Reads the PreToolUse JSON, calls `block_reason`, exits 2 with the reason | Declared in `.claude/settings.json` |
 
 `block_reason` refuses a file write by a tool in `[assistant.guard] write_tools` (by default `javis_write_file`, `javis_edit_file`, and Claude Code's `Write`, `Edit`, `MultiEdit`, `NotebookEdit`) when the target is inside the vault and:
 
@@ -411,6 +412,21 @@ flowchart LR
 | Any other `[paths]` key listed in `protected` | Always |
 | A file or folder starting with `_` | Always (templates and logs) |
 | `label_file` (Next Actions) | The new content has more labels at some level than the old one: a new or raised assignment |
+
+### 5.5 Level 3 · The knowledge graph and the integration layer (4.2)
+
+| Module or file | Role |
+| --- | --- |
+| `tools/brain/kgcore.py` | The graph, portable: rule and LLM extraction, standardisation, taxonomy inference, retrieval, suggestions. Knows nothing of the vault; the same file in every brain |
+| `tools/brain/kg.py` | The vault side: documents from clarified notes, projects, areas, maps and next actions; `_kg/triples.jsonl` and `_kg/state.json`; build, ask, remember, stats, suggest, export |
+| `tools/brain/agent_tools.py` | One definition of the tools every platform gets (`brain_recall`, `brain_remember`, `brain_capture`, `brain_submit`, `brain_check`, `brain_suggest`, `brain_turn`, `brain_weekly`, `brain_assigned`, `brain_report`); each runs `python -m brain` with `BRAIN_ACTOR=agent` |
+| `cli.py` · `brain kg …`, `brain hook prompt\|stop` | Commands for people and for turn hooks |
+| `guard.block_reason(…, write_tools)` | The shared write guard; an integration passes its platform's file tools; `_kg/` is covered by the `_` rule |
+| `integrations/mcp/brain_mcp.py` | The agent tools as an MCP server over stdio, standard library only, `--read-only` for level `suggest` |
+| `integrations/claude-code/` | `write_guard.py` and the hook settings for read-before and remember-after |
+| `integrations/javis/brain-standard/` | A thin Javis OS adapter: registers the agent tools, calls the guard with Javis's tool names |
+
+Details: [knowledge-graph.md](knowledge-graph.md) (data model, sources, trust, configuration), [integrations.md](integrations.md) (platforms, adapters, security).
 
 ## 6. Runtime view
 
@@ -697,6 +713,13 @@ The level on the label is the task's ceiling, and it has the same names as the t
 | Output | `Would change (n):` with `--dry-run`, else `Changed (n):`, one line per change, then a reminder to run `brain check` and commit |
 | Exit code | 0; 1 no `brain.toml` |
 
+### 6.14 A turn with the knowledge graph (4.2)
+
+1. **Before:** `brain hook prompt` (Claude Code) or the `brain_recall` tool matches the entities in the request, retrieves their neighbourhood (shortest paths between them first, then by distance and trust) and gives the agent up to `[kg] max_facts` facts, each with its source and trust (`owner`, a grade, `unverified`, `agent`, `inferred`).
+2. **During:** the agent answers; facts it brings in go through `brain submit` (G1); the turn closes with `brain turn`.
+3. **After:** `brain hook stop` or `brain_remember` re-reads the documents that changed (by content hash) and adds a `chat <date> <session>` node with `mentions` edges to the owner's words (trust `owner`) and `about` edges to the turn summary (trust `agent`). The agent's answer is never stored as a fact (ADR-16).
+4. A failure anywhere in the graph is written to stderr and never stops the turn. KG-01 warns when the graph lags the vault.
+
 ## 7. Deployment view
 
 ```mermaid
@@ -746,7 +769,7 @@ flowchart LR
 
 ### 7.4 Deploying Javis OS
 
-A summary of [using-with-javis-os.md](using-with-javis-os.md), which has every step:
+A summary of [integrations/javis/README.md](../integrations/javis/README.md), which has every step:
 
 1. Install Javis OS; background work on an API key.
 2. Point the brain at the repository root (the folder with `brain.toml`), not `vault/`; don't press "normalise structure".
@@ -754,7 +777,7 @@ A summary of [using-with-javis-os.md](using-with-javis-os.md), which has every s
 4. Self-learning: Dry run or Suggest; Wiki, Skills and Curator off; no INGEST.
 5. Paste the shared rule block into a Javis project's instructions; copy `AGENTS.md` and `CLAUDE.md` to the root.
 6. Copy `integrations/javis/brain-standard/` to `plugins/`, read it, enable it.
-7. Declare the `claude_write_guard.py` hook in `.claude/settings.json`.
+7. Declare the `write_guard.py` hook in `.claude/settings.json`.
 8. Create the "Javis · suggest" loop; add "Javis · auto" after 2 stable weeks; switch "Javis · full" on only when there is work for it.
 
 ## 8. Cross-cutting concepts
@@ -1159,6 +1182,38 @@ Each ADR records the context, the decision, the options considered and the conse
 - **Decision:** Commands, modules, functions, configuration keys, frontmatter keys, rule codes, file and folder names, messages and docs are in English. Names describe what a thing does rather than translating the old word: `nop` → `submit`, `k1_toi_da` → `max_reach`, `chan_cung` → `strict`, `javis` → `assigned`, `xong` → `report`. One language only, no translation layer. Old data is converted once by `brain migrate`; there are no Vietnamese aliases. The full mapping is in [glossary.md](glossary.md).
 - **Options considered:** Aliases for both languages (twice the surface to test and document, ambiguous docs); an i18n layer for messages (more code than value for one user); keep Vietnamese (blocks sharing).
 - **Consequences:** A breaking change, hence 4.0. Personal notes keep whatever language their owner writes in; only the structure is English. The archived 2.2.1 snapshot and the 3.0 test fixture keep their Vietnamese names on purpose.
+
+### ADR-15 · The knowledge graph is a derived file in the vault
+
+- **Status:** Accepted (4.2.0).
+- **Context:** Agents saw the brain only through the files they happened to open; each conversation left no trace the next one could find. The owner asked that every chat read what the brain holds first and update it after.
+- **Decision:** `brain kg build` turns the clarified vault into subject → predicate → object triples in `vault/_kg/triples.jsonl`, incrementally by content hash, adapting robert-mcdermott/ai-knowledge-graph (Apache-2.0) to the standard library. It is derived data like the retrieval index (ADR-08): rebuildable at any time, never the only copy (ADR-01).
+- **Options considered:** A graph database (a server and a dependency for a few thousand triples); the retrieval index alone (finds text, not relationships).
+- **Consequences:** One more derived file under `_`, guarded like logs. Hooks add about 0.1 s per turn on a vault of a few dozen notes.
+
+### ADR-16 · Provenance and trust on every triple; agent answers are never facts
+
+- **Status:** Accepted (4.2.0).
+- **Decision:** Every triple carries its source, kind (`note`, `memory`, `inferred`), method (rule or LLM) and trust (`owner`, `graded` with its grade, `unverified`, `agent`). The graph never raises trust. Memory keeps only the owner's words and the turn summaries; facts an agent brings in enter through G1 and come back from their notes with their grade.
+- **Consequences:** Agents can tell the owner's view from a checked fact from a lead. The graph cannot launder an agent's claim into a fact.
+
+### ADR-17 · The LLM is optional and local by default
+
+- **Status:** Accepted (4.2.0).
+- **Decision:** Rules always run (links, tags, fields, short "X is Y" sentences). An OpenAI-compatible LLM reads the notes too only when `[kg] llm_base_url` and `llm_model` are set; a local model is recommended, the key is read from an environment variable, and hooks use rules only unless `llm_in_hooks`.
+- **Consequences:** Works offline and with no model; with a cloud model, the owner knowingly sends notes outside.
+
+### ADR-18 · A platform-neutral core with one adapter per platform
+
+- **Status:** Accepted (4.2.0). Amends ADR-10: the assistant at both ends is any platform, not Javis by name.
+- **Decision:** `[assistant]` defaults to a neutral name and the `@agent` label. One tool definition (`agent_tools.TOOLS`) and one write guard serve every platform; each platform gets a thin adapter in `integrations/` that translates and never decides. MCP over stdio is the default adapter; Javis OS keeps a plugin because its hook also guards Javis's own file tools. `brain assign` is refused when `BRAIN_ACTOR=agent`.
+- **Consequences:** A new platform costs a configuration block, not code in the core. `brain migrate` moves `@javis` labels to the configured label unless `brain.toml` keeps `@javis`.
+
+### ADR-19 · Design suggestions are vetted before they are adopted
+
+- **Status:** Accepted (4.2.0).
+- **Decision:** `brain kg suggest` and the `brain_suggest` tool only print. Every design suggestion goes through find (in the brain first), evidence, vet (V1–V8), the owner's decision and a record ([design-suggestions.md](design-suggestions.md)).
+- **Consequences:** No agent adopts its own suggestion; rejected suggestions are kept with their reason.
 
 ## 10. Quality requirements
 
@@ -1598,14 +1653,14 @@ The full list of terms, with their 3.0 names, is [glossary.md](glossary.md). The
 - SQLite FTS5: <https://sqlite.org/fts5.html> · sqlite-vec: <https://github.com/asg017/sqlite-vec>
 - fastembed: <https://github.com/qdrant/fastembed>
 - Cormack, Clarke, Büttcher (2009), Reciprocal Rank Fusion outperforms Condorcet and individual rank learning methods
-- In this repository: [flow.md](flow.md), [lanes.md](lanes.md), [trust-gates.md](trust-gates.md), [execution-layer.md](execution-layer.md), [using-with-ai.md](using-with-ai.md), [using-with-javis-os.md](using-with-javis-os.md), [getting-started.md](getting-started.md), [migration.md](migration.md), [glossary.md](glossary.md)
+- In this repository: [flow.md](flow.md), [lanes.md](lanes.md), [trust-gates.md](trust-gates.md), [execution-layer.md](execution-layer.md), [using-with-ai.md](using-with-ai.md), [integrations/javis/README.md](../integrations/javis/README.md), [getting-started.md](getting-started.md), [migration.md](migration.md), [glossary.md](glossary.md)
 
 ## 15. Maintaining this document
 
 | When | Update sections |
 | --- | --- |
 | A CLI command is added or changed | 1.2, 5.3, 6, 8.10, 8.12 |
-| The Javis plugin, the hook or the levels change | 5.4, 6.12, 8.11, 9 (ADR-10–12), [using-with-javis-os.md](using-with-javis-os.md) |
+| The Javis plugin, the hook or the levels change | 5.4, 6.12, 8.11, 9 (ADR-10–12), [integrations/javis/README.md](../integrations/javis/README.md) |
 | A check rule is added or changed | 8.4, 8.12, and the matching `docs/` page |
 | A parameter is added | `tools/brain/defaults.toml` (with a comment), 8.5 |
 | A frontmatter key or template is added | 8.1, 8.2, and `migrate.FIELDS` if it renames an old key |

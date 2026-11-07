@@ -1,16 +1,19 @@
-name: "Brain 4.0 (Brain_Standard)"
-name_en: "Brain 4.0 (Brain_Standard)"
+name: "Brain 4.2 for Javis OS (Brain_Standard)"
+name_en: "Brain 4.2 for Javis OS (Brain_Standard)"
 slug: brain-standard
-version: 4.0.0
-description: "Exposes the brain commands (capture, submit, check, turn, weekly, assigned, report) as tools for every Javis engine, and stops the AI from writing permanent notes, agent items or templates directly, or assigning tasks to itself. The brain in Javis must be a Brain_Standard repository (brain.toml at its root)."
-description_en: "Exposes the brain commands (capture, submit, check, turn, weekly, assigned, report) as tools for every Javis engine, and stops the AI from writing permanent notes, agent items or templates directly, or assigning tasks to itself. The brain in Javis must be a Brain_Standard repository (brain.toml at its root)."
+version: 4.2.0
+description: "Javis OS adapter for a Brain_Standard brain: registers the brain's shared agent tools (recall from the knowledge graph, remember, capture, submit through G1, check, suggest, turn, weekly, assigned, report) and its shared write guard, which stops the AI from writing permanent notes, agent items, templates or the graph directly, or assigning tasks to itself. The brain in Javis must be a Brain_Standard repository (brain.toml at its root)."
+description_en: "Javis OS adapter for a Brain_Standard brain: registers the brain's shared agent tools (recall from the knowledge graph, remember, capture, submit through G1, check, suggest, turn, weekly, assigned, report) and its shared write guard, which stops the AI from writing permanent notes, agent items, templates or the graph directly, or assigning tasks to itself. The brain in Javis must be a Brain_Standard repository (brain.toml at its root)."
 author: Brain_Standard
 enabled: false
 min_mode: safe
 tools:
+  - brain_recall
+  - brain_remember
   - brain_capture
   - brain_submit
   - brain_check
+  - brain_suggest
   - brain_turn
   - brain_weekly
   - brain_assigned

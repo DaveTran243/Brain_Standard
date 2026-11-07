@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Claude Code PreToolUse hook: the same write guard as the Javis plugin (brain.guard).
+"""Claude Code PreToolUse hook: the brain's shared write guard (brain.guard), the same one every integration uses.
 
-Claude Code writes files with its own Write and Edit tools, which never pass through the Javis
-MCP Hub, so the plugin hook cannot see them. This script reads the hook event as JSON on stdin;
+Claude Code writes files with its own Write and Edit tools, which never pass through an MCP server
+or a plugin, so no other integration can see them. This script reads the hook event as JSON on stdin;
 exit code 2 with a reason on stderr stops Claude Code from writing.
 """
 from __future__ import annotations

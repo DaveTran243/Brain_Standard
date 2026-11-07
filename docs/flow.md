@@ -2,7 +2,7 @@
 
 Everything goes into one Inbox, through two questions, then into exactly one of three lanes. The lanes exchange items only through 7 named links; there are no shortcuts.
 
-Since 3.0 an assistant (Javis) sits at both ends of the flow: it **captures** at the start and **follows up** at the end. The middle, the two questions and the choice of lane, stays yours. See [the assistant loop](#the-assistant-loop).
+Since 3.0 an assistant sits at both ends of the flow (since 4.2 any agent platform: Javis OS, OpenClaw, Hermes Agent, a Claude…; see [integrations.md](integrations.md)): it **captures** at the start and **follows up** at the end. The middle, the two questions and the choice of lane, stays yours. See [the assistant loop](#the-assistant-loop).
 
 ```text
 assistant CAPTURES ──► Inbox ──► you CLARIFY ──► destination ──► assistant FOLLOWS UP ──► result back to Inbox
@@ -68,7 +68,7 @@ Rules of each lane: [lanes.md](lanes.md).
 
 ## The assistant loop
 
-The assistant is an operator that runs on top of the brain, for example [Javis OS](using-with-javis-os.md). It has no knowledge memory of its own: everything it knows lives in the brain.
+The assistant is an operator that runs on top of the brain, for example [Javis OS](../integrations/javis/README.md) or any MCP client ([integrations.md](integrations.md)). It has no knowledge memory of its own: everything it knows lives in the brain, and it reads the brain's knowledge graph before it answers ([knowledge-graph.md](knowledge-graph.md)).
 
 | Step | Who | Does | Command |
 | --- | --- | --- | --- |
@@ -80,10 +80,10 @@ The assistant is an operator that runs on top of the brain, for example [Javis O
 
 The result comes back to step 2, so nothing reaches a lane without passing through your hands.
 
-**The label.** On a next action, as `@javis:<level>` with the date it was assigned. `brain assign` adds both:
+**The label.** On a next action, as `@agent:<level>` (`@javis:` until 4.0) with the date it was assigned. `brain assign` adds both:
 
 ```text
-- [ ] Draft an email to the accountant · @computer · ~20' · @javis:auto · assigned 2026-10-21
+- [ ] Draft an email to the accountant · @computer · ~20' · @agent:auto · assigned 2026-10-21
 ```
 
 | Level | The assistant may | Example |

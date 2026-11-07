@@ -53,7 +53,7 @@ class MigrateTest(unittest.TestCase):
         self.run_brain("migrate")
         with (self.tmp / "brain.toml").open("rb") as f:
             cfg = tomllib.load(f)
-        self.assertEqual(cfg["brain"]["version"], "4.0.0")
+        self.assertEqual(cfg["brain"]["version"], "4.2.0")
         self.assertEqual(cfg["gates"]["required_fields"], ["source", "retrieved", "archived", "grade", "verification"])
         self.assertEqual(cfg["gates"]["fleeting_only_sources"], ["D", "F"])
         self.assertEqual(cfg["assistant"], {"label": "@javis", "stale_after_days": 7})

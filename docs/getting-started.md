@@ -233,15 +233,15 @@ A grade is one letter for how reliable the source is (A best, F not yet judged) 
 
 Your own words, spoken or typed, don't go through this gate.
 
-**Assigning tasks to Javis (since 3.0).** After clarifying, label the next actions that Javis or another agent may do for you:
+**Assigning tasks to the assistant (since 3.0).** After clarifying, label the next actions that an agent (Javis OS or any other platform) may do for you:
 
 ```sh
-brain assign "accountant" auto    # finds exactly 1 open task containing "accountant", adds @javis:auto · assigned <today>
+brain assign "accountant" auto    # finds exactly 1 open task containing "accountant", adds @agent:auto · assigned <today>
 brain assigned                    # lists assigned tasks
 brain report 1 "drafted in drafts/email.md"   # the agent reports done; the result goes to the Inbox
 ```
 
-`suggest` only reads and proposes, `auto` also writes drafts and code in the repository, `full` also acts outside. Agents never label tasks themselves. Details: [flow.md](flow.md#the-assistant-loop); setup with Javis OS: [using-with-javis-os.md](using-with-javis-os.md).
+`suggest` only reads and proposes, `auto` also writes drafts and code in the repository, `full` also acts outside. Agents never label tasks themselves. Details: [flow.md](flow.md#the-assistant-loop); setup with Javis OS: [integrations/javis/README.md](../integrations/javis/README.md).
 
 ## 9. Configuration in `brain.toml`
 
@@ -254,7 +254,7 @@ Every parameter has a default in `tools/brain/defaults.toml`. Your `brain.toml` 
 | `gates.required_fields` | 5 fields | You want different required fields in a source record |
 | `paths.*` | the standard layout | You rename or move folders |
 | `brain.vault` | `vault` | The vault lives in another folder |
-| `assistant.name`, `assistant.label` | `Javis`, `@javis` | Your assistant has another name |
+| `assistant.name`, `assistant.label` | `the assistant`, `@agent` | You want to call your assistant by name, for example `Javis`, `@javis` |
 | `assistant.stale_after_days` | 7 | `brain check` warns about assigned tasks not done after this many days |
 | `turn.types` | task, idea, file, drop | You want other turn types |
 
@@ -269,7 +269,7 @@ Thresholds such as 7 days or 7 notes for a MOC are only starting points. Adjust 
 | `Turn not closed: fix N error(s)` | Run `brain check`, fix each error it lists, then run `brain turn` again. |
 | `KN-01 · …: permanent note links to no other note` | Add at least one `[[link]]` to the note. |
 | `AC-02 · …: missing done_when` | An active project needs `outcome`, `done_when` and `stop_when`. |
-| `AS-01 · …: @javis needs a level` | The label has no level. Change it to `@javis:<level>`, or remove the label and run `brain assign`. |
+| `AS-01 · …: @agent needs a level` | The label has no level. Change it to `@agent:<level>`, or remove the label and run `brain assign`. |
 | Unicode characters look wrong on Windows | Use Windows Terminal, or run `chcp 65001` first. |
 
 ## 11. Updating to a new version

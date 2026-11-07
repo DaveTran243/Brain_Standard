@@ -1,8 +1,10 @@
-# Using the brain with Javis OS
+# Javis OS integration
 
 [Javis OS](https://github.com/blogminhquy/javis-os) is a self-hosted AI agent. It runs on a laptop or a VPS, lets you switch models (Claude Code, Codex, Grok, Antigravity, OpenRouter, Gemini, Ollama…), talks to you through a dashboard, voice, Telegram, Zalo and Slack, and works in the background with loops, reminders and a Kanban queue. It has its own "Second Brain": a folder of Markdown.
 
-This page shows how to let Javis work on a Brain 4.0 without breaking the brain's rules. Since 3.0, Javis holds both ends of the [flow](flow.md#the-assistant-loop): it captures into the Inbox, and it follows up on tasks you have clarified and assigned to it. Read [using-with-ai.md](using-with-ai.md) first if the three connection levels and the shared rule block are new to you.
+Javis OS is one of the agent platforms a brain integrates with ([docs/integrations.md](../../docs/integrations.md)); since 4.2 the brain's core names no platform, and this folder holds Javis's adapter (`brain-standard/`) and this guide. Javis OS also speaks MCP, so it can use the brain's MCP server ([../mcp/README.md](../mcp/README.md)) instead; the plugin is preferred because its hook also guards Javis's own file tools.
+
+This page shows how to let Javis work on a Brain 4.2 without breaking the brain's rules. Since 3.0, the assistant holds both ends of the [flow](../../docs/flow.md#the-assistant-loop): it captures into the Inbox, and it follows up on tasks you have clarified and assigned to it. Read [using-with-ai.md](../../docs/using-with-ai.md) first if the three connection levels and the shared rule block are new to you.
 
 Surveyed on Javis OS 0.270.0, 21/10/2026. Javis ships new versions very quickly, so recheck the items marked "recheck after upgrading".
 
@@ -21,7 +23,7 @@ In exchange, Javis has habits that run against the brain's rules. The sections b
 
 ## Concept map
 
-| Javis | Brain 4.0 | Note |
+| Javis | Brain 4.2 | Note |
 | --- | --- | --- |
 | `sources/` | `30-Knowledge/literature/` | Javis stores raw sources without a source record |
 | `wiki/` | `30-Knowledge/permanent/`, `40-Maps/` | Javis writes the wiki itself. The brain forbids AI from writing permanent notes |
@@ -29,8 +31,8 @@ In exchange, Javis has habits that run against the brain's rules. The sections b
 | INGEST ("save to sources") | `brain submit` through G1 | Javis skips G1 |
 | Learning after every chat | None | On by default, in write mode |
 | Curator, wiki LINT | `brain check` | Javis's LINT only suggests; `brain check` is the rule |
-| Kanban tasks, loops | Next actions labelled `@javis:<level>` | Javis works only on tasks you assigned with `brain assign` |
-| Permission modes `suggest`, `auto`, `full` | The level on the `@javis` label | Same three names, same meaning. A loop's mode is the ceiling for the tasks it takes |
+| Kanban tasks, loops | Next actions labelled `@agent:<level>` | Javis works only on tasks you assigned with `brain assign` |
+| Permission modes `suggest`, `auto`, `full` | The level on the `@agent` label | Same three names, same meaning. A loop's mode is the ceiling for the tasks it takes |
 | Loops, reminders | Daily, weekly and monthly rhythm | Use them to run the rhythm, read-only |
 | Skills, plugins | `AGENTS.md`, the `brain` CLI | The plugin in this package connects the two |
 
@@ -90,17 +92,17 @@ Do not use INGEST. To bring a document into the brain, follow "Verified research
 
 ### 5. Set the rules for every engine
 
-- **Claude Code and Codex engines:** copy the rules to the repository root as in [using-with-ai.md](using-with-ai.md):
+- **Claude Code and Codex engines:** copy the rules to the repository root as in [using-with-ai.md](../../docs/using-with-ai.md):
 
   ```sh
   cp vault/AGENTS.md AGENTS.md
   cp vault/AGENTS.md CLAUDE.md
   ```
 
-- **Every engine:** create a Javis project, for example "Brain", open its panel (the **Instructions** tab) and paste the [shared rule block](using-with-ai.md#the-shared-rule-block), plus three lines:
+- **Every engine:** create a Javis project, for example "Brain", open its panel (the **Instructions** tab) and paste the [shared rule block](../../docs/using-with-ai.md#the-shared-rule-block), plus three lines:
 
   ```text
-  9. In Javis: use the tools brain_capture, brain_submit, brain_check, brain_turn, brain_weekly, brain_assigned and brain_report instead of shell commands.
+  9. In Javis: call brain_recall first on every request, use the brain_* tools instead of shell commands, and call brain_remember after answering.
   10. Facts you look up: write each claim as a source record following vault/_templates/source-record.md and submit it with brain_submit, passing the whole record in the record parameter. Never write to vault/00-Inbox/agent.
   11. Never use INGEST, and never write to sources/ or wiki/.
   ```
@@ -111,10 +113,13 @@ Do not use INGEST. To bring a document into the brain, follow "Verified research
 
 This package ships a plugin in `integrations/javis/brain-standard/`. It does two things:
 
-- It exposes seven commands as tools for every engine:
+- It registers the brain's shared agent tools (`tools/brain/agent_tools.py`, the same ones the MCP server serves) for every engine:
 
   | Tool | Command | Minimum level |
   | --- | --- | --- |
+  | `brain_recall` | `brain kg ask` · what the knowledge graph holds about a request | `suggest` |
+  | `brain_remember` | `brain kg remember` · folds a turn into the graph | `auto` |
+  | `brain_suggest` | `brain kg suggest` · gaps the graph sees | `suggest` |
   | `brain_capture` | `brain capture` · captures your words | `auto` |
   | `brain_turn` | `brain turn` | `auto` |
   | `brain_submit` | `brain submit` · brings facts in through G1 | `suggest` |
@@ -122,8 +127,8 @@ This package ships a plugin in `integrations/javis/brain-standard/`. It does two
   | `brain_assigned` | `brain assigned --level` · lists the tasks assigned to Javis | `suggest` |
   | `brain_report` | `brain report` · sends the result back to the Inbox | `suggest` |
 
-  `brain_submit` and `brain_report` run at `suggest` because the only writes to the brain are the CLI's own: the item that passed G1, the done mark and one Inbox line. `brain_submit` takes the whole record (`record`), writes it to a temporary folder outside the vault and submits it, so a read-only run can still submit facts it looked up. If the record is already in a file, pass `file`. There is no tool for `brain assign`: only you assign tasks.
-- A `pre_tool_call` hook stops the AI from writing with `javis_write_file` or `javis_edit_file` to `30-Knowledge/permanent/`, `00-Inbox/agent/` and any file or folder in `vault/` whose name starts with `_`, and stops it from adding or raising an `@javis` label in Next Actions. The AI gets back an explanation and the right way to do it. The protected paths and tools come from `[assistant.guard]` in the config.
+  `brain_submit` and `brain_report` run at `suggest` because the only writes to the brain are the CLI's own: the item that passed G1, the done mark and one Inbox line. `brain_submit` takes the claim and the record fields (or the whole record as `record`), writes it to a temporary folder outside the vault and submits it, so a read-only run can still submit facts it looked up. If the record is already in a file, pass `file`. There is no tool for `brain assign`, and the CLI refuses it when an agent runs it: only you assign tasks.
+- A `pre_tool_call` hook, the brain's shared write guard with Javis's tool names, stops the AI from writing with `javis_write_file` or `javis_edit_file` to `30-Knowledge/permanent/`, `00-Inbox/agent/` and any file or folder in `vault/` whose name starts with `_`, and stops it from adding or raising an `@agent` label in Next Actions. The AI gets back an explanation and the right way to do it. The protected paths come from `[assistant.guard]` in the config; the knowledge graph (`vault/_kg/`) is covered by the `_` rule.
 
 Copy it into the brain (the repository root):
 
@@ -134,28 +139,11 @@ cp -r integrations/javis/brain-standard plugins/
 
 To give it to every brain in Javis, copy it to `<JAVIS_STATE_DIR>/plugins/` instead of `plugins/` in the repository. The plugin ships with `enabled: false`; read `plugin.py`, then switch it on from the Javis **Plugins** page, or change it to `enabled: true`.
 
-The plugin uses only the standard library and calls back into the repository's `brain` package, so the rules live in one place. Timeouts and the default channel come from `[assistant.plugin]`. If the brain selected in Javis is not a brain repository, the tools report an error and the hook blocks nothing.
+The plugin uses only the standard library and calls back into the repository's `brain` package, so the rules live in one place. Timeouts come from `[assistant.plugin]`; the plugin records the channel `javis` on the words it captures. If the brain selected in Javis is not a brain repository, the tools report an error and the hook blocks nothing.
 
-### 7. A hook for Claude Code
+### 7. Hooks for Claude Code
 
-Add this to `.claude/settings.json` at the repository root (Javis loads it when it runs the Claude Code engine, and so does Claude Code run directly in the repository):
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
-        "hooks": [
-          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/integrations/javis/claude_write_guard.py\"" }
-        ]
-      }
-    ]
-  }
-}
-```
-
-The script applies the same guard as the plugin. On Windows change `python3` to `python`. The hook is useful even when you use Claude Code without Javis.
+When Javis runs the Claude Code engine, Claude Code loads `.claude/settings.json` from the repository. Install the hooks in [../claude-code/README.md](../claude-code/README.md): the prompt hook reads the knowledge graph, the Stop hook remembers the turn, and the write guard blocks the same writes as the plugin. They are useful even when you use Claude Code without Javis.
 
 ## Sample workflows
 
@@ -200,7 +188,7 @@ The loop only suggests; you move the item. Do not use Javis's sample "digest sou
 You assign a task after clarifying it:
 
 ```sh
-bin/brain assign "accountant" auto    # adds @javis:auto · assigned <today> to that next action
+bin/brain assign "accountant" auto    # adds @agent:auto · assigned <today> to that next action
 ```
 
 Then create one loop per level, with the loop's mode equal to the level of the tasks it takes:
@@ -220,7 +208,7 @@ At the end of each turn of work in the "Brain" project, Javis calls `brain_check
 ## Staying safe
 
 - **Javis runs the AI with full rights on the machine.** On a VPS Javis requires a login; still keep the brain repository private and don't expose Javis to the internet unless you need to.
-- **Loops and reminders for the brain use `suggest`.** Raise to `auto` only for work that writes, such as `brain_capture` or the "Javis · auto" loop. Use `full` only for the loop that works on `@javis:full` tasks, and switch it off when the work is done.
+- **Loops and reminders for the brain use `suggest`.** Raise to `auto` only for work that writes, such as `brain_capture` or the "Javis · auto" loop. Use `full` only for the loop that works on `@agent:full` tasks, and switch it off when the work is done.
 - **Back up with the brain repository's own git.** You don't need Javis's "GitHub backup" for this brain.
 - **The plugin runs real Python code inside the Javis server.** Read `plugin.py` before enabling it.
 - **The hook does not replace the rules.** It blocks the most common way to write, not every way, a shell command for example. `brain check` and your own review remain the final gate.

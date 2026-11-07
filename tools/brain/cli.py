@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import sys
 from pathlib import Path
 
-from . import assistant, checks, gates, intake, metrics, migrate, notes
+from . import assistant, checks, gates, intake, kg, kgcore, metrics, migrate, notes
 from .config import Brain, BrainError, defaults, find_root, open_brain
 
 
@@ -78,6 +80,9 @@ def cmd_weekly(brain: Brain, a) -> int:
 
 
 def cmd_assign(brain: Brain, a) -> int:
+    if os.environ.get("BRAIN_ACTOR", "").lower() == "agent":
+        raise BrainError(f"Only the brain's owner assigns tasks to {brain.assistant['name']}. Suggest the task worth "
+                         "assigning; the owner runs brain assign.", code=1)
     text = assistant.assign(brain, a.match, a.level)
     print(f"Assigned to {brain.assistant['name']} ({a.level}): {text}")
     return 0
@@ -107,10 +112,81 @@ def cmd_report(brain: Brain, a) -> int:
     return 0
 
 
+def cmd_kg(brain: Brain, a) -> int:
+    if a.sub == "build":
+        r = kg.build(brain, full=a.full, use_llm=True if a.llm else (False if a.no_llm else None))
+        print(f"Knowledge graph: {r['triples']} triples (+{r['inferred']} inferred) from {r['documents']} documents; "
+              f"{r['changed']} read again, {r['removed']} removed" + (" · with the LLM" if r["llm"] else " · rules only"))
+        if r["llm_errors"]:
+            print(f"  {r['llm_errors']} documents failed at the LLM and kept their rule triples; run again later.")
+    elif a.sub == "ask":
+        seeds, facts = kg.ask(brain, " ".join(a.question), a.max, a.hops)
+        if not facts:
+            print("The graph holds nothing about that yet." + ("" if kg.load(brain) else " Build it first: brain kg build"))
+            return 0
+        print(f"About: {', '.join(seeds)}")
+        for t in facts:
+            print(f"  {kgcore.fact_line(t)}")
+    elif a.sub == "stats":
+        st = kg.stats(brain)
+        print(f"{st['triples']} triples · {st['entities']} entities · {st['components']} islands · built {st['built'] or 'never'}")
+        print("  by kind:  " + ", ".join(f"{k} {n}" for k, n in st["by_kind"].items()))
+        print("  by trust: " + ", ".join(f"{k} {n}" for k, n in st["by_trust"].items()))
+        print("  hubs:     " + ", ".join(st["top"]))
+    elif a.sub == "suggest":
+        found = kg.suggest(brain, a.max)
+        if not found:
+            print("No suggestions: the graph has no gaps it can see." + ("" if kg.load(brain) else " Build it first: brain kg build"))
+            return 0
+        print("Suggestions from the graph. None is written anywhere; vet them first (docs/design-suggestions.md).")
+        for i, sg in enumerate(found, 1):
+            print(f"  {i:>2}. [{sg['kind']}] {sg['text']}\n      why: {sg['evidence']}")
+    elif a.sub == "remember":
+        n = kg.remember(brain, a.prompt or "", a.session or "", [a.summary] if a.summary else [])
+        print(f"Remembered: {n} memory triples added to the knowledge graph.")
+    elif a.sub == "export":
+        print(f"Wrote {kg.export(brain, Path(a.path))} triples to {a.path} (ai-knowledge-graph's JSON shape).")
+    return 0
+
+
+def _hook_state(brain: Brain, session: str) -> Path:
+    safe = "".join(c for c in (session or "default") if c.isalnum() or c in "-_")[:80] or "default"
+    return brain.path("hook_state") / f"{safe}.json"
+
+
+def cmd_hook(brain: Brain, a) -> int:
+    """For agent platforms with turn hooks (Claude Code): read the graph before, remember the turn after.
+    Reads the hook event as JSON on stdin; never fails the agent's turn."""
+    try:
+        event = json.loads(sys.stdin.read() or "{}")
+    except ValueError:
+        event = {}
+    cfg, session = brain.cfg["kg"], str(event.get("session_id") or "")
+    try:
+        if a.event == "prompt":
+            text = str(event.get("prompt") or "").strip()
+            notes.write(_hook_state(brain, session), json.dumps({"stamp": brain.stamp, "prompt": text},
+                                                                ensure_ascii=False) + "\n")
+            if cfg["enabled"] and cfg["read_on_prompt"] and text:
+                ctx = kg.context(brain, text)
+                if ctx:
+                    print(ctx)
+        elif a.event == "stop":
+            f = _hook_state(brain, session)
+            if cfg["enabled"] and cfg["update_on_stop"] and f.is_file():
+                st = json.loads(notes.read(f))
+                if not st.get("remembered"):
+                    kg.remember(brain, st.get("prompt", ""), session, kg.summaries_since(brain, st["stamp"]))
+                    notes.write(f, json.dumps({**st, "remembered": True}, ensure_ascii=False) + "\n")
+    except Exception as e:  # noqa: BLE001 - a broken graph must not stop the conversation
+        print(f"brain hook {a.event}: {type(e).__name__}: {e}", file=sys.stderr)
+    return 0
+
+
 def cmd_migrate(root: Path, a) -> int:
     plan = migrate.run(root, dry_run=a.dry_run)
     if not plan.changes:
-        print("Nothing to migrate: this brain already uses the 4.0 names.")
+        print("Nothing to migrate: this brain already uses the current names.")
         return 0
     print(("Would change" if a.dry_run else "Changed") + f" ({len(plan.changes)}):")
     for c in plan.changes:
@@ -167,7 +243,24 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--level", help=f"{levels}: the same --level used with brain assigned")
     p.set_defaults(fn=cmd_report)
 
-    p = sub.add_parser("migrate", help="convert a 3.0 brain to the 4.0 English names")
+    p = sub.add_parser("kg", help="the knowledge graph: read before a conversation, updated after it")
+    kgs = p.add_subparsers(dest="sub", required=True)
+    p.set_defaults(fn=cmd_kg)
+    q = kgs.add_parser("build", help="bring the graph up to date (only changed notes are read again)")
+    q.add_argument("--full", action="store_true"); q.add_argument("--llm", action="store_true"); q.add_argument("--no-llm", action="store_true")
+    q = kgs.add_parser("ask", help="what the graph holds about a question"); q.add_argument("question", nargs="+")
+    q.add_argument("--max", type=int); q.add_argument("--hops", type=int)
+    kgs.add_parser("stats", help="size, trust and hubs of the graph")
+    q = kgs.add_parser("suggest", help="gaps the graph sees"); q.add_argument("--max", type=int, default=15)
+    q = kgs.add_parser("remember", help="fold a conversation turn into the graph (for agents without hooks)")
+    q.add_argument("--prompt", help="the owner's message, verbatim"); q.add_argument("--summary"); q.add_argument("--session")
+    q = kgs.add_parser("export", help="write the graph as JSON for ai-knowledge-graph's tools"); q.add_argument("path")
+
+    p = sub.add_parser("hook", help="turn hooks for agent platforms (Claude Code): read the graph, remember the turn")
+    p.add_argument("event", choices=["prompt", "stop"])
+    p.set_defaults(fn=cmd_hook)
+
+    p = sub.add_parser("migrate", help="convert a 3.0 or 4.0 brain to the current names")
     p.add_argument("--dry-run", action="store_true", help="show what would change, change nothing")
     p.set_defaults(fn=cmd_migrate)
     return ap

@@ -1,4 +1,16 @@
-# Upgrading to 4.0
+# Upgrading
+
+## From 4.0 to 4.2
+
+4.2 adds the knowledge graph and makes the assistant platform-neutral. Nothing in your notes changes.
+
+1. Pull the new `tools/`, `integrations/` and `docs/`.
+2. `bin/brain migrate --dry-run`, then `bin/brain migrate`: `@javis:<level>` labels in Next Actions become `@agent:<level>`, unless your `brain.toml` sets `[assistant] label = "@javis"` (then nothing changes and you keep the name).
+3. `bin/brain kg build` once. From then on the hooks or the `brain_remember` tool keep it current; `brain check` warns (KG-01) when it lags.
+4. Claude Code: replace the old hook path `integrations/javis/claude_write_guard.py` with the three hooks in [integrations/claude-code/README.md](../integrations/claude-code/README.md).
+5. Javis OS: copy `integrations/javis/brain-standard/` to `plugins/` again and enable it; it now registers 10 tools, including `brain_recall` and `brain_remember`. Other platforms: [integrations/mcp/README.md](../integrations/mcp/README.md).
+
+## From 3.0 to 4.0
 
 Brain 4.0 renames everything in English: commands, configuration keys, frontmatter keys, rule codes, files and folders. The flow and the rules are the same as 3.0. An existing brain is converted once with `brain migrate`; there are no Vietnamese aliases, so old commands such as `brain ghi` stop working after the upgrade. Every old and new name is listed in [glossary.md](glossary.md).
 
@@ -46,7 +58,7 @@ Brain 4.0 renames everything in English: commands, configuration keys, frontmatt
 
    Paste the new [shared rule block](using-with-ai.md#the-shared-rule-block) into the chat AIs you use: the footer is now `Brain:`, and the prefixes are `capture:`, `today`, `weekly`.
 
-5. **Update Javis OS**, if you use it: copy `integrations/javis/brain-standard/` to `plugins/` again, update the hook in `.claude/settings.json` to `claude_write_guard.py`, and change the tool names in your loops and project instructions (`brain_ghi` → `brain_capture`, `brain_viec_javis` → `brain_assigned`, `brain_xong` → `brain_report`…). See [using-with-javis-os.md](using-with-javis-os.md).
+5. **Update Javis OS**, if you use it: copy `integrations/javis/brain-standard/` to `plugins/` again, update the hook in `.claude/settings.json` to `write_guard.py`, and change the tool names in your loops and project instructions (`brain_ghi` → `brain_capture`, `brain_viec_javis` → `brain_assigned`, `brain_xong` → `brain_report`…). See [integrations/javis/README.md](../integrations/javis/README.md).
 
 6. **Commit** the migration on its own: `git commit -am "Migrate to Brain 4.0"`.
 

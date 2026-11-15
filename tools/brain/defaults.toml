@@ -128,6 +128,19 @@ min_score = 4                  # a hit shown by the prompt hook needs at least t
 demote = ["90-Archive"]        # folders whose copies rank below the live ones
 stopwords = []
 
+[dashboard]
+# brain dashboard (tools/brain/dashboard.py, docs/dashboard.md, ADR-20): a read-only page on 127.0.0.1 with the brain's
+# four golden signals (traffic, latency, errors, saturation). It never writes and shows no note content.
+port = 7799
+refresh_s = 30                      # the page asks for new numbers this often
+cache_s = 10                        # the server reads the brain at most this often
+days = 30                           # the activity chart and sparklines
+timeline_n = 20                     # turns in the timeline
+inbox_max_age_days = 7              # latency turns amber past this (the Inbox header says 7 days)
+weekly_max_gap_days = 8             # days since the newest Weekly Review before latency turns amber
+name = ""                           # the label in the brain picker; empty = "main"
+brains = []                         # other brain folders to offer in the picker, relative to this one
+
 [kg]
 # The knowledge graph (tools/brain/kg.py, docs/knowledge-graph.md): read before every conversation, updated after it.
 enabled = true

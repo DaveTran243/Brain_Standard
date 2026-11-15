@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# platform map of this machine (brain kg drive)
+vault/_kg/drive.jsonl
+vault/_kg/drive-state.json
+vault/_kg/drive-graph*.html

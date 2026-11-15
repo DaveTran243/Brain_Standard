@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import assistant, checks, gates, intake, kg, kgcore, metrics, migrate, notes
+from . import assistant, checks, drive, gates, intake, kg, kgcore, metrics, migrate, notes
 from .config import Brain, BrainError, defaults, find_root, open_brain
 
 
@@ -146,6 +146,33 @@ def cmd_kg(brain: Brain, a) -> int:
         print(f"Remembered: {n} memory triples added to the knowledge graph.")
     elif a.sub == "export":
         print(f"Wrote {kg.export(brain, Path(a.path))} triples to {a.path} (ai-knowledge-graph's JSON shape).")
+    elif a.sub == "drive":
+        if not drive.enabled(brain):
+            raise BrainError("The platform map is off: set [drive] enabled = true and root in brain.toml.", code=1)
+        r = drive.scan(brain, full=a.full)
+        print(f"Platform map of {drive.root(brain)}: {r['folders']} folders, {r['files']} files ({r['datasets']} "
+              f"datasets counted as one node each), {r['triples']} triples; {r['read']} folders read again, "
+              f"{r['removed']} gone.")
+    elif a.sub == "draw":
+        from . import drawing
+        n = drawing.write(brain, Path(a.path), with_files=a.files, with_knowledge=not a.no_knowledge,
+                          fragment=a.fragment)
+        print(f"Wrote the graph ({n} nodes) to {a.path}. Open it in a browser.")
+    return 0
+
+
+def cmd_where(brain: Brain, a) -> int:
+    if not drive.enabled(brain):
+        raise BrainError("The platform map is off: set [drive] enabled = true and root in brain.toml.", code=1)
+    if not brain.path("drive_graph").is_file():
+        raise BrainError("The platform map is empty. Build it first: brain kg drive", code=1)
+    hits = drive.where(brain, " ".join(a.query), a.max)
+    if a.json:
+        print(json.dumps(hits, ensure_ascii=False, indent=1))
+    elif not hits:
+        print("Nothing on the platform root matches that. Try other words, or brain kg drive if it was just written.")
+    for h in ([] if a.json else hits):
+        print(f"  {h['score']:>2}  {drive.line(h)}")
     return 0
 
 
@@ -171,6 +198,11 @@ def cmd_hook(brain: Brain, a) -> int:
                 ctx = kg.context(brain, text)
                 if ctx:
                     print(ctx)
+            dcfg = brain.cfg["drive"]
+            if drive.enabled(brain) and dcfg["read_on_prompt"] and text:
+                ctx = drive.context(brain, text)
+                if ctx:
+                    print(ctx)
         elif a.event == "stop":
             f = _hook_state(brain, session)
             if cfg["enabled"] and cfg["update_on_stop"] and f.is_file():
@@ -178,6 +210,8 @@ def cmd_hook(brain: Brain, a) -> int:
                 if not st.get("remembered"):
                     kg.remember(brain, st.get("prompt", ""), session, kg.summaries_since(brain, st["stamp"]))
                     notes.write(f, json.dumps({**st, "remembered": True}, ensure_ascii=False) + "\n")
+            if drive.enabled(brain) and brain.cfg["drive"]["update_on_stop"]:
+                drive.scan(brain)
     except Exception as e:  # noqa: BLE001 - a broken graph must not stop the conversation
         print(f"brain hook {a.event}: {type(e).__name__}: {e}", file=sys.stderr)
     return 0
@@ -255,6 +289,15 @@ def build_parser() -> argparse.ArgumentParser:
     q = kgs.add_parser("remember", help="fold a conversation turn into the graph (for agents without hooks)")
     q.add_argument("--prompt", help="the owner's message, verbatim"); q.add_argument("--summary"); q.add_argument("--session")
     q = kgs.add_parser("export", help="write the graph as JSON for ai-knowledge-graph's tools"); q.add_argument("path")
+    q = kgs.add_parser("drive", help="map every folder and file under the platform root ([drive] root)")
+    q.add_argument("--full", action="store_true", help="read every folder again, not only the ones that changed")
+    q = kgs.add_parser("draw", help="write an HTML picture of the platform map and the knowledge graph")
+    q.add_argument("path"); q.add_argument("--files", action="store_true", help="one node per file, not only folders")
+    q.add_argument("--no-knowledge", action="store_true"); q.add_argument("--fragment", action="store_true")
+
+    p = sub.add_parser("where", help="where something lives on the platform root: read the map before the disk")
+    p.add_argument("query", nargs="+"); p.add_argument("--max", type=int); p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_where)
 
     p = sub.add_parser("hook", help="turn hooks for agent platforms (Claude Code): read the graph, remember the turn")
     p.add_argument("event", choices=["prompt", "stop"])

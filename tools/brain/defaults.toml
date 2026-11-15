@@ -28,6 +28,8 @@ rejected_log = "_log/rejected.md"
 templates = "_templates"
 kg_triples = "_kg/triples.jsonl"   # the knowledge graph; under "_", so the write guard keeps AIs out
 kg_state = "_kg/state.json"
+drive_graph = "_kg/drive.jsonl"     # the platform map ([drive]); machine-local, git ignores it
+drive_state = "_kg/drive-state.json"
 hook_state = "_log/.hooks"         # what the prompt hook hands to the Stop hook, per session
 
 [files]
@@ -106,6 +108,25 @@ protected = ["permanent", "inbox_agent"]
 # The file where an AI may not add or raise an assignment label.
 label_file = "next_actions"
 write_tools = ["Write", "Edit", "MultiEdit", "NotebookEdit"]   # Claude Code's; an integration passes its own
+
+[drive]
+# The platform root and its map (tools/brain/drive.py, docs/platform-map.md). A brain that keeps its whole platform
+# on one disk or folder (functions, memory, library, archive) sets enabled and root; agents then save every result
+# there, the map records it, and agents read the map before they open anything on the root.
+enabled = false
+root = ""                      # e.g. "D:/" or "~/brain-platform"
+inbox = ""                     # where a produced file with no home yet is saved, e.g. "D:/Brain/00-Inbox"
+jd_index = "Code/50 System/50.00 Index (JDex).md"   # relative to the vault; JD numbers are attached to their locations
+skip = [".git", "node_modules", "__pycache__", ".dart_tool", "build", ".idea", ".venv", "venv", "dist", ".next", ".pytest_cache", ".mypy_cache", ".gradle", ".cache", "$RECYCLE.BIN", "System Volume Information"]
+skip_files = ["pagefile.sys", "hiberfil.sys", "swapfile.sys", "DumpStack.log.tmp", "desktop.ini", "Thumbs.db", ".DS_Store"]
+bulk_files = 200               # a folder with more files than this is a dataset: one node with counts, no file nodes
+max_depth = 14
+read_on_prompt = true          # brain hook prompt adds the locations a prompt names
+update_on_stop = true          # brain hook stop re-reads the folders that changed during the turn
+max_hits = 8
+min_score = 4                  # a hit shown by the prompt hook needs at least this score (3 per word in its name)
+demote = ["90-Archive"]        # folders whose copies rank below the live ones
+stopwords = []
 
 [kg]
 # The knowledge graph (tools/brain/kg.py, docs/knowledge-graph.md): read before every conversation, updated after it.

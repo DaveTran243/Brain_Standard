@@ -2,6 +2,19 @@
 
 Versions are x.y.z: x goes up when the main flow changes shape or a migration is needed, y when a mechanism is added without breaking the flow, z for fixes to numbers, labels and wording. The newest version is at the top. Entries before 4.0 use the names of their time; [docs/glossary.md](docs/glossary.md) maps them to the current ones.
 
+## Unreleased · proposed 15/11/2026
+
+The platform root: a brain may name one disk or folder that holds its whole platform, and keep a map of every folder and file there that agents read before they open anything and update after they write. Off by default; no migration.
+
+### Added
+- `tools/brain/drive.py`: `brain kg drive` scans `[drive] root` into `vault/_kg/drive.jsonl` (triples with `kind: location`, `trust: system`), re-reading only folders whose mtime changed; folders over `bulk_files` files are one dataset node; JDex locations, git remotes and the vault's notes are attached to their places.
+- `brain where "<words>"` and the MCP tools `brain_where`, `brain_map_update`; `brain hook prompt` adds `[Brain Drive]` lines, `brain hook stop` updates the map.
+- `tools/brain/drawing.py`: `brain kg draw <file.html>` draws the map with the knowledge graph.
+- `[drive]` in `defaults.toml`, `drive_graph` and `drive_state` in `[paths]`; `vault/AGENTS.md` "Platform root" with four rules for agents; `docs/platform-map.md`; `tests/test_drive.py`.
+
+### Changed
+- `kg.documents` returns each note's `path`, so the map can say where a note is stored.
+
 ## 4.2.0 · 07/11/2026
 
 A knowledge graph agents read before answering and update after each turn, and an assistant loop that names no platform. Minor version: the flow is unchanged; `brain migrate` moves `@javis` labels to the new default.

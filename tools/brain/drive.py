@@ -44,9 +44,10 @@ STOP = {"d", "c", "the", "a", "an", "of", "and", "to", "in", "on", "for", "is", 
         "trong", "nay", "do", "di", "khong", "co", "duoc", "nhung", "cac", "mot", "voi", "toi", "anh", "em", "minh",
         "hay", "thi", "ma", "nhe", "roi", "vao", "ra", "len", "xuong", "den", "khi", "lam", "sao", "gi", "nao",
         "file", "files", "md", "html", "json", "py", "txt", "thu", "muc", "folder", "mo", "tim", "xem", "doc", "ghi",
-        "luu", "giup", "repo", "project", "open", "find", "show", "where"}
+        "luu", "giup", "repo", "project", "open", "find", "show", "where", "kiem", "tra", "check"}
 JD_LINE = re.compile(r"^-\s+(\d\d\.\d\d)\s+([^·]+?)\s*(?:·\s*(.*))?$")
-PATH_IN_TEXT = re.compile(r"([A-Za-z]:[/\\][^\s,;)`'\"]+|/[^\s,;)`'\"]+/[^\s,;)`'\"]*)")
+# A Windows path (D:/…) or a POSIX one (/home/…); a "/" inside a URL or a word never starts a path.
+PATH_IN_TEXT = re.compile(r"((?<![\w])[A-Za-z]:[/\\][^\s,;)`'\"]+|(?<![\w:/.])/[^\s,;)`'\"]+)")
 
 
 def settings(brain: Brain) -> dict:

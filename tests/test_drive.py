@@ -111,6 +111,12 @@ class DriveTest(BrainTestCase):
             self.run_brain("hook", "stop")
         self.assertIn((self.k("Code", "invoice-bot", "report.md"), "is a", "document"), self.triples())
 
+    def test_paths_in_notes(self):
+        f = drive.PATH_IN_TEXT.findall
+        self.assertEqual(f("D:/Brain/bot (was D:/Project/bot)"), ["D:/Brain/bot", "D:/Project/bot"])
+        self.assertEqual(f("/srv/brain/Code/bot · x"), ["/srv/brain/Code/bot"])
+        self.assertEqual(f("see https://github.com/x/y, a/b and 5/10"), [])
+
     def test_agent_tools(self):
         names = {t["name"] for t in agent_tools.TOOLS}
         self.assertTrue({"brain_where", "brain_map_update"} <= names)

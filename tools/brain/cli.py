@@ -161,6 +161,15 @@ def cmd_kg(brain: Brain, a) -> int:
     return 0
 
 
+def cmd_dashboard(brain: Brain, a) -> int:
+    from . import dashboard
+    if a.json:
+        print(json.dumps(dashboard.collect(brain), ensure_ascii=False, indent=1, default=str))
+        return 0
+    dashboard.serve(brain, host=a.host, port=a.port, open_browser=a.open)
+    return 0
+
+
 def cmd_where(brain: Brain, a) -> int:
     if not drive.enabled(brain):
         raise BrainError("The platform map is off: set [drive] enabled = true and root in brain.toml.", code=1)
@@ -298,6 +307,13 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("where", help="where something lives on the platform root: read the map before the disk")
     p.add_argument("query", nargs="+"); p.add_argument("--max", type=int); p.add_argument("--json", action="store_true")
     p.set_defaults(fn=cmd_where)
+
+    p = sub.add_parser("dashboard", help="a read-only page on 127.0.0.1 that shows how the brain is running")
+    p.add_argument("--port", type=int, help=f"default [dashboard] port, {d['dashboard']['port']}")
+    p.add_argument("--host", default="127.0.0.1", help="listen address; anything but 127.0.0.1 prints a warning")
+    p.add_argument("--open", action="store_true", help="open the page in the default browser")
+    p.add_argument("--json", action="store_true", help="print the data once (schema 1) and exit")
+    p.set_defaults(fn=cmd_dashboard)
 
     p = sub.add_parser("hook", help="turn hooks for agent platforms (Claude Code): read the graph, remember the turn")
     p.add_argument("event", choices=["prompt", "stop"])

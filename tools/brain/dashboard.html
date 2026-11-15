@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brain dashboard</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a64; --line: #e3e1d9;
+  --ok: #2f7d4f; --warn: #b7791f; --fail: #c0392b; --accent: #2b5f9e; --chip: #f0eee7;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161614; --panel: #1f1f1c; --ink: #ecebe6; --muted: #a09e95; --line: #33322e;
+    --ok: #5cbf86; --warn: #e0a84a; --fail: #ef6b5b; --accent: #7aa7e0; --chip: #2a2a26;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 14px 20px;
+  border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+header h1 { font-size: 17px; margin: 0; font-weight: 650; }
+header .meta { color: var(--muted); font-size: 12.5px; margin-left: auto; }
+select { font: inherit; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); }
+main { padding: 16px 20px 28px; display: grid; gap: 14px; max-width: 1400px; margin: 0 auto; }
+.signals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 1000px) { .signals { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .signals, .grid2 { grid-template-columns: 1fr; } main { padding: 12px 16px 24px; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px;
+  font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.signal { border-top: 4px solid var(--line); }
+.signal.ok { border-top-color: var(--ok); } .signal.warn { border-top-color: var(--warn); } .signal.fail { border-top-color: var(--fail); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); display: inline-block; }
+.ok .dot { background: var(--ok); } .warn .dot { background: var(--warn); } .fail .dot { background: var(--fail); }
+.big { font-size: 26px; font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; align-items: baseline; }
+.row .k { color: var(--muted); } .row .v { font-variant-numeric: tabular-nums; text-align: right; }
+.v.warn { color: var(--warn); font-weight: 600; } .v.fail { color: var(--fail); font-weight: 600; }
+.sub { color: var(--muted); font-size: 12px; }
+.spark { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.spark .sub { width: 34px; }
+.spark svg { flex: 1; height: 26px; min-width: 0; }
+.rules { list-style: none; margin: 0; padding: 0; }
+.rules li { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.rules li:last-child { border-bottom: 0; }
+.tag { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-right: 6px; }
+.tag.warning { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.tag.error { background: color-mix(in srgb, var(--fail) 18%, transparent); color: var(--fail); }
+code, .cmd { font: 12.5px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace; }
+.cmd { display: flex; gap: 6px; align-items: center; margin-top: 5px; background: var(--chip); border-radius: 6px;
+  padding: 4px 6px 4px 9px; overflow: hidden; }
+.cmd span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+button { font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  border-radius: 5px; padding: 2px 8px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+table { width: 100%; border-collapse: collapse; }
+td, th { text-align: left; padding: 5px 4px; border-bottom: 1px solid var(--line); font-weight: normal; }
+th { color: var(--muted); font-size: 12px; } .n { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+.empty { color: var(--muted); padding: 6px 0; }
+.chart svg { width: 100%; display: block; }
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { display: grid; grid-template-columns: 130px 60px minmax(0, 1fr); gap: 10px; padding: 4px 0;
+  border-bottom: 1px solid var(--line); font-size: 13px; }
+.timeline li:last-child { border-bottom: 0; }
+.timeline .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+.timeline .s { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 700px) { .timeline li { grid-template-columns: 110px minmax(0, 1fr); } .timeline .s { grid-column: 1 / -1; } }
+.banner { background: color-mix(in srgb, var(--warn) 14%, var(--panel)); border: 1px solid var(--warn);
+  border-radius: 8px; padding: 8px 12px; display: none; }
+footer { color: var(--muted); font-size: 12px; text-align: center; padding: 0 16px 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Brain</h1>
+  <label class="sub">Brain <select id="brain" aria-label="Brain"></select></label>
+  <span class="meta" id="meta">loading…</span>
+</header>
+<main>
+  <div class="banner" id="banner" role="status"></div>
+  <section class="signals" id="signals" aria-label="The four golden signals"></section>
+  <section class="grid2">
+    <article class="card">
+      <h2>To do · the command to copy</h2>
+      <ul class="rules" id="rules"></ul>
+    </article>
+    <article class="card">
+      <h2>Active projects</h2>
+      <table><thead><tr><th>Project</th><th class="n">Next</th><th>Board</th><th>Due</th></tr></thead>
+        <tbody id="projects"></tbody></table>
+    </article>
+  </section>
+  <section class="grid2">
+    <article class="card chart">
+      <h2 id="chart-title">Activity</h2>
+      <svg id="chart" role="img" aria-label="Events per day"></svg>
+      <div class="sub" style="margin-top:6px">One row per kind, one column per day. A blank day is a day off, not a fault.</div>
+    </article>
+    <article class="card">
+      <h2>Knowledge</h2>
+      <div id="knowledge"></div>
+    </article>
+  </section>
+  <section class="card">
+    <h2>Turns</h2>
+    <ul class="timeline" id="timeline"></ul>
+  </section>
+</main>
+<footer>Read-only · every change goes through the brain command</footer>
+
+<script>
+const BOOT = __BOOT__;
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window */ } },
+};
+const TITLES = { traffic: "Traffic · 7 days", latency: "Latency", errors: "Errors", saturation: "Saturation" };
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const tone = (t) => css(t === "ok" ? "--ok" : "--accent");
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else n.setAttribute(k, v);
+  }
+  for (const c of kids) n.append(c instanceof Node ? c : document.createTextNode(c == null ? "" : String(c)));
+  return n;
+}
+const svgEl = (tag, attrs) => {
+  const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  return n;
+};
+
+function sparkline(values, color) {
+  const svg = svgEl("svg", { viewBox: "0 0 200 26", preserveAspectRatio: "none", "aria-hidden": "true" });
+  const w = 200, h = 26, n = values.length, max = Math.max(1, ...values), bw = w / n;
+  values.forEach((v, i) => {
+    if (!v) return;
+    const bh = Math.max(2, (v / max) * (h - 2));
+    svg.append(svgEl("rect", { x: i * bw + 0.5, y: h - bh, width: Math.max(1, bw - 1), height: bh, fill: color, rx: 1 }));
+  });
+  svg.append(svgEl("line", { x1: 0, y1: h - 0.5, x2: w, y2: h - 0.5, stroke: css("--line") }));
+  return svg;
+}
+
+function chart(svg, series) {
+  svg.replaceChildren();
+  const rows = series.rows, days = series.days, n = days.length;
+  const lw = 150, rowH = 30, gap = 6, w = 640, h = rows.length * (rowH + gap) + 16;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const bw = (w - lw) / n;
+  rows.forEach((r, k) => {
+    const max = Math.max(1, ...r.values), y0 = k * (rowH + gap);
+    const label = svgEl("text", { x: 0, y: y0 + rowH - 9, fill: css("--muted"), "font-size": 12 });
+    label.textContent = `${r.label} ${r.values.reduce((a, b) => a + b, 0)}`;
+    svg.append(label, svgEl("line", { x1: lw, y1: y0 + rowH, x2: w, y2: y0 + rowH, stroke: css("--line") }));
+    r.values.forEach((v, i) => {
+      if (!v) return;
+      const bh = Math.max(2, (v / max) * (rowH - 4));
+      const rect = svgEl("rect", { x: lw + i * bw + 1, y: y0 + rowH - bh, width: Math.max(1, bw - 2), height: bh,
+        fill: tone(r.tone), rx: 1.5 });
+      const t = svgEl("title", {}); t.textContent = `${days[i]} · ${r.label}: ${v}`; rect.append(t);
+      svg.append(rect);
+    });
+  });
+  const first = svgEl("text", { x: lw, y: h - 2, fill: css("--muted"), "font-size": 11 });
+  first.textContent = days[0];
+  const last = svgEl("text", { x: w, y: h - 2, fill: css("--muted"), "font-size": 11, "text-anchor": "end" });
+  last.textContent = days[n - 1];
+  svg.append(first, last);
+}
+
+function copyButton(text) {
+  const b = el("button", { type: "button", title: "Copy the command" }, "Copy");
+  b.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(text); b.textContent = "Copied"; }
+    catch (e) { b.textContent = "Select and copy"; }
+    setTimeout(() => (b.textContent = "Copy"), 1500);
+  });
+  return b;
+}
+
+function signalCard(key, s) {
+  const card = el("article", { class: `card signal ${s.level}` }, el("h2", {}, el("span", { class: "dot" }), TITLES[key]));
+  if (s.headline) card.append(el("div", { class: "big" }, s.headline));
+  if (s.caption) card.append(el("div", { class: "sub" }, s.caption));
+  for (const sp of s.sparks) card.append(el("div", { class: "spark" }, el("span", { class: "sub" }, sp.label), sparkline(sp.values, tone(sp.tone))));
+  for (const r of s.rows) {
+    const value = r.value == null ? "none yet" : (r.limit == null ? r.value : `${r.value} (${r.limit})`);
+    card.append(el("div", { class: "row" }, el("span", { class: "k" }, r.label),
+      el("span", { class: `v ${r.value == null && r.limit != null ? "warn" : r.level}` }, value)));
+  }
+  return card;
+}
+
+function render(d) {
+  const sig = $("signals"); sig.replaceChildren();
+  for (const key of ["traffic", "latency", "errors", "saturation"]) sig.append(signalCard(key, d.signals[key]));
+
+  const rules = $("rules"); rules.replaceChildren();
+  if (!d.rules.length) rules.append(el("li", { class: "empty" }, "No rule broken."));
+  for (const r of d.rules) {
+    const li = el("li", {}, el("span", { class: `tag ${r.level}` }, r.code), `${r.count} · ${r.examples[0] || ""}`);
+    if (r.examples.length > 1) li.append(el("div", { class: "sub" }, r.examples.slice(1).join(" · ")));
+    li.append(el("div", { class: "cmd" }, el("span", {}, r.command), copyButton(r.command)));
+    rules.append(li);
+  }
+
+  const pb = $("projects"); pb.replaceChildren();
+  if (!d.projects.length) pb.append(el("tr", {}, el("td", { colspan: 4, class: "empty" }, "No active project.")));
+  for (const p of d.projects) {
+    const due = el("td", { class: p.past_due ? "v fail" : "" }, p.due || "–");
+    const nx = el("td", { class: !p.next && !p.board ? "n v warn" : "n" }, p.next);
+    pb.append(el("tr", {}, el("td", { title: p.slug }, p.title), nx, el("td", {}, p.board ? "yes" : "–"), due));
+  }
+
+  $("chart-title").textContent = `Activity · ${d.days} days`;
+  chart($("chart"), d.series);
+
+  const kn = $("knowledge"); kn.replaceChildren();
+  for (const k of d.knowledge) kn.append(el("div", { class: "row" }, el("span", { class: "k" }, k.label), el("span", { class: "v" }, k.value)));
+
+  const tl = $("timeline"); tl.replaceChildren();
+  if (!d.timeline.length) tl.append(el("li", { class: "empty" }, "No turn recorded yet."));
+  for (const ev of d.timeline) {
+    tl.append(el("li", {}, el("span", { class: "t" }, ev.ts), el("code", {}, ev.type), el("span", { class: "s", title: ev.text }, ev.text)));
+  }
+
+  const banner = $("banner");
+  if (d.errors_reading.length) {
+    banner.textContent = "Could not read: " + d.errors_reading.map((x) => `${x.source} (${x.error})`).join("; ");
+    banner.style.display = "block";
+  } else banner.style.display = "none";
+  $("meta").textContent = `${d.label} · updated ${d.at.replace("T", " ").slice(0, 16)} · refresh ${BOOT.refresh_s}s · brain ${d.version}`;
+  document.title = `Brain · ${d.label}`;
+}
+
+async function load() {
+  try {
+    const r = await fetch(`/api/state?brain=${encodeURIComponent($("brain").value)}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    render(await r.json());
+  } catch (e) {
+    const banner = $("banner");
+    banner.textContent = `Could not load the numbers (${e.message}). Is brain dashboard still running?`;
+    banner.style.display = "block";
+  }
+}
+
+const sel = $("brain");
+for (const b of BOOT.brains) sel.append(el("option", { value: b.slug }, b.label));
+const saved = store.get("brain-dashboard.brain");
+if (saved && BOOT.brains.some((b) => b.slug === saved)) sel.value = saved;
+sel.addEventListener("change", () => { store.set("brain-dashboard.brain", sel.value); load(); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", load);
+load();
+setInterval(load, Math.max(5, BOOT.refresh_s) * 1000);
+</script>
+</body>
+</html>

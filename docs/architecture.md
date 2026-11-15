@@ -66,6 +66,7 @@ The document covers the vault's data standard, the `brain` CLI, the check rules,
 | 3.0 | 21/10/2026 | DAB 3.0: the Javis loop in every view (requirements F13–F18, use cases UC10–UC12, success metrics, new containers and components, the assign, list and report commands, Javis OS deployment, label grammar, rules for labels, the `[javis]` table, threats, tests, ADR-10–12, risks R14–R17, open decisions). The retrieval layer moved from 2.3 to 3.1 |
 | 4.0 | 22/10/2026 | DAB 4.0, in English: every command, key, rule code and file name in English; the CLI split into a package of modules (ADR-13, superseding ADR-02); every parameter in `defaults.toml`; rule codes in CLI messages; `brain migrate` (6.13); R9 fixed; English naming (ADR-14, superseding ADR-09). The retrieval layer moved from 3.1 to 4.1 |
 | 4.0.1 | 29/10/2026 | Packaging: the Docker image as a deployment node (7.1, 7.2), CI and the release workflow in the test strategy (8.12), R7 resolved. No change to the flow, the rules or the data |
+| 4.4 (proposed) | 15/11/2026 | ADR-20: the dashboard, a read-only page with the brain's four golden signals ([dashboard.md](dashboard.md)) |
 | 4.2 | 07/11/2026 | DAB 4.2: the knowledge graph (5.5, 6.14, ADR-15–17, [knowledge-graph.md](knowledge-graph.md)); the platform-neutral assistant with one tool definition and adapters per platform (5.5, ADR-18, amending ADR-10; [integrations.md](integrations.md)); design suggestions vetted before adoption (ADR-19, [design-suggestions.md](design-suggestions.md)). **Reading note:** sections written for 3.0 and 4.0 say "Javis" for the assistant; since 4.2 read "the assistant, on any platform". The label is `@agent` by default, the result channel `assistant`, and the Claude Code write guard moved to `integrations/claude-code/write_guard.py` |
 
 ## 1. Introduction and goals
@@ -1214,6 +1215,13 @@ Each ADR records the context, the decision, the options considered and the conse
 - **Status:** Accepted (4.2.0).
 - **Decision:** `brain kg suggest` and the `brain_suggest` tool only print. Every design suggestion goes through find (in the brain first), evidence, vet (V1–V8), the owner's decision and a record ([design-suggestions.md](design-suggestions.md)).
 - **Consequences:** No agent adopts its own suggestion; rejected suggestions are kept with their reason.
+
+### ADR-20 · The dashboard is a read side: read-only, local, no state of its own
+
+- **Status:** Accepted (4.4.0, proposed).
+- **Context:** The brain's measures were only readable one command at a time (`brain check`, `brain weekly`, `brain kg stats`); a backlog could grow for two weeks before the Weekly Review showed it.
+- **Decision:** `brain dashboard` serves one page on `127.0.0.1` ([dashboard.md](dashboard.md)). It reads the vault (dated lines, notes, `checks.check`, the graph and the platform map) and answers `GET` only; every change still goes through the `brain` commands and the trust gates, so the page shows the command to copy. The top row is the brain's four golden signals (traffic, latency, errors, saturation, after Google's SRE book); no score, no target, no streak. `GET /api/state` returns a presentation-neutral contract (`schema: 1`).
+- **Consequences:** Stopping the dashboard loses nothing; there is no new source of truth (ADR-01). Another host must be named with `--host`, and the command warns. A brain with a server can fill the same contract from its API without changing the page.
 
 ## 10. Quality requirements
 

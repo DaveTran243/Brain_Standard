@@ -2,6 +2,12 @@
 
 Versions are x.y.z: x goes up when the main flow changes shape or a migration is needed, y when a mechanism is added without breaking the flow, z for fixes to numbers, labels and wording. The newest version is at the top. Entries before 4.0 use the names of their time; [docs/glossary.md](docs/glossary.md) maps them to the current ones.
 
+## Unreleased · proposed for 4.4.0
+
+### Added
+- `brain dashboard` (`tools/brain/dashboard.py`, `dashboard.html`, ADR-20, `docs/dashboard.md`): a read-only page on `127.0.0.1:7799`. On top, the brain's four golden signals: traffic (captured, turns by type, next actions done), latency (oldest Inbox item, oldest fleeting note, days since the last Weekly Review), errors (`brain check` errors and warnings, rejected at G1) and saturation (Inbox, fleeting, stale assignments, documents the graph has not read). Below: the rules broken with the command that fixes each, active projects, activity per day, knowledge, the turn log. `GET` only (405 for anything else), no note content, no state, no score or target. `GET /api/state` returns the contract `schema: 1`; `brain dashboard --json` prints it once. Standard library only.
+- `[dashboard]` in `defaults.toml` (port, refresh, the Inbox and Weekly Review limits, other brains for the picker); `tests/test_dashboard.py`.
+
 ## 4.3.0 · 15/11/2026
 
 The platform root: a brain may name one disk or folder that holds its whole platform, and keep a map of every folder and file there that agents read before they open anything and update after they write. Off by default; no migration.

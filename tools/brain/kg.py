@@ -87,7 +87,7 @@ def documents(brain: Brain) -> dict[str, dict]:
         trust, grade = _trust(brain, fm)
         docs.append({"id": f"{kind}:{p.stem}", "kind": kind, "title": title, "text": body,
                      "links": sorted({titles.get(l, l) for l in links if l}), "tags": _list(fm.get("tags", "")),
-                     "relations": rel, "trust": trust, "grade": grade})
+                     "relations": rel, "trust": trust, "grade": grade, "path": p})
     na = brain.path("next_actions")
     if "next" in kinds and na.is_file():
         for i, line in enumerate(notes.read(na).splitlines()):

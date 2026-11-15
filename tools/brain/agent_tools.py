@@ -81,7 +81,24 @@ def _report(a):
     return ["report", _s(a, "number"), _s(a, "result")] + _level(a)
 
 
+def _where(a):
+    if (err := _need(a, "query")):
+        return err
+    return ["where", _s(a, "query")] + (["--max", _s(a, "max")] if _s(a, "max") else [])
+
+
 TOOLS = [
+    {"name": "brain_where", "min_mode": "readonly", "argv": _where,
+     "description": ("Where something lives on the brain's platform root (the disk or folder that holds the whole brain "
+                     "platform): read the platform map before opening or searching files. Returns paths with their "
+                     "type, Johnny Decimal number, repository and the notes stored there."),
+     "schema": {"type": "object", "properties": {"query": {"type": "string"},
+                                                 "max": {"type": "string", "description": "default 8"}},
+                "required": ["query"]}},
+    {"name": "brain_map_update", "min_mode": "safe", "argv": lambda a: ["kg", "drive"],
+     "description": ("After saving files on the platform root, add them to the platform map (only folders that changed "
+                     "are read again). Every result an agent produces is saved under the root and then mapped."),
+     "schema": {"type": "object", "properties": {}}},
     {"name": "brain_recall", "min_mode": "readonly", "argv": _recall,
      "description": ("Read the brain's knowledge graph before answering: the facts it already holds about a question, "
                      "each with its source and trust (owner = the owner's own notes or words; a grade such as B2 = an "

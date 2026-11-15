@@ -95,6 +95,7 @@ The three lanes exchange items through 7 links, I1–I7, described in [docs/flow
 | `docs/execution-layer.md` | The execution layer: boards, milestones, owners |
 | `docs/architecture.md` | DAB 4.2, the system architecture in arc42 form: modules, runtime, the assistant loop, the knowledge graph, decisions, risks, the retrieval layer design |
 | `docs/knowledge-graph.md` | The knowledge graph: read before a turn, remembered after, trust on every fact |
+| `docs/platform-map.md` | The platform root and its map: where everything is, read before the disk, updated after every write (off by default) |
 | `docs/integrations.md` | Agent and automation platforms and how each reaches the brain |
 | `docs/design-suggestions.md` | Finding design suggestions through the brain and vetting them |
 | `docs/glossary.md` | Every term, command, key and rule code, with its 3.0 name |

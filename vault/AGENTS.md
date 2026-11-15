@@ -19,6 +19,15 @@ This repository is a brain built on Brain_Standard 4.2. These rules are for ever
   - When done: `brain report <n> "what was done, where the result is"`. The result goes back to the Inbox for the owner to clarify.
 - Remember the turn: `brain kg remember --prompt "<the owner's message, verbatim>" --summary "<one line>"` (MCP tool `brain_remember`); with Claude Code the hooks in `integrations/claude-code/` do it. Never store your own claims as the owner's words.
 
+## Platform root (when `[drive]` is enabled in `brain.toml`)
+
+The owner may name one disk or folder as the brain's platform root (`[drive] root`): it holds the whole platform, its functions (the `brain` CLI, hooks, tools), its memory (the vault, the knowledge graph, the platform map, exports), its library and its archive. Then:
+
+1. **Write to the root.** Everything you produce (files, exports, downloads, generated code, reports, pictures) is saved under the root: in its Johnny Decimal folder (a JDex line first) or, when it has no home yet, in `[drive] inbox` for the Weekly Review to file. Scratch files may live elsewhere while a task runs; the result does not stay there.
+2. **Map what you write.** After saving, run `brain kg drive` (MCP tool `brain_map_update`). With Claude Code the Stop hook does it.
+3. **Read the map before the disk.** Before opening, searching or listing anything on the root, ask `brain where "<words>"` (MCP tool `brain_where`) and read the knowledge graph (`brain kg ask`). The prompt hook shows the best matches as `[Brain Drive]` lines. Search the disk only when the map has nothing, then run `brain kg drive`.
+4. **Names, not contents.** The map holds names, sizes and dates. A file's contents enter the knowledge graph only through the normal lanes (capture, literature, G1).
+
 ## Never
 
 - Never write a permanent note for the owner. You may offer drafts, questions and notes to link to.

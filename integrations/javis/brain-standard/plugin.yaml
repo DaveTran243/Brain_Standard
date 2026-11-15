@@ -18,5 +18,7 @@ tools:
   - brain_weekly
   - brain_assigned
   - brain_report
+  - brain_where
+  - brain_map_update
 hooks:
   - pre_tool_call

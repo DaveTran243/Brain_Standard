@@ -26,7 +26,7 @@ The architecture design document (DAB) for Brain_Standard. It follows the [arc42
 | Item | Value |
 | --- | --- |
 | System | Brain_Standard · a second brain made of Markdown + git + the `brain` CLI |
-| System version described | 4.2.0 (current: 4.0.1, which added a Docker image and CI, plus the knowledge graph and the platform-neutral assistant, sections 5.5, 6.14, ADR-15–19) and the retrieval layer (proposed, section 12) |
+| System version described | 4.3.0 (the platform root, docs/platform-map.md, on top of 4.2.0; 4.0.1 which added a Docker image and CI, plus the knowledge graph and the platform-neutral assistant, sections 5.5, 6.14, ADR-15–19) and the retrieval layer (proposed, section 12) |
 | Document version | 4.2. Version 3.0 (in Vietnamese) is in git history; version 1.1 is kept at [`archive/2.2.1/docs/kien-truc-he-thong.md`](../archive/2.2.1/docs/kien-truc-he-thong.md) |
 | Status | Awaiting Design Authority Board review; code, tests and plugin are done; Javis OS has not yet run on a real brain |
 | Owner | The owner of the Brain_Standard repository |

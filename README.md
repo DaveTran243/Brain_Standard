@@ -1,8 +1,10 @@
-# Brain_Standard · Brain 4.2
+# Brain_Standard · Brain 4.3
 
 A second brain you own: Markdown files in a git repository, a set of rules so everything has its place, and one rule set so any AI can work with it.
 
-**Version 4.2.0** · 07/11/2026 · [Change log](CHANGELOG.md) · [Architecture (DAB 4.2)](docs/architecture.md) · [Glossary](docs/glossary.md) · [version 2.2.1](archive/2.2.1/README.md)
+**Version 4.3.0** · 15/11/2026 · [Change log](CHANGELOG.md) · [Architecture (DAB 4.2)](docs/architecture.md) · [Glossary](docs/glossary.md) · [version 2.2.1](archive/2.2.1/README.md)
+
+**New in 4.3:** the **platform root**: a brain may name one disk or folder that holds its whole platform and keep a map of every folder and file there, which agents read before they open anything (`brain where`) and update after they write ([docs/platform-map.md](docs/platform-map.md)). Off by default; no migration.
 
 **New in 4.2:** a **knowledge graph** of the vault that agents read before answering and update after each turn ([docs/knowledge-graph.md](docs/knowledge-graph.md)), and a **platform-neutral assistant**: one set of agent tools served to any platform through an MCP server, with Javis OS as one integration among many ([docs/integrations.md](docs/integrations.md)). Design suggestions are vetted before they are adopted ([docs/design-suggestions.md](docs/design-suggestions.md)). Upgrading: `brain migrate`, then `brain kg build`.
 
@@ -158,7 +160,7 @@ Every parameter, from folder paths and thresholds to the assistant's name, label
 
 ```toml
 [brain]
-version = "4.2.0"
+version = "4.3.0"
 vault = "vault"
 
 [clarify]

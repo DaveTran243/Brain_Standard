@@ -2,7 +2,7 @@
 
 Versions are x.y.z: x goes up when the main flow changes shape or a migration is needed, y when a mechanism is added without breaking the flow, z for fixes to numbers, labels and wording. The newest version is at the top. Entries before 4.0 use the names of their time; [docs/glossary.md](docs/glossary.md) maps them to the current ones.
 
-## 4.3.0 · unreleased (platform root merged 15/11/2026)
+## 4.3.0 · 15/11/2026
 
 The platform root: a brain may name one disk or folder that holds its whole platform, and keep a map of every folder and file there that agents read before they open anything and update after they write. Off by default; no migration.
 

@@ -2,6 +2,18 @@
 
 Versions are x.y.z: x goes up when the main flow changes shape or a migration is needed, y when a mechanism is added without breaking the flow, z for fixes to numbers, labels and wording. The newest version is at the top. Entries before 4.0 use the names of their time; [docs/glossary.md](docs/glossary.md) maps them to the current ones.
 
+## Unreleased
+
+Release hardening, approved 17/11/2026 in the phase 02 review (question 3, option A; risks RK-01, RK-04, RK-06).
+
+### Changed
+- `release.yml`: the `docker` job runs in the `release` environment, so a pushed tag publishes nothing until a reviewer approves it (RK-01). The environment and its reviewer are set once in the repository settings.
+- `Dockerfile`: the image runs as uid 10001 instead of root, and the base image is pinned by digest (RK-06). On Linux, commands that write into the brain need `--user "$(id -u):$(id -g)"`, as the README already showed; reading commands such as `check` work as before.
+- CI and the release check that the image does not run as root.
+
+### Not yet done
+- Pinning third-party actions to commit SHAs (RK-04): the SHAs have to be looked up from the actions' repositories, which this change could not reach.
+
 ## 4.4.0 · 15/11/2026
 
 The dashboard: one read-only page that shows how the brain is running, at a glance. Minor version: a mechanism is added, the flow is unchanged; nothing to migrate.

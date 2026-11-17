@@ -5,3 +5,6 @@ __pycache__/
 vault/_kg/drive.jsonl
 vault/_kg/drive-state.json
 vault/_kg/drive-graph*.html
+
+# derived search index (brain search); rebuilt from the vault at any time
+.brain/

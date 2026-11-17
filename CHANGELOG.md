@@ -4,6 +4,14 @@ Versions are x.y.z: x goes up when the main flow changes shape or a migration is
 
 ## Unreleased
 
+### Added · search round, milestone M1 (BR-01 to BR-04)
+- `brain search "<words>"` (`tools/brain/search.py`): BM25 over the sections of the vault's notes, in the standard library (ADR-08). Matching goes through `textnorm.fold`, so diacritics, none or NFD all match; Johnny Decimal numbers such as `51.03` are one word. Skipped: the Inbox, anything starting with `_`, and `[search] exclude`. Each result has `path:line`, lane, grade and the `UNVERIFIED` and `EXPIRED` flags; less trusted notes are flagged, never hidden. A query no section covers well enough (`min_coverage`) gets "not found".
+- `brain index [--rebuild]`: the index is derived data in `.brain/search-index.json` (git ignores `.brain/`); only notes whose size or time changed are read again, and search works from memory when the file cannot be written. On 1,000 synthetic notes (4,014 sections), a search takes about 95 ms and a full build about 0.5 s.
+- `brain eval`: recall@k and MRR over the owner's questions in `vault/_eval/questions.md`, and how often search said "not found" to a question marked `none`. The same vault gives the same numbers on every run.
+- MCP tool `brain_search` (readonly): at most `k` = 8 sections, best first and second best last, within `max_chars`; or "Not found" with the instruction to say so.
+- What `brain_recall`, `brain_search` and `brain_where` return to any agent platform is wrapped in `<brain-data>` and marked as data, never instructions; a closing tag inside a note cannot end the frame. `vault/AGENTS.md` and the MCP instructions say so.
+- `[search]` in `defaults.toml`; `tests/test_search.py`.
+
 Release hardening, approved 17/11/2026 in the phase 02 review (question 3, option A; risks RK-01, RK-04, RK-06).
 
 ### Changed

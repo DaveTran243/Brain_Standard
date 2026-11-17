@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import assistant, checks, drive, gates, intake, kg, kgcore, metrics, migrate, notes
+from . import assistant, checks, drive, gates, intake, kg, kgcore, metrics, migrate, notes, search
 from .config import Brain, BrainError, defaults, find_root, open_brain
 
 
@@ -185,6 +185,53 @@ def cmd_where(brain: Brain, a) -> int:
     return 0
 
 
+def cmd_search(brain: Brain, a) -> int:
+    query = " ".join(a.query)
+    res = search.search(brain, query, a.max)
+    if a.json:
+        print(json.dumps(res, ensure_ascii=False, indent=1))
+    elif a.agent or os.environ.get("BRAIN_ACTOR", "").lower() == "agent":
+        print(search.for_agent(brain, res))
+    elif not res["found"]:
+        print(f"Nothing in the vault covers \"{query}\" ({res['sections']} sections searched). "
+              "Try other words; the Inbox and files starting with _ are not searched.")
+    else:
+        for i, r in enumerate(res["results"], 1):
+            where = r["title"] + (f" › {r['heading']}" if r["heading"] else "")
+            print(f"{i:>2}. {r['path']}:{r['line']}  [{search.flags(r)}]  {r['score']:.2f}\n    {where}\n    {r['snippet']}")
+    return 0
+
+
+def cmd_index(brain: Brain, a) -> int:
+    r = search.update(brain, rebuild=a.rebuild)
+    where = brain.rel(r["path"]) if r["path"].is_relative_to(brain.vault) else r["path"].relative_to(brain.root).as_posix()
+    print(f"Search index: {r['files']} notes, {r['sections']} sections; {r['read']} read again, {r['removed']} gone."
+          + (f" Saved to {where}." if r["saved"] else " Could not write the index file; search works from memory."))
+    return 0
+
+
+def cmd_eval(brain: Brain, a) -> int:
+    r = search.evaluate(brain, a.k)
+    if a.json:
+        print(json.dumps(r, ensure_ascii=False, indent=1))
+        return 0
+    if not r["questions"]:
+        print(f"No questions yet. The owner writes them in vault/{r['file']} (lines like "
+              "'- question → path/to/note.md'); an AI never does.")
+        return 1
+    for row in r["rows"]:
+        mark = "ok  " if row["ok"] else "MISS"
+        got = "not found" if row["rank"] is None and not row["got"] else (f"rank {row['rank']}" if row["rank"]
+                                                                           else "top: " + ", ".join(row["got"]))
+        want = ", ".join(row["want"]) or "none"
+        print(f"  {mark} line {row['line']:>3} · {row['question']}\n         want {want} · {got}")
+    if r["answerable"]:
+        print(f"recall@{r['k']} {r['recall']:.3f} · MRR {r['mrr']:.3f} · {r['answerable']} questions with an answer")
+    if r["unanswerable"]:
+        print(f"Not in the brain: search said not found to {r['said_not_found']} of {r['unanswerable']}")
+    return 0
+
+
 def _hook_state(brain: Brain, session: str) -> Path:
     safe = "".join(c for c in (session or "default") if c.isalnum() or c in "-_")[:80] or "default"
     return brain.path("hook_state") / f"{safe}.json"
@@ -307,6 +354,20 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("where", help="where something lives on the platform root: read the map before the disk")
     p.add_argument("query", nargs="+"); p.add_argument("--max", type=int); p.add_argument("--json", action="store_true")
     p.set_defaults(fn=cmd_where)
+
+    p = sub.add_parser("search", help="find notes by keyword (BM25); with or without diacritics")
+    p.add_argument("query", nargs="+"); p.add_argument("--max", type=int, help="results (default [search] k, 8)")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--agent", action="store_true", help="the short form an agent receives (best first and last)")
+    p.set_defaults(fn=cmd_search)
+
+    p = sub.add_parser("index", help="bring the search index up to date (only changed notes are read again)")
+    p.add_argument("--rebuild", action="store_true", help="drop the index and read every note again")
+    p.set_defaults(fn=cmd_index)
+
+    p = sub.add_parser("eval", help="measure search on the owner's questions: recall@k and MRR")
+    p.add_argument("--k", type=int); p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_eval)
 
     p = sub.add_parser("dashboard", help="a read-only page on 127.0.0.1 that shows how the brain is running")
     p.add_argument("--port", type=int, help=f"default [dashboard] port, {d['dashboard']['port']}")

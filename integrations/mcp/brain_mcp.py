@@ -34,7 +34,7 @@ __version__ = defaults()["brain"]["version"]
 
 PROTOCOL_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 INSTRUCTIONS = ("A second brain (Brain_Standard). Before answering, call brain_recall with the request to read what "
-                "the brain already holds. The owner's words go in verbatim through brain_capture; facts you looked up "
+                "the brain already holds, and brain_search to find the notes themselves (cite path:line). The owner's words go in verbatim through brain_capture; facts you looked up "
                 "go through brain_submit with a source record (gate G1). After answering, call brain_remember with the "
                 "owner's message and a one-line summary, and close the turn with brain_turn. Only the owner assigns "
                 "work: follow up only on tasks brain_assigned lists, never above their level.")

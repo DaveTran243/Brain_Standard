@@ -118,6 +118,7 @@ This package ships a plugin in `integrations/javis/brain-standard/`. It does two
   | Tool | Command | Minimum level |
   | --- | --- | --- |
   | `brain_recall` | `brain kg ask` · what the knowledge graph holds about a request | `suggest` |
+  | `brain_search` | `brain search --agent` · the owner's notes by keyword, with path:line, grade and flags | `suggest` |
   | `brain_remember` | `brain kg remember` · folds a turn into the graph | `auto` |
   | `brain_suggest` | `brain kg suggest` · gaps the graph sees | `suggest` |
   | `brain_capture` | `brain capture` · captures your words | `auto` |

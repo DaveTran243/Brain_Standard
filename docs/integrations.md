@@ -125,6 +125,7 @@ flowchart TB
 | Tool | Command | Mode |
 | --- | --- | --- |
 | `brain_recall` | `kg ask` | readonly |
+| `brain_search` | `search --agent` | readonly |
 | `brain_remember` | `kg remember` | safe |
 | `brain_capture` | `capture [--channel]` | safe |
 | `brain_submit` | `submit` on a record written to a temporary folder outside the vault | readonly (its only write is the CLI's own, after G1) |

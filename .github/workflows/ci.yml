@@ -76,6 +76,10 @@ jobs:
           # The template brain at the repository root, mounted the way users run it.
           docker run --rm -v "$PWD:/brain" --user "$(id -u):$(id -g)" brain_standard:ci check
 
+          # The image runs as an unprivileged user, never root.
+          [ "$(docker run --rm --entrypoint id brain_standard:ci -u)" = "10001" ] \
+            || { echo "::error::The image must run as uid 10001, not root"; exit 1; }
+
           # The image holds the package and nothing else: no vault, no notes.
           [ "$(docker run --rm --entrypoint ls brain_standard:ci -A /opt/brain)" = "tools" ] \
             || { echo "::error::/opt/brain must hold only tools/"; exit 1; }

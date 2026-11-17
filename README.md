@@ -139,7 +139,7 @@ docker run --rm -v "$PWD:/brain" dfat243/brain_standard check
 docker run --rm -v "$PWD:/brain" --user "$(id -u):$(id -g)" dfat243/brain_standard capture "Read chapter 5 of DDIA"
 ```
 
-`--user` keeps new files owned by you on Linux; Docker Desktop on Windows and macOS doesn't need it (in PowerShell write `${PWD}`). The image holds only `tools/brain/`, never a vault. Tags follow the versions: `4.0.1`, `4.0`, `latest`.
+The image runs as an unprivileged user (uid 10001), not root. On Linux pass `--user` for any command that writes, so new files are owned by you; Docker Desktop on Windows and macOS doesn't need it (in PowerShell write `${PWD}`). The image holds only `tools/brain/`, never a vault. Tags follow the versions: `4.0.1`, `4.0`, `latest`.
 
 ## Commands
 

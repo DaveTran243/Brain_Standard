@@ -1,13 +1,17 @@
 # Release: pushing a tag vX.Y.Z publishes that version.
 #   1. The tag must match brain.version in tools/brain/defaults.toml and have a CHANGELOG section.
 #   2. CI runs in full.
-#   3. The image goes to Docker Hub as dfat243/brain_standard:X.Y.Z, X.Y, latest and sha-<commit>,
+#   3. A reviewer approves the "release" environment (see below), then the image goes to Docker Hub as dfat243/brain_standard:X.Y.Z, X.Y, latest and sha-<commit>,
 #      for linux/amd64 and linux/arm64.
 #   4. A GitHub Release is created with the CHANGELOG section as its notes.
 #
 # Needs two repository secrets (Settings → Secrets and variables → Actions):
 #   DOCKERHUB_USERNAME  the Docker Hub account, dfat243
 #   DOCKERHUB_TOKEN     a Docker Hub personal access token with Read & Write
+#
+# And one environment (Settings → Environments → New environment): "release", with
+# "Required reviewers" set to the owner, so pushing a tag never publishes an image on its own.
+# Until that environment has a reviewer, GitHub creates it on the first run without one.
 #
 # Runs only in the Brain_Standard repository itself, never in a personal brain made from it.
 name: Release
@@ -51,6 +55,7 @@ jobs:
     needs: [version, ci]
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: release
     steps:
       - name: Secrets are set
         env:
@@ -95,6 +100,8 @@ jobs:
           set -eu
           got="$(docker run --rm "$IMAGE:$VERSION" --version)"
           [ "$got" = "brain $VERSION" ] || { echo "::error::$IMAGE:$VERSION prints '$got'"; exit 1; }
+          [ "$(docker run --rm --entrypoint id "$IMAGE:$VERSION" -u)" != "0" ] \
+            || { echo "::error::$IMAGE:$VERSION runs as root"; exit 1; }
           echo "Published $IMAGE:$VERSION"
 
   github-release:

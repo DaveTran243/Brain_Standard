@@ -154,6 +154,9 @@ The image runs as an unprivileged user (uid 10001), not root. On Linux pass `--u
 | `brain assigned [--level …]` | List the tasks assigned to the assistant, filtered by level. |
 | `brain report <n> "result"` | The assistant reports an assigned task done; the result goes to the Inbox. |
 | `brain kg build \| ask \| stats \| suggest \| export \| remember` | The knowledge graph: build it, read it, see its gaps, fold a turn into it. |
+| `brain search "…" [--max n] [--json]` | Find notes by keyword, typed with or without diacritics. Each result gives `path:line`, lane, grade and `UNVERIFIED` / `EXPIRED`. |
+| `brain index [--rebuild]` | Bring the search index (`.brain/`, never committed) up to date; `brain search` also does this itself. |
+| `brain eval [--k n] [--json]` | Measure search on your own questions in `vault/_eval/questions.md`: recall@k and MRR. |
 | `brain hook prompt\|stop` | Turn hooks for Claude Code: read the graph before, remember after. |
 | `brain migrate [--dry-run]` | Convert a 3.0 brain to the 4.0 names, and `@javis` labels to the 4.2 label, once. |
 

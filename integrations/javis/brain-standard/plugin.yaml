@@ -9,6 +9,7 @@ enabled: false
 min_mode: safe
 tools:
   - brain_recall
+  - brain_search
   - brain_remember
   - brain_capture
   - brain_submit

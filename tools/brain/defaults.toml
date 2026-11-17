@@ -128,6 +128,19 @@ min_score = 4                  # a hit shown by the prompt hook needs at least t
 demote = ["90-Archive"]        # folders whose copies rank below the live ones
 stopwords = []
 
+[search]
+# brain search and brain eval (tools/brain/search.py, ADR-08): BM25 over the sections of the vault's notes. All matching
+# goes through textnorm.fold, so diacritics, no diacritics and NFD all match. Skipped: the Inbox, anything starting
+# with the template prefix "_", and the exclude list below.
+index = ".brain/search-index.json"  # relative to the folder that holds brain.toml; derived, never committed
+k = 8                               # results returned (BR-04); recall@k in brain eval uses the same k
+k1 = 1.2                            # BM25 term-frequency saturation
+b = 0.75                            # BM25 length normalisation
+min_coverage = 0.5                  # a section must hold at least this share of the query's content words
+max_chars = 6000                    # what an agent receives from brain_search, at most
+questions = "_eval/questions.md"    # brain eval's questions, relative to the vault; written by the owner only
+exclude = []                        # more paths or globs relative to the vault, e.g. ["Code/99-private", "*/drafts/*"]
+
 [dashboard]
 # brain dashboard (tools/brain/dashboard.py, docs/dashboard.md, ADR-20): a read-only page on 127.0.0.1 with the brain's
 # four golden signals (traffic, latency, errors, saturation). It never writes and shows no note content.

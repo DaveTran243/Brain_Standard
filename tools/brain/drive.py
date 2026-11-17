@@ -21,10 +21,10 @@ from __future__ import annotations
 import json
 import os
 import re
-import unicodedata
 from pathlib import Path
 
 from . import notes
+from .textnorm import fold  # noqa: F401  (also used by callers as drive.fold)
 from .config import Brain, now
 
 KIND = "location"
@@ -261,12 +261,6 @@ def load(brain: Brain) -> list[dict]:
 
 
 # ---------------------------------------------------------------- read
-def fold(text: str) -> str:
-    """Lower case with Vietnamese and other marks removed, so 'Thư viện' matches 'thu-vien'."""
-    text = str(text).replace("đ", "d").replace("Đ", "D")
-    return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).lower()
-
-
 def tokens(text: str, extra_stop=()) -> list[str]:
     raw = re.sub(r"([a-z])([A-Z])", r"\1 \2", str(text))
     stop = STOP | {fold(s) for s in extra_stop}

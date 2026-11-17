@@ -1,6 +1,6 @@
 """Knowledge graph core: turn the brain's documents into subject → predicate → object triples, and read them back.
 
-Portable on purpose: it knows nothing about the vault. A caller hands it documents and the [kg] configuration;
+Portable on purpose: it knows nothing about the vault, and needs only textnorm.py beside it. A caller hands it documents and the [kg] configuration;
 it hands back triples, retrieved facts and suggestions. Standard library only.
 
 The pipeline follows robert-mcdermott/ai-knowledge-graph (Apache License 2.0): chunk the text, ask an LLM for
@@ -25,6 +25,8 @@ import re
 import urllib.error
 import urllib.request
 from collections import defaultdict, deque
+
+from .textnorm import fold
 
 TRUST_ORDER = ["dave", "owner", "graded", "unverified", "agent"]   # most trusted first; retrieval prefers the left
 TITLE_TYPES = {"note", "task", "project", "area", "map", "conversation"}   # entities that are titles, not concepts
@@ -320,17 +322,21 @@ class GraphIndex:
 
 def match_entities(index: GraphIndex, question: str, limit: int = 6, extra_stop=()) -> list[str]:
     """Entities a question is about: whole names first (longest wins), then names sharing content words."""
-    q = " " + " ".join(m.group(0).lower() for m in _WORD.finditer(question or "")) + " "
-    matched = [n for n in index.adjacency if len(n) >= 2 and f" {n} " in q]
-    matched = [n for n in matched if not any(n != m and f" {n} " in f" {m} " for m in matched)]
+    # Both sides folded (textnorm): "johnny decimal", "Johnny Decimal" and an NFD paste match the same entity, and
+    # "thu vien" matches "thư viện". Entity names themselves are never changed.
+    q = " " + " ".join(fold(m.group(0)) for m in _WORD.finditer(question or "")) + " "
+    folded = {n: " ".join(fold(m.group(0)) for m in _WORD.finditer(n)) for n in index.adjacency}
+    matched = [n for n in index.adjacency if len(folded[n]) >= 2 and f" {folded[n]} " in q]
+    matched = [n for n in matched if not any(n != m and f" {folded[n]} " in f" {folded[m]} " for m in matched)]
     matched.sort(key=lambda n: (-len(n), -index.degree[n]))
     if len(matched) < limit:
-        qw = words(question, extra_stop)
+        stop = {fold(w) for w in (*_STOP_EN, *_STOP_VI, *extra_stop)}
+        qw = {fold(w) for w in words(question, extra_stop)} - stop
         cands = []
         for name in index.entities:
             if name in matched:
                 continue
-            nw = words(name, extra_stop) or {name}
+            nw = ({fold(w) for w in words(name, extra_stop)} - stop) or {fold(name)}
             overlap = len(nw & qw)
             if overlap:
                 cands.append((-overlap / len(nw), -index.degree[name], name))

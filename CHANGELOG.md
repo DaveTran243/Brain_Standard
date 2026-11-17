@@ -11,6 +11,16 @@ Release hardening, approved 17/11/2026 in the phase 02 review (question 3, optio
 - `Dockerfile`: the image runs as uid 10001 instead of root, and the base image is pinned by digest (RK-06). On Linux, commands that write into the brain need `--user "$(id -u):$(id -g)"`, as the README already showed; reading commands such as `check` work as before.
 - CI and the release check that the image does not run as root.
 
+### Added
+- `tools/brain/textnorm.py` (search round, milestone M0): `fold`, `nfc` and `words`, the one place that decides when two texts match. A query matches whether either side is written with diacritics, without them, or decomposed (NFD); `đ` folds to `d`. Display text is never changed. `tests/test_textnorm.py` is the M0 gate.
+- `vault/_eval/questions.md`: the empty template for the owner's 30 search questions, in five sections; `brain eval` (M1) will read it. Under `_`, so it is never indexed.
+
+### Fixed
+- `brain kg ask` and the `[Brain KG]` hook lines now find an entity typed without diacritics or pasted in NFD form ("thu vien" finds "thư viện"); before, only an exact lower-case match or a shared word with the same marks worked.
+
+### Changed (docs)
+- ADR-08 accepted as decided on 17/11/2026: BM25 in the standard library with the index in `.brain/`, all matching through `textnorm.fold`, embeddings optional in a separate local process.
+
 ### Not yet done
 - Pinning third-party actions to commit SHAs (RK-04): the SHAs have to be looked up from the actions' repositories, which this change could not reach.
 

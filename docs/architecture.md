@@ -1083,7 +1083,7 @@ Each ADR records the context, the decision, the options considered and the conse
 - **Context:** Personal data must live for decades, across many tools and many AIs.
 - **Decision:** All data is Markdown files in a git repository. No database is a source of truth.
 - **Options considered:** Notion or a cloud notes app (vendor lock-in); SQLite as the source (hard to read by hand, hard to diff).
-- **Consequences:** Diffs and undo through git; opens in any editor. Complex queries and search by meaning need a separate index (ADR-08).
+- **Consequences:** Diffs and undo through git; opens in any editor. Ranked search and search by meaning need a separate, derived index (ADR-08).
 
 ### ADR-02 · A single-file CLI, standard library only
 
@@ -1129,13 +1129,13 @@ Each ADR records the context, the decision, the options considered and the conse
 - **Decision:** The vault keeps the coordination (outcome, criteria, decisions, lessons); the board keeps the execution.
 - **Consequences:** The brain only links, with no two-way sync. Collaborators never need the vault.
 
-### ADR-08 · The retrieval index is derived data in SQLite
+### ADR-08 · The retrieval index is derived data, built with the standard library
 
-- **Status:** Proposed (4.1).
-- **Context:** As the vault grows, notes can't be found by meaning; an AI only knows what is pasted into it.
-- **Decision:** An index at `.brain/index.db` (SQLite, FTS5, sqlite-vec), never committed, always rebuildable; accessed through `brain search` and `brain mcp`.
-- **Options considered:** A separate vector database such as Chroma or Qdrant (another server); a cloud service such as Pinecone (data leaves the machine); grep only (no search by meaning).
-- **Consequences:** Optional dependencies. The index must be kept in step with the vault. Details in section 12.
+- **Status:** Accepted (17/11/2026, the search round's BRD, section 9). Replaces the 4.1 proposal of SQLite FTS5 and sqlite-vec.
+- **Context:** As the vault grows, notes can't be found by keyword or by meaning; an AI only knows what is pasted into it. Vietnamese is typed with and without diacritics, and pasted text is often decomposed (NFD).
+- **Decision:** `brain search` ranks note sections with BM25 written in the standard library. The index lives in `.brain/`, is never committed and can always be rebuilt from the vault. Every comparison goes through `tools/brain/textnorm.py` (`fold`: NFKD, marks removed, đ → d, casefold), so a query matches whether either side has diacritics, none, or NFD; stored text is never changed. Indexed: the clarified vault, `Code/` notes included; skipped: `00-Inbox`, every folder starting with `_`, and a configurable `exclude` list. Embeddings, if kept, run in a separate local process (Ollama) that writes vector files; the core only reads them and merges rankings with Reciprocal Rank Fusion.
+- **Options considered:** SQLite FTS5 (not in every Python build, and its tokenizers do not fold đ); sqlite-vec or a vector database such as Chroma or Qdrant (another dependency or server); a cloud service such as Pinecone (data leaves the machine); grep only (no ranking).
+- **Consequences:** No new dependency and the CLI still runs offline (metric M6). The index must be kept in step with the vault. Embeddings are kept only if they raise recall@8 by at least 0.05 over BM25 alone. Details in section 12, which still describes the 4.1 proposal where it differs from this decision.
 
 ### ADR-09 · Vietnamese names without diacritics
 
@@ -1296,7 +1296,7 @@ flowchart LR
 
 ## 12. Future work · retrieval layer (proposed 4.1)
 
-Status: **proposed**, not in the code. It adds a mechanism without changing the flow, so it is version 4.1.0 (this design was numbered 2.3 before 3.0, and 3.1 before 4.0).
+Status: **proposed**, not in the code, and partly replaced by ADR-08 as accepted on 17/11/2026 (BM25 in the standard library instead of SQLite FTS5; vectors from a separate process). Text folding is in the code since M0 (`textnorm.py`). It adds a mechanism without changing the flow, so it is version 4.1.0 (this design was numbered 2.3 before 3.0, and 3.1 before 4.0).
 
 ### 12.1 Goals and non-goals
 

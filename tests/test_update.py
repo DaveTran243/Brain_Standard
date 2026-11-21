@@ -25,7 +25,8 @@ GIT_ENV = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.org", "GIT_COM
 
 
 def git(cwd: Path, *args: str) -> str:
-    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True,
+                          encoding="utf-8").stdout.strip()
 
 
 def copy_standard(dest: Path) -> None:
@@ -97,7 +98,7 @@ class UpdateTest(unittest.TestCase):
     def test_commit_and_second_run_is_current(self):
         code, out = self.run_update("--commit")
         self.assertEqual(code, 0, out)
-        self.assertEqual(git(self.brain, "log", "-1", "--format=%s"), f"Update Brain_Standard 4.3.0 → {self.new}")
+        self.assertEqual(git(self.brain, "log", "-1", "--format=%s"), f"Update Brain_Standard 4.3.0 to {self.new}")
         self.assertEqual(git(self.brain, "status", "--porcelain", "--", *ub.PATHS), "")
         code, out = self.run_update()
         self.assertEqual(code, 0)

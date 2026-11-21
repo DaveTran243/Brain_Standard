@@ -307,8 +307,9 @@ def run(a) -> int:
             changed.append(AGENTS)
         if a.commit:
             git(brain, "add", "--", *changed)
-            git(brain, "commit", "-q", "-m", f"Update Brain_Standard {old} → {new}", "--", *changed)
-            say(f"Committed: Update Brain_Standard {old} → {new}")
+            message = f"Update Brain_Standard {old} to {new}"      # ASCII: safe under any locale and code page
+            git(brain, "commit", "-q", "-m", message, "--", *changed)
+            say(f"Committed: {message}")
         else:
             say("Not committed: review with git status and git diff --stat, then commit.")
         say(f"Undo: git checkout {head[:12]} -- " + " ".join(changed))

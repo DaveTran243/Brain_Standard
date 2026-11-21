@@ -13,6 +13,7 @@ Versions are x.y.z: x goes up when the main flow changes shape or a migration is
   - `--mcp claude-desktop,claude-code` registers the MCP server read-only. The Claude Desktop config is merged, other servers are kept, and the old file is saved as `.bak`. Claude Code uses `claude mcp add -s user`.
   - `--commit` makes one commit; `--dry-run` changes nothing.
   - `-RegisterTask` schedules a weekly run in Windows Task Scheduler, logging to `.brain/update.log`.
+- CI on Windows parses `update-brain.ps1` and runs it on an older brain: a dry run that changes nothing, then an update that commits.
 - `tests/test_update.py`: an update on a 4.3.0 brain, notes and settings untouched, commit, already current, dry run, refusal over uncommitted work, full rollback, tests run outside the brain, Claude Desktop config merge.
 
 ### Added · search round, milestone M2 (BR-05, BR-06, BR-09 to BR-11)

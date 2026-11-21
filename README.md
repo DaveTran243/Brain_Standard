@@ -160,6 +160,7 @@ The image runs as an unprivileged user (uid 10001), not root. On Linux pass `--u
 | `brain read <path> [--from n] [--lines n]` | Read one note with numbered lines, to cite as `path:line`. Never outside the vault. |
 | `brain cite-check [file] [--text "…"]` | Check every `path:line` citation in an answer: the note, the line, and any quote after it. |
 | `brain hook prompt\|stop` | Turn hooks for Claude Code: read the graph before, remember after. |
+| `bin/update-brain.ps1` · `bin/update_brain.py` | Update your brain from the standard, run its tests on your machine (rolled back if they fail), check, index, connect Claude Desktop and Claude Code, commit; `-RegisterTask` runs it weekly. See docs/getting-started.md, section 11. |
 | `brain migrate [--dry-run]` | Convert a 3.0 brain to the 4.0 names, and `@javis` labels to the 4.2 label, once. |
 
 ## Configuration

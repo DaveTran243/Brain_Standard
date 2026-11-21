@@ -4,6 +4,13 @@ Versions are x.y.z: x goes up when the main flow changes shape or a migration is
 
 ## Unreleased
 
+### Added · search round, milestone M2 (BR-05, BR-06, BR-09 to BR-11)
+- `brain read <path>` and MCP `brain_read` (BR-06): one note with numbered lines, framed as `<brain-data>`. The path is checked in code (`tools/brain/reading.py`): only `.md` notes inside the vault; absolute paths, drive letters, `..` and links that lead out are refused with exit code 4 (BR-05, metric M5 = 0 on 13 escape cases).
+- `brain cite-check` and MCP `brain_cite_check` (BR-09, metric M4): every `path:line` or `path:a-b` in a text, bare or in backticks, is checked: the note exists, the line exists, and a quote written after it is within `[read] quote_window` lines (folded, so a quote without diacritics counts). Statuses: ok, missing, refused, bad_line, quote_not_found.
+- Two optional ranking signals, off by default: recency (`[search] recency_weight`, BR-10, after Park et al. 2023) and Personalized PageRank over `[[links]]` from the BM25 hits (`graph_weight`, BR-11, after HippoRAG). `brain eval --compare` measures recall@k and MRR with each, so a signal is turned on only where it does not lower recall. The index (version 2) now keeps each note's date and links.
+- `docs/mcp-security.md`: the MCP security checklist (BR-05), what the code enforces and what the owner checks when connecting a client.
+- `[read]` in `defaults.toml`; `tests/test_reading.py`.
+
 ### Added · search round, milestone M1 (BR-01 to BR-04)
 - `brain search "<words>"` (`tools/brain/search.py`): BM25 over the sections of the vault's notes, in the standard library (ADR-08). Matching goes through `textnorm.fold`, so diacritics, none or NFD all match; Johnny Decimal numbers such as `51.03` are one word. Skipped: the Inbox, anything starting with `_`, and `[search] exclude`. Each result has `path:line`, lane, grade and the `UNVERIFIED` and `EXPIRED` flags; less trusted notes are flagged, never hidden. A query no section covers well enough (`min_coverage`) gets "not found".
 - `brain index [--rebuild]`: the index is derived data in `.brain/search-index.json` (git ignores `.brain/`); only notes whose size or time changed are read again, and search works from memory when the file cannot be written. On 1,000 synthetic notes (4,014 sections), a search takes about 95 ms and a full build about 0.5 s.

@@ -59,6 +59,22 @@ def _search(a):
     return ["search", "--agent", _s(a, "query")] + (["--max", _s(a, "max")] if _s(a, "max") else [])
 
 
+def _read(a):
+    if (err := _need(a, "path")):
+        return err
+    argv = ["read", _s(a, "path")]
+    for key, flag in (("from", "--from"), ("lines", "--lines")):
+        if _s(a, key):
+            argv += [flag, _s(a, key)]
+    return argv
+
+
+def _cite_check(a):
+    if (err := _need(a, "text")):
+        return err
+    return ["cite-check", "--text", str(a["text"])]
+
+
 def _remember(a):
     if not (_s(a, "owner_said") or _s(a, "summary")):
         return "ERROR: give 'owner_said' (the owner's message, verbatim) and/or 'summary' (one line on what was done)."
@@ -119,6 +135,18 @@ TOOLS = [
      "schema": {"type": "object", "properties": {"query": {"type": "string"},
                                                  "max": {"type": "string", "description": "default 8"}},
                 "required": ["query"]}},
+    {"name": "brain_read", "min_mode": "readonly", "argv": _read, "data": True,
+     "description": ("Read one note by its path relative to the vault (as brain_search gives it), with numbered lines "
+                     "to cite as path:line. Paths outside the vault, other file types and links leading out are refused."),
+     "schema": {"type": "object", "properties": {"path": {"type": "string"},
+                                                 "from": {"type": "string", "description": "first line, default 1"},
+                                                 "lines": {"type": "string", "description": "default and cap 200"}},
+                "required": ["path"]}},
+    {"name": "brain_cite_check", "min_mode": "readonly", "argv": _cite_check,
+     "description": ("Before giving an answer built on the owner's notes, check its citations: each path:line must "
+                     "exist, and a quote written after it (path:line \"words\") must be there. Fix or drop what fails."),
+     "schema": {"type": "object", "properties": {"text": {"type": "string", "description": "your answer, with citations"}},
+                "required": ["text"]}},
     {"name": "brain_remember", "min_mode": "safe", "argv": _remember,
      "description": ("After answering, fold the conversation into the knowledge graph: the owner's message verbatim "
                      "and a one-line summary of what was done. Never pass your own claims as the owner's words; facts "

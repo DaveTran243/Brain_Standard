@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import assistant, checks, drive, gates, intake, kg, kgcore, metrics, migrate, notes, search
+from . import assistant, checks, drive, gates, intake, kg, kgcore, metrics, migrate, notes, reading, search
 from .config import Brain, BrainError, defaults, find_root, open_brain
 
 
@@ -210,7 +210,55 @@ def cmd_index(brain: Brain, a) -> int:
     return 0
 
 
+def cmd_read(brain: Brain, a) -> int:
+    r = reading.read_note(brain, a.path, a.start, a.lines)
+    if a.json:
+        print(json.dumps(r, ensure_ascii=False, indent=1))
+        return 0
+    print(f"{r['path']} · lines {r['from']}–{r['to']} of {r['total']}")
+    print("\n".join(r["lines"]))
+    if r["to"] < r["total"]:
+        print(f"… more: brain read \"{r['path']}\" --from {r['to'] + 1}")
+    return 0
+
+
+def cmd_cite_check(brain: Brain, a) -> int:
+    if a.text is not None:
+        text = a.text
+    elif a.file and a.file != "-":
+        text = Path(a.file).read_text(encoding="utf-8")
+    else:
+        text = sys.stdin.read()
+    r = reading.cite_check(brain, text)
+    if a.json:
+        print(json.dumps(r, ensure_ascii=False, indent=1))
+    elif not r["citations"]:
+        print("No citations found. Cite notes as path:line, e.g. 30-Knowledge/permanent/note.md:12 \"the words\".")
+    else:
+        for row in r["rows"]:
+            mark = "ok  " if row["status"] == "ok" else row["status"].upper()
+            where = f"{row['path']}:{row['line']}" + (f"-{row['end']}" if row["end"] != row["line"] else "")
+            print(f"  {mark} {where}" + (f" · {row['why']}" if row["why"] else ""))
+        print(f"{r['ok']} of {r['citations']} citations check out.")
+    agent = os.environ.get("BRAIN_ACTOR", "").lower() == "agent"
+    return 1 if r["broken"] and not agent and not a.json else 0
+
+
 def cmd_eval(brain: Brain, a) -> int:
+    if a.compare:
+        rows = search.compare(brain, a.k)
+        if a.json:
+            print(json.dumps(rows, ensure_ascii=False, indent=1))
+            return 0
+        if not search.questions(brain):
+            print(f"No questions yet in vault/{search.settings(brain)['questions']}; the owner writes them.")
+            return 1
+        base = rows[0]["recall"]
+        for r in rows:
+            keep = "" if r["variant"] == "bm25" else ("  keep" if (r["recall"] or 0) >= (base or 0) else "  drop: lower recall")
+            print(f"  {r['variant']:<14} recall {r['recall']:.3f} · MRR {r['mrr']:.3f}  {r['settings'] or ''}{keep}")
+        print("Turn a signal on in brain.toml ([search] recency_weight, graph_weight) only where it says keep.")
+        return 0
     r = search.evaluate(brain, a.k)
     if a.json:
         print(json.dumps(r, ensure_ascii=False, indent=1))
@@ -367,7 +415,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("eval", help="measure search on the owner's questions: recall@k and MRR")
     p.add_argument("--k", type=int); p.add_argument("--json", action="store_true")
+    p.add_argument("--compare", action="store_true", help="the same questions with and without recency and links")
     p.set_defaults(fn=cmd_eval)
+
+    p = sub.add_parser("read", help="read a note by its vault path, with numbered lines (never outside the vault)")
+    p.add_argument("path"); p.add_argument("--from", dest="start", type=int, default=1)
+    p.add_argument("--lines", type=int, help="at most this many lines (default and cap: [read] max_lines)")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_read)
+
+    p = sub.add_parser("cite-check", help="check every path:line citation in a text: the note, the line, the quote")
+    p.add_argument("file", nargs="?", help="a file with the text, or - for stdin (the default)")
+    p.add_argument("--text", help="the text itself"); p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_cite_check)
 
     p = sub.add_parser("dashboard", help="a read-only page on 127.0.0.1 that shows how the brain is running")
     p.add_argument("--port", type=int, help=f"default [dashboard] port, {d['dashboard']['port']}")

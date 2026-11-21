@@ -11,6 +11,8 @@ python integrations/mcp/brain_mcp.py --read-only              # only the tools a
 | Tool | Mode | What it does |
 | --- | --- | --- |
 | `brain_recall` | readonly | what the knowledge graph holds about a question, with source and trust per fact |
+| `brain_read` | readonly | one note by its vault path, numbered lines; paths outside the vault are refused (see [docs/mcp-security.md](../../docs/mcp-security.md)) |
+| `brain_cite_check` | readonly | check the `path:line` citations, and their quotes, in an answer |
 | `brain_search` | readonly | the owner's notes by keyword (BM25, with or without diacritics): at most 8 sections with path:line, lane, grade, UNVERIFIED and EXPIRED, or "Not found" |
 | `brain_remember` | safe | fold a turn into the graph: the owner's message verbatim + a one-line summary |
 | `brain_capture` | safe | the owner's words, verbatim, to the Inbox |

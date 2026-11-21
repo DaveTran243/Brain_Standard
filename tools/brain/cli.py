@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import assistant, checks, drive, gates, intake, kg, kgcore, metrics, migrate, notes, reading, search
+from . import assistant, checks, drive, gates, intake, kg, kgcore, metrics, migrate, notes, reading, scripts, search
 from .config import Brain, BrainError, defaults, find_root, open_brain
 
 
@@ -170,6 +170,88 @@ def cmd_dashboard(brain: Brain, a) -> int:
     return 0
 
 
+def _actor_by(a) -> str:
+    return a.by or ("agent" if os.environ.get("BRAIN_ACTOR", "").lower() == "agent" else "owner")
+
+
+def cmd_script(brain: Brain, a) -> int:
+    """The script library (ADR-21): every AI-generated script kept on disk, by topic, one file per OS."""
+    if not scripts.settings(brain)["enabled"]:
+        raise BrainError("The script library is off: set [scripts] enabled = true in brain.toml.", code=1)
+    if a.sub in ("add", "save"):
+        if a.sub == "save" or a.file == "-":
+            data = sys.stdin.buffer.read()
+            source = a.filename or (f"{a.name or 'script'}.{a.os}.{a.ext.lstrip('.')}" if a.os and a.ext
+                                     else f"{a.name or 'script'}.{(a.ext or 'sh').lstrip('.')}")
+        else:
+            f = Path(a.file)
+            if not f.is_file():
+                raise BrainError(f"No file {a.file}.")
+            data, source = f.read_bytes(), f.name
+        if not data.strip():
+            raise BrainError("The script is empty.")
+        origin = a.origin if a.origin is not None else (
+            str(Path(a.file).resolve()) if a.sub == "add" and a.file != "-" else "")
+        r = scripts.add(brain, data, source, name=a.name or "", os_name=a.os or "", topic=a.topic or "",
+                        purpose=a.purpose or "", prompt=a.prompt or "", by=_actor_by(a),
+                        origin="" if origin == "-" else origin, replace=a.replace)
+        if a.json:
+            print(json.dumps(r, ensure_ascii=False, indent=1))
+            return 0
+        how = "" if r["classified"] < 0 else (" (topic chosen by keywords)" if r["classified"] else
+                                               " (no topic matched: move it later with brain script move)")
+        verb = {"add": "Saved", "replace": "Replaced", "same": "Already saved"}[r["action"]]
+        print(f"{verb} {r['path']} · {r['os']} · topic {r['topic']}{how}. Manifest: {r['manifest']}")
+        if r["missing"]:
+            print(f"Still missing: {', '.join(r['missing'])}. Write those variants with brain script add, or set "
+                  f"not_applicable in the manifest with a reason.")
+        return 0
+    if a.sub == "list":
+        rows = scripts.listing(brain, a.topic or "", a.os or "", " ".join(a.query or []))
+        if a.json:
+            print(json.dumps(rows, ensure_ascii=False, indent=1))
+            return 0
+        if not rows:
+            print("No scripts match." if (a.topic or a.os or a.query) else
+                  "The script library is empty. Save one with brain script add <file>.")
+            return 0
+        oss = scripts.os_names(brain)
+        any_os = scripts.settings(brain)["any_os"]
+        print(f"{'topic':<22} {'script':<28} " + " ".join(f"{o:<7}" for o in oss) + " purpose")
+        for r in rows:
+            cells = []
+            for o in oss:
+                cells.append("yes" if o in r["os"] or any_os in r["os"] else ("n/a" if o in r["not_applicable"] else "—"))
+            print(f"{r['topic']:<22} {r['name']:<28} " + " ".join(f"{c:<7}" for c in cells) + f" {r['purpose'][:60]}")
+        return 0
+    if a.sub == "topics":
+        lib = scripts.library(brain)
+        for t in scripts.topics(brain).values():
+            n = sum(1 for f in (lib / t.folder_name).glob("*.md")) if (lib / t.folder_name).is_dir() else 0
+            print(f"{t.folder_name:<24} {n:>3} scripts   {', '.join(t.keywords[:10])}")
+        return 0
+    if a.sub == "sync":
+        done = scripts.sync(brain, _actor_by(a))
+        print("\n".join(done) if done else "Every script is recorded and every manifest is current.")
+        return 0
+    if a.sub == "move":
+        print(scripts.move(brain, a.name, a.topic))
+        return 0
+    if a.sub == "graph":
+        docs = scripts.documents(brain)
+        if a.json:
+            print(json.dumps([{k: v for k, v in d.items() if k != "path"} for d in docs], ensure_ascii=False, indent=1))
+            return 0
+        for d in docs:
+            print(d["title"])
+            for p, o in d["relations"]:
+                print(f"  → {p} → {o}")
+        if not docs:
+            print("The script library is empty.")
+        return 0
+    return 2
+
+
 def cmd_where(brain: Brain, a) -> int:
     if not drive.enabled(brain):
         raise BrainError("The platform map is off: set [drive] enabled = true and root in brain.toml.", code=1)
@@ -307,6 +389,18 @@ def cmd_hook(brain: Brain, a) -> int:
                 ctx = drive.context(brain, text)
                 if ctx:
                     print(ctx)
+        elif a.event == "script":
+            # PostToolUse after Write/Edit: a script an agent wrote is filed into the library (ADR-21).
+            ti = event.get("tool_input") or {}
+            target = str(ti.get("file_path") or ti.get("path") or "").strip()
+            if target and scripts.settings(brain)["enabled"]:
+                p = Path(target)
+                if not p.is_absolute():
+                    p = Path(str(event.get("cwd") or brain.root)) / p
+                msg = scripts.capture(brain, p, by=str(event.get("agent") or "claude-code"))
+                if msg:
+                    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse",
+                                                             "additionalContext": f"[Brain Scripts] {msg}"}}))
         elif a.event == "stop":
             f = _hook_state(brain, session)
             if cfg["enabled"] and cfg["update_on_stop"] and f.is_file():
@@ -436,8 +530,37 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="print the data once (schema 1) and exit")
     p.set_defaults(fn=cmd_dashboard)
 
+    p = sub.add_parser("script", help="the script library: every AI-generated script, by topic, one file per OS")
+    scs = p.add_subparsers(dest="sub", required=True)
+    p.set_defaults(fn=cmd_script)
+    oses = "/".join([*d["scripts"]["os"].keys(), d["scripts"]["any_os"]])
+    for verb, helptext in (("add", "file a script into the library (copy it, write its manifest, record its hash)"),
+                           ("save", "the same, with the script on stdin (for agents)")):
+        q = scs.add_parser(verb, help=helptext)
+        if verb == "add":
+            q.add_argument("file", help="the script, or - for stdin")
+        q.add_argument("--name", help="short name, e.g. check-port (default: from the file name)")
+        q.add_argument("--os", help=f"{oses} (default: from the extension and the commands used)")
+        q.add_argument("--topic", help="52.02, 02 or network (default: chosen by keywords)")
+        q.add_argument("--purpose", help="one line: what it does (default: its leading comment)")
+        q.add_argument("--prompt", help="the owner's request that produced it, verbatim")
+        q.add_argument("--by", help="who generated it: claude-code, chatgpt, owner… (default: agent or owner)")
+        q.add_argument("--ext", help="with stdin: the extension, e.g. sh or ps1")
+        q.add_argument("--filename", help="with stdin: the original file name")
+        q.add_argument("--replace", action="store_true", help="save over a variant that has other content")
+        q.add_argument("--origin", help="where the script was first written (default: the file given; - for none)")
+        q.add_argument("--json", action="store_true")
+    q = scs.add_parser("list", help="scripts with their OS coverage")
+    q.add_argument("query", nargs="*"); q.add_argument("--topic"); q.add_argument("--os"); q.add_argument("--json", action="store_true")
+    scs.add_parser("topics", help="topics, their AC.ID and keywords")
+    q = scs.add_parser("sync", help="record files changed by hand and refresh every manifest")
+    q.add_argument("--by")
+    q = scs.add_parser("move", help="move a script to another topic"); q.add_argument("name"); q.add_argument("topic")
+    q = scs.add_parser("graph", help="the code graph of the library: topic, OS, commands called, imports")
+    q.add_argument("--json", action="store_true")
+
     p = sub.add_parser("hook", help="turn hooks for agent platforms (Claude Code): read the graph, remember the turn")
-    p.add_argument("event", choices=["prompt", "stop"])
+    p.add_argument("event", choices=["prompt", "stop", "script"])
     p.set_defaults(fn=cmd_hook)
 
     p = sub.add_parser("migrate", help="convert a 3.0 or 4.0 brain to the current names")

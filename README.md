@@ -4,6 +4,8 @@ A second brain you own: Markdown files in a git repository, a set of rules so ev
 
 **Version 4.4.0** · 15/11/2026 · [Change log](CHANGELOG.md) · [Architecture (DAB 4.2)](docs/architecture.md) · [Glossary](docs/glossary.md) · [version 2.2.1](archive/2.2.1/README.md)
 
+**Coming next (unreleased):** the **script library**: every script an AI generates is saved on your disk, filed by topic as Johnny Decimal `52.xx`, and written once per operating system (Linux, Red Hat, macOS, Windows), with a manifest and a sha256 log; a Claude Code hook and the MCP tool `brain_script_save` capture them, `brain check` enforces it, and the scripts enter the knowledge graph as a small code graph ([docs/script-library.md](docs/script-library.md), research: [docs/research/code-knowledge-graphs.md](docs/research/code-knowledge-graphs.md)).
+
 **New in 4.4:** the **dashboard**: `brain dashboard` serves one read-only page on `127.0.0.1` with the brain's four golden signals (traffic, latency, errors, saturation), the rules broken with the command that fixes each, projects, activity and knowledge ([docs/dashboard.md](docs/dashboard.md)). It never writes; no migration.
 
 **New in 4.3:** the **platform root**: a brain may name one disk or folder that holds its whole platform and keep a map of every folder and file there, which agents read before they open anything (`brain where`) and update after they write ([docs/platform-map.md](docs/platform-map.md)). Off by default; no migration.
@@ -99,6 +101,8 @@ The three lanes exchange items through 7 links, I1–I7, described in [docs/flow
 | `docs/execution-layer.md` | The execution layer: boards, milestones, owners |
 | `docs/architecture.md` | DAB 4.2, the system architecture in arc42 form: modules, runtime, the assistant loop, the knowledge graph, decisions, risks, the retrieval layer design |
 | `docs/knowledge-graph.md` | The knowledge graph: read before a turn, remembered after, trust on every fact |
+| `docs/script-library.md` | The script library: every AI-generated script kept by topic, one file per OS, rules S1–S4 and SC codes |
+| `docs/research/code-knowledge-graphs.md` | Survey: knowledge graphs for code (SCIP, Kythe, Glean, CPG, CodeQL, GraphGen4Code, CodexGraph, RepoGraph, LocAgent) compared with the brain's script graph |
 | `docs/dashboard.md` | `brain dashboard`: a read-only page on 127.0.0.1 with the brain's four golden signals, the rules broken with the command that fixes each, projects, activity, knowledge |
 | `docs/platform-map.md` | The platform root and its map: where everything is, read before the disk, updated after every write (off by default) |
 | `docs/integrations.md` | Agent and automation platforms and how each reaches the brain |
@@ -159,6 +163,7 @@ The image runs as an unprivileged user (uid 10001), not root. On Linux pass `--u
 | `brain eval [--k n] [--compare] [--json]` | Measure search on your own questions in `vault/_eval/questions.md`: recall@k and MRR. `--compare` also measures the optional recency and link signals. |
 | `brain read <path> [--from n] [--lines n]` | Read one note with numbered lines, to cite as `path:line`. Never outside the vault. |
 | `brain cite-check [file] [--text "…"]` | Check every `path:line` citation in an answer: the note, the line, and any quote after it. |
+| `brain script add <file> \| save \| list \| topics \| sync \| move \| graph` | The script library: save a script by topic and OS, see OS coverage, record hand edits ([docs/script-library.md](docs/script-library.md)). |
 | `brain hook prompt\|stop` | Turn hooks for Claude Code: read the graph before, remember after. |
 | `bin/update-brain.ps1` · `bin/update_brain.py` | Update your brain from the standard, run its tests on your machine (rolled back if they fail), check, index, connect Claude Desktop and Claude Code, commit; `-RegisterTask` runs it weekly. See docs/getting-started.md, section 11. |
 | `brain migrate [--dry-run]` | Convert a 3.0 brain to the 4.0 names, and `@javis` labels to the 4.2 label, once. |
@@ -189,4 +194,5 @@ label = "@friday"
 - Every turn of work ends with `brain turn`.
 - The assistant, on any platform, only follows up on tasks you assigned with `@agent:<level>`, never above that level, and sends the result back to the Inbox. It never assigns work to itself.
 - Agents read the knowledge graph before answering and fold each turn into it; an agent's own answers never become facts in it.
+- Every script an AI generates is saved in the script library, by topic, with one variant per operating system.
 - There is no limit on projects or next actions. The Weekly Review measures, so you see for yourself when you are carrying too much.

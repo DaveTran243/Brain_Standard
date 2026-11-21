@@ -64,6 +64,18 @@ Brain_Standard 4.0 uses English for every name in the system: commands, configur
 | Design suggestion | A proposed change to the design, vetted with V1–V8 before the owner decides ([design-suggestions.md](design-suggestions.md)) |
 | KG-01 | Warning: the knowledge graph is missing or lags the vault |
 
+## Script library (ADR-21)
+
+| Term | Meaning |
+| --- | --- |
+| Script library | Category 52 Scripts in the files and code lane: every AI-generated script, by topic, one file per OS ([script-library.md](script-library.md)) |
+| Topic | One Johnny Decimal ID in category 52, such as `52.02 network`; `52.99 unsorted` is the fallback |
+| Variant | One file of a script for one operating system: `<name>.<os>.<ext>`; `any` covers every OS |
+| OS key | `linux` (Debian, Ubuntu, generic), `rhel` (Red Hat family), `macos`, `windows` (PowerShell); more in `[scripts.os]` |
+| Manifest | `<name>.md` beside the variants: purpose, generated_by, generated_on, prompt, not_applicable, tested, the Variants table |
+| Script log | `vault/_log/scripts.md`: every variant added or changed, with its sha256 |
+| Code graph | The scripts as knowledge-graph documents of kind `script`: topic, OS, commands called, imports ([research](research/code-knowledge-graphs.md)) |
+
 ## Commands
 
 | Command | Does | Up to 3.0 |
@@ -77,6 +89,7 @@ Brain_Standard 4.0 uses English for every name in the system: commands, configur
 | `brain assigned [--level L]` | List open assigned tasks | `brain javis [--muc M]` |
 | `brain report <n> "result" [--level L]` | Mark an assigned task done and send the result to the Inbox | `brain xong <số> "…" [--muc M]` |
 | `brain migrate [--dry-run]` | Convert a 3.0 brain to 4.0 names | (new) |
+| `brain script add\|save\|list\|topics\|sync\|move\|graph` | The script library | (new) |
 
 Turn types: `task` (produced a task), `idea` (produced an idea or note), `file` (produced a file or code), `drop` (nothing kept). Up to 3.0: `viec`, `y`, `file`, `xoa`.
 
@@ -156,6 +169,7 @@ Capture channels: `hand` (typed or written, was `tay`), `voice` (was `noi`), `te
 | AC-01 · AC-02 · AC-03 | HD-01 · HD-02 · HD-03 | Project status invalid · active project missing outcome or criteria · stopped project without a reason |
 | EX-01 · EX-02 · EX-03 | TH-01 · TH-02 · TH-03 | Milestone without a board · active project without any task · project past its due date |
 | AS-01 · AS-02 | JV-01 · JV-02 | Assignment label without a valid level · stale assignment |
+| SC-01 … SC-08 | (new) | Script library: no manifest · bad name or nesting · missing OS variant · topic without JDex line · not recorded · no purpose or shebang · command its OS lacks · still unsorted |
 
 ## Files and folders
 

@@ -4,6 +4,15 @@ Versions are x.y.z: x goes up when the main flow changes shape or a migration is
 
 ## Unreleased
 
+### Added · the script library (ADR-21)
+- `tools/brain/scripts.py` and `brain script add | save | list | topics | sync | move | graph`: every script an AI generates is saved in `vault/Code/52 Scripts/` (`[paths] scripts`), one topic per Johnny Decimal ID (its JDex line written first), one file per operating system `<name>.<os>.<ext>` for `linux`, `rhel`, `macos` and `windows` (or `any`), and a manifest `<name>.md` with purpose, generated_by, generated_on, the owner's request, `not_applicable` and the Variants table. Topic from `--topic` or keywords (`52.99 unsorted` otherwise); OS from the extension and the commands used.
+- `vault/_log/scripts.md`: every variant added, replaced or changed, with its sha256.
+- `brain check` rules SC-01 to SC-08: no manifest, bad name or nesting, a required OS without a variant or reason, a topic without its JDex line, a file changed without a record, no purpose or shebang, a command its OS lacks by default (`[scripts.os.<os>] avoid`), still unsorted.
+- `brain hook script`: a Claude Code `PostToolUse` hook that files every script the agent writes, anywhere, and tells it which variants are still missing.
+- MCP tools `brain_script_save` (safe) and `brain_scripts` (readonly); the MCP instructions, the Javis manifest and `vault/AGENTS.md` (section "Scripts") ask every agent to save each script, one variant per OS.
+- The code graph: `kg` reads every script as a document of kind `script` (in topic, purpose, runs on, calls on <os>, imports, not for), by rules, with trust `system`.
+- `[scripts]` in `defaults.toml` (topics with keywords, OS tables with extensions, `avoid` and `detect` lists); `docs/script-library.md`; `docs/research/code-knowledge-graphs.md`, a survey of knowledge graphs for code compared with the brain's; `tests/test_scripts.py`.
+
 ### Added · updating a brain automatically
 - `bin/update_brain.py` (standard library) and its PowerShell wrapper `bin/update-brain.ps1`: one command updates a personal brain from the standard.
   - It refuses to start while the paths it replaces hold uncommitted or untracked work.

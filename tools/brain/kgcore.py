@@ -138,7 +138,7 @@ def rule_triples(doc: dict, cfg: dict) -> list[dict]:
             out.append({**base, "s": s2, "p": p, "o": o2, "st": st, "ot": ot, "method": method,
                         "quote": _short(quote, 200)})
 
-    kind_type = {"project": "project", "area": "area", "next": "task", "moc": "map"}.get(doc.get("kind"), "note")
+    kind_type = {"project": "project", "area": "area", "next": "task", "moc": "map", "script": "script"}.get(doc.get("kind"), "note")
     for target in doc.get("links", []):
         add(title, "links to", target, "rule:link", kind_type, "note")
     for tag in doc.get("tags", []):

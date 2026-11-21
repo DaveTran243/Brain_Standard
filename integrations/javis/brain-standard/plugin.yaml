@@ -23,5 +23,7 @@ tools:
   - brain_report
   - brain_where
   - brain_map_update
+  - brain_script_save
+  - brain_scripts
 hooks:
   - pre_tool_call

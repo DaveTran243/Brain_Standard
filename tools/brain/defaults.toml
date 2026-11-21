@@ -31,6 +31,8 @@ kg_state = "_kg/state.json"
 drive_graph = "_kg/drive.jsonl"     # the platform map ([drive]); machine-local, git ignores it
 drive_state = "_kg/drive-state.json"
 hook_state = "_log/.hooks"         # what the prompt hook hands to the Stop hook, per session
+scripts = "Code/52 Scripts"         # the script library ([scripts]); an absolute path puts it outside the vault
+script_log = "_log/scripts.md"      # every script file added or changed, with its sha256; brain commands only
 
 [files]
 template_prefix = "_"               # files and folders starting with this are templates or logs: skipped by checks
@@ -164,12 +166,91 @@ weekly_max_gap_days = 8             # days since the newest Weekly Review before
 name = ""                           # the label in the brain picker; empty = "main"
 brains = []                         # other brain folders to offer in the picker, relative to this one
 
+[scripts]
+# The script library (tools/brain/scripts.py, docs/script-library.md, ADR-21). Every script an AI generates is saved
+# on the owner's disk, in [paths] scripts, filed by topic (one Johnny Decimal AC.ID per topic, its JDex line first)
+# and kept as one file per operating system: <name>.<os>.<ext>, plus a manifest <name>.md.
+enabled = true
+category = "52"
+category_name = "Scripts"
+required_os = ["linux", "rhel", "macos", "windows"]   # SC-03: a variant for each, or not_applicable with a reason
+any_os = "any"                      # <name>.any.<ext> runs everywhere (Python, for instance) and covers every OS
+fallback_topic = "99"               # where a script whose topic could not be told goes; SC-08 until it is moved
+default_by = "agent"                # generated_by when the caller does not say
+capture_on_write = true             # brain hook script: a script an AI writes anywhere is filed into the library
+capture_extensions = [".sh", ".bash", ".zsh", ".command", ".ps1", ".psm1", ".bat", ".cmd"]
+capture_skip = [".git", "node_modules", ".venv", "venv", "__pycache__", "dist", "build"]
+capture_skip_globs = []             # e.g. ["*/vendor/*"]
+
+# One table per operating system, in priority order. extensions: what a variant may be; avoid: commands that OS does
+# not have by default (SC-07); detect: commands that tell a script was written for it (brain script add without --os).
+[scripts.os.linux]
+label = "Linux (Debian, Ubuntu and generic)"
+extensions = [".sh", ".bash", ".py"]
+avoid = ["dnf", "yum", "rpm", "firewall-cmd", "brew", "launchctl", "pbcopy"]
+
+[scripts.os.rhel]
+label = "Red Hat family (RHEL, Rocky, AlmaLinux, CentOS Stream, Fedora)"
+extensions = [".sh", ".bash", ".py"]
+avoid = ["apt", "apt-get", "dpkg", "ufw", "brew", "launchctl", "pbcopy"]
+
+[scripts.os.macos]
+label = "macOS (zsh, bash 3.2, BSD tools)"
+extensions = [".sh", ".zsh", ".bash", ".command", ".py"]
+avoid = ["apt", "apt-get", "dnf", "yum", "systemctl", "journalctl", "free", "ss", "ufw", "firewall-cmd", "ip"]
+
+[scripts.os.windows]
+label = "Windows (PowerShell 5.1 and 7)"
+extensions = [".ps1", ".psm1", ".bat", ".cmd", ".py"]
+avoid = ["sudo", "apt", "apt-get", "dnf", "yum", "brew", "chmod", "systemctl", "grep", "sed", "awk"]
+
+[scripts.detect]
+rhel = ["dnf", "yum", "rpm", "firewall-cmd", "subscription-manager", "semanage", "restorecon", "getenforce"]
+macos = ["brew", "launchctl", "osascript", "diskutil", "pbcopy", "pbpaste", "scutil", "networksetup", "sw_vers"]
+linux = ["apt", "apt-get", "dpkg", "ufw", "systemctl", "journalctl"]
+
+# Topics: one AC.ID each (52.01 …). The keywords classify a script that comes without --topic. Add your own topics
+# in brain.toml; a folder "52.NN name" the owner creates is a topic too.
+[scripts.topics."01"]
+name = "system"
+keywords = ["system", "service", "services", "systemctl", "user", "users", "group", "cron", "boot", "kernel", "update", "upgrade", "reboot", "hostname", "timezone", "process", "he thong"]
+[scripts.topics."02"]
+name = "network"
+keywords = ["network", "port", "ports", "dns", "ping", "ip", "ssh", "proxy", "vpn", "firewall", "curl", "http", "tcp", "udp", "route", "wifi", "mang"]
+[scripts.topics."03"]
+name = "storage-backup"
+keywords = ["disk", "backup", "restore", "rsync", "mount", "partition", "snapshot", "archive", "tar", "zip", "storage", "volume", "sao luu"]
+[scripts.topics."04"]
+name = "security"
+keywords = ["security", "ssl", "tls", "cert", "certificate", "audit", "permission", "permissions", "harden", "hardening", "password", "selinux", "scan", "gpg", "key", "keys", "bao mat"]
+[scripts.topics."05"]
+name = "dev-tools"
+keywords = ["developer", "brew", "homebrew", "git", "build", "compile", "python", "node", "npm", "pip", "java", "go", "rust", "sdk", "ide", "lint", "test", "venv", "dev"]
+[scripts.topics."06"]
+name = "containers-cloud"
+keywords = ["docker", "podman", "container", "containers", "kubernetes", "k8s", "kubectl", "helm", "aws", "azure", "gcloud", "gcp", "terraform", "cloud", "vm"]
+[scripts.topics."07"]
+name = "monitoring-logs"
+keywords = ["log", "logs", "monitor", "monitoring", "cpu", "memory", "ram", "health", "metrics", "alert", "uptime", "journal", "nhat ky"]
+[scripts.topics."08"]
+name = "files-data"
+keywords = ["file", "files", "rename", "csv", "json", "convert", "image", "images", "video", "pdf", "excel", "duplicate", "folder", "clean", "tep"]
+[scripts.topics."09"]
+name = "automation"
+keywords = ["automation", "schedule", "notify", "notification", "telegram", "email", "webhook", "bot", "task", "workflow", "tu dong"]
+[scripts.topics."10"]
+name = "database"
+keywords = ["database", "db", "mysql", "mariadb", "postgres", "postgresql", "redis", "mongo", "mongodb", "sqlite", "sql", "dump"]
+[scripts.topics."99"]
+name = "unsorted"
+keywords = []
+
 [kg]
 # The knowledge graph (tools/brain/kg.py, docs/knowledge-graph.md): read before every conversation, updated after it.
 enabled = true
 read_on_prompt = true          # brain hook prompt adds what the graph holds about the prompt
 update_on_stop = true          # brain hook stop folds the turn into the graph
-kinds = ["permanent", "literature", "fleeting", "project", "area", "moc", "next"]   # the Inbox is never read
+kinds = ["permanent", "literature", "fleeting", "project", "area", "moc", "next", "script"]   # the Inbox is never read
 max_facts = 15
 hops = 2
 max_seeds = 6

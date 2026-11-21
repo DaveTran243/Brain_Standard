@@ -4,6 +4,18 @@ Versions are x.y.z: x goes up when the main flow changes shape or a migration is
 
 ## Unreleased
 
+### Added · updating a brain automatically
+- `bin/update_brain.py` (standard library) and its PowerShell wrapper `bin/update-brain.ps1`: one command updates a personal brain from the standard.
+  - It refuses to start while the paths it replaces hold uncommitted or untracked work.
+  - It fetches the `standard` remote and replaces only `docs`, `tools`, `bin`, `tests`, `integrations` and `CHANGELOG.md`, never `vault/` or `brain.toml`. It adds `vault/_eval/questions.md` when missing and `.brain/` to `.gitignore`. `vault/AGENTS.md` changes only with `--update-agents`.
+  - It verifies that the CLI prints the new version. With `--tests` it runs the standard's tests on this machine, in a temporary copy of the standard, and puts every replaced path back if anything fails, including files the update added.
+  - It then runs `brain check`, `brain index` and `brain eval`.
+  - `--mcp claude-desktop,claude-code` registers the MCP server read-only. The Claude Desktop config is merged, other servers are kept, and the old file is saved as `.bak`. Claude Code uses `claude mcp add -s user`.
+  - `--commit` makes one commit; `--dry-run` changes nothing.
+  - `-RegisterTask` schedules a weekly run in Windows Task Scheduler, logging to `.brain/update.log`.
+- CI on Windows parses `update-brain.ps1` and runs it on an older brain: a dry run that changes nothing, then an update that commits.
+- `tests/test_update.py`: an update on a 4.3.0 brain, notes and settings untouched, commit, already current, dry run, refusal over uncommitted work, full rollback, tests run outside the brain, Claude Desktop config merge.
+
 ### Added · search round, milestone M2 (BR-05, BR-06, BR-09 to BR-11)
 - `brain read <path>` and MCP `brain_read` (BR-06): one note with numbered lines, framed as `<brain-data>`. The path is checked in code (`tools/brain/reading.py`): only `.md` notes inside the vault; absolute paths, drive letters, `..` and links that lead out are refused with exit code 4 (BR-05, metric M5 = 0 on 13 escape cases).
 - `brain cite-check` and MCP `brain_cite_check` (BR-09, metric M4): every `path:line` or `path:a-b` in a text, bare or in backticks, is checked: the note exists, the line exists, and a quote written after it is within `[read] quote_window` lines (folded, so a quote without diacritics counts). Statuses: ok, missing, refused, bad_line, quote_not_found.

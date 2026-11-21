@@ -274,7 +274,27 @@ Thresholds such as 7 days or 7 notes for a MOC are only starting points. Adjust 
 
 ## 11. Updating to a new version
 
-See [CHANGELOG.md](../CHANGELOG.md) for what each version changes. To pull the new `docs/`, `tools/` and `bin/` without touching your notes:
+See [CHANGELOG.md](../CHANGELOG.md) for what each version changes.
+
+**The automatic way.** `bin/update_brain.py` does every step below in one run:
+
+1. It refuses to start while the paths it replaces hold uncommitted work.
+2. It replaces only the standard's paths, never `vault/` or `brain.toml`.
+3. It checks that the CLI prints the new version and, with `--tests`, runs the standard's tests on your machine. If they fail, it rolls everything back.
+4. It runs `brain check`, `brain index` and `brain eval`.
+5. It can register the MCP server with Claude Desktop and Claude Code, and commit.
+
+On Windows, from your brain's folder:
+
+```powershell
+.\bin\update-brain.ps1 -DryRun                                              # see the plan, change nothing
+.\bin\update-brain.ps1 -Tests -Commit -Mcp claude-desktop,claude-code       # update, test, commit, connect
+.\bin\update-brain.ps1 -RegisterTask -Day Sunday -At 20:00                  # every Sunday, log in .brain\update.log
+```
+
+The first time, when your brain does not have the script yet, run it from a clone of the standard: `python D:\path\to\Brain_Standard\bin\update_brain.py --brain D:\path\to\your-brain --tests`. On macOS and Linux it is the same Python script: `python3 bin/update_brain.py --tests --commit`. MCP servers are registered read-only unless you pass `-McpWrite` (see [mcp-security.md](mcp-security.md)).
+
+**By hand.** To pull the new `docs/`, `tools/` and `bin/` without touching your notes:
 
 ```sh
 git remote add standard https://github.com/DaveTran243/Brain_Standard.git   # first time only

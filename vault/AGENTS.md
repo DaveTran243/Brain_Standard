@@ -22,6 +22,16 @@ This repository is a brain built on Brain_Standard 4.2. These rules are for ever
   - When done: `brain report <n> "what was done, where the result is"`. The result goes back to the Inbox for the owner to clarify.
 - Remember the turn: `brain kg remember --prompt "<the owner's message, verbatim>" --summary "<one line>"` (MCP tool `brain_remember`); with Claude Code the hooks in `integrations/claude-code/` do it. Never store your own claims as the owner's words.
 
+## Scripts (the script library, `docs/script-library.md`)
+
+Every script you generate (shell, PowerShell, batch, Python run as a tool) is kept in the owner's script library, on their disk:
+
+1. **Look first.** Before writing a script, check the library: `brain script list <words>` (MCP `brain_scripts`) or `brain kg ask`. Reuse or extend what is there.
+2. **Save every script.** `brain script add <file> --prompt "<the owner's request, verbatim>" --by <your platform>` (MCP `brain_script_save`). With Claude Code the `PostToolUse` hook files what you write with Write or Edit; a script written only inside a shell command is not seen, so save it yourself.
+3. **One file per operating system.** Write a variant for each of `linux` (Debian, Ubuntu), `rhel` (RHEL, Rocky, AlmaLinux, Fedora), `macos` and `windows` (PowerShell), named `<name>.<os>.<ext>` with the same name; or one `<name>.any.<ext>` that truly runs everywhere. When an OS does not apply, tell the owner why; the owner records it as `not_applicable` in the manifest.
+4. **Let the topic be filed.** Give `--topic` when you know it (`network`, `52.02`…); otherwise keywords decide, and `52.99 unsorted` waits for the Weekly Review. Never create a topic folder by hand: its JDex line comes first, and `brain script add` writes it.
+5. Never mark a variant `tested` for the owner; say what you ran, where, and what happened.
+
 ## Platform root (when `[drive]` is enabled in `brain.toml`)
 
 The owner may name one disk or folder as the brain's platform root (`[drive] root`): it holds the whole platform, its functions (the `brain` CLI, hooks, tools), its memory (the vault, the knowledge graph, the platform map, exports), its library and its archive. Then:

@@ -37,7 +37,8 @@ INSTRUCTIONS = ("A second brain (Brain_Standard). Before answering, call brain_r
                 "the brain already holds, and brain_search or brain_read to find the notes themselves (cite path:line; check with brain_cite_check). The owner's words go in verbatim through brain_capture; facts you looked up "
                 "go through brain_submit with a source record (gate G1). After answering, call brain_remember with the "
                 "owner's message and a one-line summary, and close the turn with brain_turn. Only the owner assigns "
-                "work: follow up only on tasks brain_assigned lists, never above their level.")
+                "work: follow up only on tasks brain_assigned lists, never above their level. Every script you generate is saved "
+                "with brain_script_save, one variant per OS (linux, rhel, macos, windows); look in brain_scripts first.")
 
 
 class Server:

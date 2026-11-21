@@ -6,6 +6,7 @@ Claude Code is the one platform whose turns the brain can hook, so here "read th
 | --- | --- | --- |
 | `UserPromptSubmit` | `bin/brain hook prompt` | puts what the knowledge graph holds about the prompt in Claude's context (`[Brain KG]` lines) |
 | `Stop` | `bin/brain hook stop` | folds the finished turn into the graph: notes changed, what the chat was about |
+| `PostToolUse` (`Write|Edit|MultiEdit`) | `bin/brain hook script` | files every script Claude writes into the script library, by topic and OS, and tells Claude which OS variants are still missing ([docs/script-library.md](../../docs/script-library.md)) |
 | `PreToolUse` (`Write|Edit|MultiEdit|NotebookEdit`) | `write_guard.py` | the shared write guard: no permanent notes, agent items, templates, logs or graph files written by hand, no assignment labels added |
 
 Add this to `.claude/settings.json` at the brain's root (on Windows use `bin\\brain.cmd` and `python`):
@@ -18,6 +19,12 @@ Add this to `.claude/settings.json` at the brain's root (on Windows use `bin\\br
     ],
     "Stop": [
       { "hooks": [ { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR/bin/brain\" hook stop" } ] }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [ { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR/bin/brain\" hook script" } ]
+      }
     ],
     "PreToolUse": [
       {

@@ -99,6 +99,9 @@ def documents(brain: Brain) -> dict[str, dict]:
             rel += [("context", s) for s in segs[1:] if s.startswith("@") and ":" not in s]
             docs.append({"id": f"next:{i + 1}", "kind": "next", "title": segs[0], "text": "", "links": [],
                          "tags": [], "relations": rel, "trust": "owner", "grade": ""})
+    if "script" in kinds:
+        from . import scripts
+        docs += scripts.documents(brain)      # the script library as a small code graph (ADR-21)
     return {d["id"]: d for d in docs}
 
 

@@ -107,6 +107,12 @@ def check(brain: Brain) -> tuple[list[str], list[str]]:
         elif assistant.is_stale(brain, a):
             warnings.append(f"AS-02 · next action line {a.line + 1}: assigned {(today - a.assigned).days} days ago "
                             "and still open")
+    # SC · the script library (ADR-21)
+    from . import scripts
+    sc_errors, sc_warnings = scripts.check(brain)
+    errors += sc_errors
+    warnings += sc_warnings
+
     # KG-01 · the knowledge graph is missing or lags the vault (hooks keep it current; hand edits do not)
     if brain.cfg["kg"]["enabled"]:
         from . import kg

@@ -109,7 +109,37 @@ def _where(a):
     return ["where", _s(a, "query")] + (["--max", _s(a, "max")] if _s(a, "max") else [])
 
 
+def _scripts(a):
+    argv = ["script", "list", *(_s(a, "query").split())]
+    for k in ("topic", "os"):
+        if _s(a, k):
+            argv += [f"--{k}", _s(a, k)]
+    return argv
+
+
+SCRIPT_FIELDS = ("name", "os", "topic", "purpose", "prompt", "by")
+
 TOOLS = [
+    # Safe: it writes a file into the script library (ADR-21). The script goes to a temporary folder outside the vault
+    # first; the only write to the brain is the CLI's own, which files it, writes its manifest and records its hash.
+    {"name": "brain_script_save", "min_mode": "safe", "argv": None,
+     "description": ("Save a script you generated into the owner's script library, every time you write one: one call "
+                     "per operating system variant. 'content' is the script; 'os' is linux, rhel, macos, windows or any "
+                     "(e.g. Python that runs everywhere); 'ext' is sh, ps1, py…; 'name' a short kebab-case name shared "
+                     "by all variants (e.g. check-port); 'purpose' one line; 'prompt' the owner's request verbatim; "
+                     "'topic' (network, 52.02…) may be left out to classify by keywords. Write a variant for each of "
+                     "linux, rhel, macos and windows, or tell the owner which OS does not apply and why."),
+     "schema": {"type": "object", "properties": {"content": {"type": "string"},
+                                                 **{k: {"type": "string"} for k in SCRIPT_FIELDS},
+                                                 "ext": {"type": "string", "description": "sh, ps1, py, zsh, bat…"},
+                                                 "origin": {"type": "string", "description": "where you also saved it"},
+                                                 "replace": {"type": "boolean"}},
+                "required": ["content", "name", "os", "ext"]}},
+    {"name": "brain_scripts", "min_mode": "readonly", "argv": _scripts, "data": True,
+     "description": ("Look in the owner's script library before writing a new script: scripts by words, topic or OS, "
+                     "with the operating systems each one covers. Reuse or extend what is there."),
+     "schema": {"type": "object", "properties": {"query": {"type": "string"}, "topic": {"type": "string"},
+                                                 "os": {"type": "string"}}}},
     {"name": "brain_where", "min_mode": "readonly", "argv": _where, "data": True,
      "description": ("Where something lives on the brain's platform root (the disk or folder that holds the whole brain "
                      "platform): read the platform map before opening or searching files. Returns paths with their "
@@ -259,6 +289,22 @@ def call(root: Path, name: str, args: dict | None = None, home: Path | None = No
             p = Path(tmp) / f"{slug}.md"
             p.write_text(text, encoding="utf-8", newline="\n")
             return run(root, ["submit", str(p)], home)
+    if name == "brain_script_save":
+        if (err := _need(args, "content", "name", "os", "ext")):
+            return err
+        ext = re.sub(r"[^A-Za-z0-9]", "", _s(args, "ext")) or "sh"
+        name_ = re.sub(r"[^a-z0-9-]+", "-", _s(args, "name").lower()).strip("-")[:60] or "script"
+        os_ = re.sub(r"[^a-z0-9]", "", _s(args, "os").lower())
+        argv = ["--origin", _s(args, "origin") or "-"]
+        for k in ("topic", "purpose", "prompt", "by"):
+            if _s(args, k):
+                argv += [f"--{k}", _s(args, k)]
+        if args.get("replace"):
+            argv.append("--replace")
+        with tempfile.TemporaryDirectory(prefix="brain-script-") as tmp:   # outside the vault
+            p = Path(tmp) / f"{name_}.{os_}.{ext}"
+            p.write_text(str(args.get("content") or ""), encoding="utf-8", newline="\n")
+            return run(root, ["script", "add", str(p), "--name", name_, "--os", os_, *argv], home)
     argv = tool["argv"](args)
     if isinstance(argv, str):
         return argv

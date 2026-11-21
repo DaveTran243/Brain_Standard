@@ -41,6 +41,37 @@ jobs:
           bin/brain --version
           bin/brain check
 
+      - name: bin\update-brain.ps1 updates an older brain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GIT_AUTHOR_NAME: ci
+          GIT_AUTHOR_EMAIL: ci@example.org
+          GIT_COMMITTER_NAME: ci
+          GIT_COMMITTER_EMAIL: ci@example.org
+        run: |
+          $errs = $null
+          $null = [System.Management.Automation.Language.Parser]::ParseFile("$PWD\bin\update-brain.ps1", [ref]$null, [ref]$errs)
+          if ($errs) { $errs | Out-String | Write-Host; exit 1 }
+
+          # A "standard" on this commit, and a brain cloned from it that claims an older version.
+          $std = Join-Path $env:RUNNER_TEMP "standard"; $brain = Join-Path $env:RUNNER_TEMP "brain"
+          git clone -q . $std; git -C $std checkout -q -B main HEAD
+          git clone -q $std $brain
+          $d = "$brain\tools\brain\defaults.toml"
+          (Get-Content $d) -replace '^version = ".*"', 'version = "0.0.1"' | Set-Content $d
+          git -C $brain commit -qam "an older brain"
+
+          & .\bin\update-brain.ps1 -Brain $brain -Standard $std -DryRun
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if ((git -C $brain status --porcelain) -ne $null) { Write-Host "the dry run changed files"; exit 1 }
+
+          & .\bin\update-brain.ps1 -Brain $brain -Standard $std -Commit
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $subject = git -C $brain log -1 --format=%s
+          if ($subject -notlike "Update Brain_Standard 0.0.1 to *") { Write-Host "unexpected commit: $subject"; exit 1 }
+          Write-Host "update-brain.ps1: $subject"
+
       - name: CLI through bin\brain.cmd
         if: runner.os == 'Windows'
         shell: cmd

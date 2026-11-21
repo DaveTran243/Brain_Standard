@@ -29,7 +29,7 @@ from . import kg, kgcore, notes
 from .config import Brain
 from .textnorm import fold, words
 
-INDEX_VERSION = 1
+INDEX_VERSION = 2
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 FENCE_RE = re.compile(r"^\s*(```|~~~)")
 JD_RE = re.compile(r"(?<![\d.])(\d\d\.\d\d)(?![\d.])")
@@ -97,8 +97,11 @@ def sections(brain: Brain, p: Path) -> list[dict]:
     rel = brain.rel(p)
     title = fm.get("title") or notes.title(body, p.stem)
     trust, grade = kg._trust(brain, fm)
+    links = kg._links(body) + [l for k in brain.cfg["notes"]["link_keys"] for l in kg._links(fm.get(k, ""))]
     meta = {"path": rel, "title": title, "lane": lane_of(brain, rel), "grade": grade,
-            "unverified": trust == "unverified", "valid_until": fm.get("valid_until", "")}
+            "unverified": trust == "unverified", "valid_until": fm.get("valid_until", ""),
+            "date": notes.note_date(p, fm, brain.cfg["notes"]["date_keys"]).isoformat(),
+            "links": sorted(set(links))}
     header = " ".join([title, p.stem.replace("-", " "), fm.get("tags", ""), fm.get("aliases", "")])
     out, cur, fenced = [], {"line": offset + 1, "heading": "", "lines": []}, False
     for i, line in enumerate(body.splitlines()):
@@ -199,8 +202,12 @@ def search(brain: Brain, query: str, k: int | None = None, index: dict | None = 
                 idf = math.log(1 + (n - df[t] + 0.5) / (df[t] + 0.5))
                 s += idf * f * (k1 + 1) / (f + k1 * (1 - b + b * c["len"] / avg))
         scored.append((s, c))
-    scored.sort(key=lambda x: (-x[0], x[1]["path"], x[1]["line"]))
     today = brain.today
+    if float(cfg.get("recency_weight", 0)) > 0:
+        scored = _recency(scored, today, float(cfg["recency_weight"]), float(cfg["recency_half_life_days"]))
+    if float(cfg.get("graph_weight", 0)) > 0 and scored:
+        scored = _graph(chunks, scored, float(cfg["graph_weight"]), float(cfg["graph_damping"]))
+    scored.sort(key=lambda x: (-x[0], x[1]["path"], x[1]["line"]))
     results = []
     for s, c in scored[:k]:
         end = notes.expires_on(c.get("valid_until", ""))
@@ -208,6 +215,63 @@ def search(brain: Brain, query: str, k: int | None = None, index: dict | None = 
                         "lane": c["lane"], "grade": c["grade"], "unverified": c["unverified"],
                         "expired": bool(end and end <= today), "score": round(s, 3), "snippet": c["snippet"]})
     return {"query": query, "found": bool(results), "results": results, "sections": n}
+
+
+def _recency(scored: list, today, weight: float, half_life: float) -> list:
+    """BR-10, off unless [search] recency_weight > 0: newer notes rise, as in Park et al. 2023's memory stream.
+    A note half_life days old gets half the boost of one written today."""
+    import datetime as dt
+    out = []
+    for s, c in scored:
+        try:
+            age = max(0, (today - dt.date.fromisoformat(c.get("date", ""))).days)
+        except ValueError:
+            age = 10 ** 6
+        out.append((s * (1 + weight * 0.5 ** (age / half_life)), c))
+    return out
+
+
+def _graph(chunks: list, scored: list, weight: float, damping: float, iterations: int = 30) -> list:
+    """BR-11, off unless [search] graph_weight > 0: Personalized PageRank over the [[links]] between notes, started
+    from the notes BM25 found (HippoRAG, Gutiérrez et al. 2024). A note linked from several hits gains even when it
+    shares no word with the query; such a note is added through its first section."""
+    first, names = {}, {}
+    for c in chunks:
+        first.setdefault(c["path"], c)
+        stem = c["path"].rsplit("/", 1)[-1][:-3]
+        names.setdefault(fold(stem), c["path"])
+        names.setdefault(fold(c["title"]), c["path"])
+    edges = {p: set() for p in first}
+    for p, c in first.items():
+        for l in c.get("links", []):
+            q = names.get(fold(l))
+            if q and q != p:
+                edges[p].add(q)
+                edges[q].add(p)
+    seed = {}
+    for s, c in scored:
+        seed[c["path"]] = max(seed.get(c["path"], 0.0), s)
+    total = sum(seed.values()) or 1.0
+    restart = {p: v / total for p, v in seed.items()}
+    rank = dict(restart)
+    for _ in range(iterations):
+        nxt = {p: (1 - damping) * restart.get(p, 0.0) for p in edges}
+        for p, r in rank.items():
+            if edges.get(p):
+                share = damping * r / len(edges[p])
+                for q in edges[p]:
+                    nxt[q] += share
+            else:
+                nxt[p] = nxt.get(p, 0.0) + damping * r
+        rank = nxt
+    top = max(s for s, _ in scored)
+    peak = max(rank.values()) or 1.0
+    out = [(s + weight * top * rank.get(c["path"], 0.0) / peak, c) for s, c in scored]
+    hit = {c["path"] for _, c in scored}
+    for p, r in rank.items():
+        if p not in hit and r > 0:
+            out.append((weight * top * r / peak, first[p]))
+    return out
 
 
 def edges_first(results: list) -> list:
@@ -262,6 +326,25 @@ def questions(brain: Brain) -> list[dict]:
         want = [w.strip().strip("`") for w in m.group(2).split(";") if w.strip()]
         none = [w.lower() for w in want] == ["none"]
         out.append({"line": n, "section": section, "question": m.group(1), "want": [] if none else want})
+    return out
+
+
+VARIANTS = {"bm25": {}, "recency": {"recency_weight": 0.3}, "graph": {"graph_weight": 0.5},
+            "recency+graph": {"recency_weight": 0.3, "graph_weight": 0.5}}
+
+
+def compare(brain: Brain, k: int | None = None) -> list[dict]:
+    """BR-10 and BR-11 are kept only if they do not lower recall@k: the same questions under each ranking."""
+    base = dict(brain.cfg["search"])
+    out = []
+    try:
+        for name, extra in VARIANTS.items():
+            brain.cfg["search"] = {**base, "recency_weight": 0, "graph_weight": 0, **extra}
+            r = evaluate(brain, k)
+            out.append({"variant": name, "settings": extra, "recall": r["recall"], "mrr": r["mrr"],
+                        "said_not_found": r["said_not_found"], "unanswerable": r["unanswerable"]})
+    finally:
+        brain.cfg["search"] = base
     return out
 
 

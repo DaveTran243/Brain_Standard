@@ -140,6 +140,16 @@ min_coverage = 0.5                  # a section must hold at least this share of
 max_chars = 6000                    # what an agent receives from brain_search, at most
 questions = "_eval/questions.md"    # brain eval's questions, relative to the vault; written by the owner only
 exclude = []                        # more paths or globs relative to the vault, e.g. ["Code/99-private", "*/drafts/*"]
+# Two optional ranking signals (BR-10, BR-11), off until brain eval --compare shows they do not lower recall@k.
+recency_weight = 0                  # > 0: newer notes rise; e.g. 0.3
+recency_half_life_days = 90         # a note this old gets half the boost of one written today
+graph_weight = 0                    # > 0: Personalized PageRank over [[links]] from the BM25 hits; e.g. 0.5
+graph_damping = 0.5                 # share of a note's rank passed along its links at each step
+
+[read]
+# brain read and brain cite-check (tools/brain/reading.py): what an agent may read, and how citations are checked.
+max_lines = 200                     # lines one brain read returns at most
+quote_window = 3                    # a quoted citation passes if the words are within this many lines of path:line
 
 [dashboard]
 # brain dashboard (tools/brain/dashboard.py, docs/dashboard.md, ADR-20): a read-only page on 127.0.0.1 with the brain's
